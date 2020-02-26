@@ -9,7 +9,8 @@ Usage: Rscript postgwas-exe.r [Functions]
     
 Functions:
     --gwas    This is a function for GWAS Catalog data.
-    --ldlink  This is a function for LDlink data
+    --ldlink  This is a function for LDlink data.
+    --bw2bed  This is a function to convert BigWig to BED format.
 
 Global arguments:
     --base    Base input file is mendatory.
@@ -47,6 +48,6 @@ if(help) { cat(help_message)
         source('src/gwas_ldlink.r')
         gwas_ldlink(args)
     } else {
-        paste0('There is no such function "',commandLine[1],'". Try again.')
+        paste0('There is no such function: "',commandLine[1],'". Try again.')
     }
 }
