@@ -1,19 +1,22 @@
-help_messages = function() {
-    help_message = '
+help_message = '
 gwas_ldlink, v2020-01-21
 This is a function for LDlink data.
 
-Usage: Rscript postgwas.r --ldlink [options] <-b base file> <-o out folder> <...>
-    --ldlink [Options: dn/fl]
-        dn   This is a function for LDlink data download.
-        fl   This is a function for LDlink data filter.
-        bed  This is a function to generate two BED files (hg19 and hg38).
+Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out folder> <...>
+    --ldlink <Functions: dn/fl>
 
-Required arguments:
+Functions:
+    dn       This is a function for LDlink data download.
+    fl       This is a function for LDlink data filter.
+    bed      This is a function to generate two BED files (hg19 and hg38).
+
+Global arguments:
     --base   <EFO0001359.tsv>
              One base TSV file is mendatory.
     --out    <data>
              Out folder path is mendatory. Default is "data" folder.
+
+Required arguments:
     --popul  <CEU TSI FIN GBR IBS ...>
              An argument for the "--ldlink dn". One or more population option have to be included.
     --r2d    <1/2/3/4>
@@ -23,9 +26,6 @@ Required arguments:
                 3) Dprime=1
                 4) r2>0.6 or Dprime=1
 '
-    help_message %>% cat
-    quit()
-}
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
@@ -258,7 +258,7 @@ ldlink_dn = function(
     snps = read.delim(snp_path)
     rsid = snps$rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
-    token = '669e9dc0b428' # Seungsoo Kim's token
+    token = '669e9dc0b428' # Seungsoo Kim's personal token
     LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token, append=F)
     paste0('done\n') %>% cat
     
@@ -270,10 +270,11 @@ ldlink_dn = function(
 }
 
 gwas_ldlink = function(
-    args = args
+    args = NULL
 ) {
-    if(length(args$help)>0)    help    = args$help
-    if(help) help_messages()
+    if(length(args$help)>0) {  help    = args$help
+    } else                     help    = FALSE
+    if(help)                   cat(help_message)
     
     if(length(args$base)>0)    b_path  = args$base
     if(length(args$out)>0)     out     = args$out
@@ -290,6 +291,9 @@ gwas_ldlink = function(
         ldlink_fl(b_path[1],b_path[2],out,r2d,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
+    } else {
+        paste0('[Error] There is no such function in gwas_ldlink: ',
+            paste0(args$ldlink,collapse=', '),'\n') %>% cat
     }
     paste0(pdtime(t0,1),'\n') %>% cat
 }

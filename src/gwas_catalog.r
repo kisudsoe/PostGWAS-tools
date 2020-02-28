@@ -1,28 +1,25 @@
-help_messages = function() {
-    help_message = '
+help_message = '
 gwas_catalog, v2020-01-06
 This is a function for GWAS Catalog data.
 
-Usage: Rscript postgwas-exe.r --gwas [options] <-b base file> <-o out folder> <...>
-    --gwas  [Options: tarit/gene/study/filt]
-        tarit  Generating pivot table for traits
-        gene   Generating pivot table for genes
-        study  Generating summary table for studies
-        filt   Filtering SNPs by P-values
+Usage: Rscript postgwas-exe.r --gwas <functions> --base <base file> --out <out folder> <...>
+
+Functions:
+    tarit   Generating pivot table for traits
+    gene    Generating pivot table for genes
+    study   Generating summary table for studies
+    filt    Filtering SNPs by P-values
+
+Global arguments:
+    --base  <EFO0001359.tsv>
+            One base TSV file is mendatory.
+    --out   <Default:data folder>
+            Out files target path is mendatory. Default is "data" folder.
 
 Required arguments:
-    --base     <EFO0001359.tsv>
-               One base TSV file is mendatory.
-    --out      <Default:data folder>
-               Out files target path is mendatory. Default is "data" folder.
-
-Optional arguments:
     --p.criteria 5e-8
-               Argument for "--pivot filt" option. Default is 5e-8.
+            An argument for "--pivot filt". Default is 5e-8.
 '
-    help_message %>% cat
-    quit()
-}
 
 ## Load libraries ##
 suppressMessages(library(dplyr))
@@ -292,18 +289,18 @@ gwas_summ = function(
 gwas_catalog = function(
     args = args
 ) {
-    if(length(args$help)>0)     help  = args$help
-    if(help) help_messages()
+    if(length(args$help)>0) {       help    = args$help
+    } else                          help    = FALSE
+    if(help)                        cat(help_message)
     
-    if(length(args$base)>0)     gwas  = args$base
-    if(length(args$out)>0)      out   = args$out
-    if(length(args$debug)>0) {  debug = args$debug
-    } else                      debug = FALSE
+    if(length(args$base)>0)         gwas  = args$base
+    if(length(args$out)>0)          out   = args$out
+    if(length(args$debug)>0) {      debug = args$debug
+    } else                          debug = FALSE
         
-    if(length(args$gwas)>0)     pivot = args$gwas
-    if(length(args$p.criteria)>0) {
-                                p_criteria = args$p.criteria
-    } else                      p_criteria = 5e-8
+    if(length(args$gwas)>0)         pivot = args$gwas
+    if(length(args$p.criteria)>0) { p_criteria = args$p.criteria
+    } else                          p_criteria = 5e-8
     
     gwas_summ(gwas,out,p_criteria,pivot,debug)
 }
