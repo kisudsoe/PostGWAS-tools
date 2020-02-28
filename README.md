@@ -1,4 +1,4 @@
-# Type 1 Diabetes Analysis
+# Post-GWAS analysis : Type 1 Diabetes
 
 This is a log file for analyzing "Type I Diabetes Mellitus" (EFO0001359) from GWAS Catalog.
 
@@ -132,7 +132,7 @@ Rscript postgwas-exe.r ^
 
 # 2. Downloading annotation data
 
-## Roadmap data
+## Roadmap download
 
 Downloading the 127 cell type-specific Roadmap **ChmmModels** BED files (**hg19**) to designated out folder. This process takes about ~35 min depending on your internet speed.
 
@@ -159,7 +159,7 @@ Rscript postgwas-exe.r ^
 > File write: db_gwas/roadmap/E129_25_imputed12marks_dense.bed.rds
 > Job done: 2020-02-27 16:46:38 for 34.3 min
 
-## ENCODE data
+## ENCODE download
 
 Downloading `wgEncodeRegTfbsClusteredV3.bed.gz` file (81 MB) which is regulatory transcription factor binding site (Reg-TFBS) cluster data from ENCODE.
 
@@ -180,7 +180,7 @@ Rscript postgwas-exe.r ^
 > db_gwas/encode/wgEncodeRegTfbsClusteredV3.bed.gz
 > Job done: 2020-02-27 17:01:53 for 9.2 sec
 
-## RegulomeDB data
+## RegulomeDB download
 
 Downloading category scores for SNPs by evidences such as eQTL, TF binding, matched TF motif, matched DNase Footprint, and DNase peak from the RegulomeDB. Default filtering criteria is **score ≥2b**.
 
@@ -216,7 +216,7 @@ Rscript postgwas-exe.r ^
 > File write: db_gwas/regulome/dbSNP132.Category2.txt.gz.rds
 > Job done: 2020-02-27 17:07:17 for 34.7 sec
 
-## GTEx data
+## GTEx download
 
 GTEx v8 includes 17,382 samples of 54 tissues from 948 donors. See [README_eQTL_v8.txt](https://storage.googleapis.com/gtex_analysis_v8/single_tissue_qtl_data/README_eQTL_v8.txt) for description of GTEx file format.
 
@@ -260,9 +260,9 @@ Rscript postgwas-exe.r ^
 >   Saving a compiled RDS file..  db_gwas/gtex/Gtex_Analysis_v8_eQTL_rsid.rds
 > Job done: 2020-02-27 19:07:32 for 52.9 min
 
-## lncRNASNP2 data
+## lncRNASNP2 download
 
-
+In lncRNASNP2, 141,353 human lncRNAs and 10,205,295 SNPs were archived.
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -292,9 +292,102 @@ Rscript postgwas-exe.r ^
 > File write: db_gwas/lncrna/lncrna-diseases_experiment.txt.rds
 > Job done: 2020-02-27 21:10:59 for 3.2 min
 
+## Ensembl Genes
+
+Downloading Ensembl gene coordinates through biomaRt (hg19)
+
+```CMD
+Rscript postgwas-exe.r ^
+	--dbdown gene ^
+	--out db_gwas ^
+	--hg hg19
+```
+
+> ** Run function: db_download.r/biomart_gene...
+>   BiomaRt table, dim    = [1] 63677     5
+>   File write: db_gwas/ensembl_gene_ann_hg19.tsv
+>
+>   Filtered table, dim   = [1] 57736     5
+>   File write: db_gwas/ensembl_gene_hg19.bed
+>
+> Job done: 2020-02-28 00:38:13 for 6 sec
+
+# 3. Filtering annotation data
+
+## Roadmap filter
+
+Filtering the Roadmap data by "Enhancers" (e.g., 13_EnhA1, 14_EnhA2, 15_EnhAF, 16_EnhW1, 17_EnhW2, 18_EnhAc). This process might take ~3 min.
+
+```CMD
+Rscript postgwas-exe.r ^
+	--dbfilt roadmap ^
+	--base db_gwas/roadmap ^
+	--out db_gwas
+```
+
+> ** Run function: db_filter.r/roadmap_filt...
+>   Reading files..
+>     10/129 being processed.
+>     20/129 being processed.
+>     30/129 being processed.
+>     40/129 being processed.
+>     50/129 being processed.
+>     60/129 being processed.
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning messages:
+> 1: package 'plyr' was built under R version 3.6.2
+> 2: package 'data.table' was built under R version 3.6.2
+> 3: package 'numbers' was built under R version 3.6.2
+> 4: In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds - file not found.
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning message:
+> In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds - file not found.
+>     70/129 being processed.
+>     80/129 being processed.
+>     90/129 being processed.
+>     100/129 being processed.
+>     110/129 being processed.
+>     120/129 being processed.
+>   Finished reading and filtering 129 files.
+>
+> Write file: db_gwas/roadmap_enh.bed
+> Job done: 2020-02-27 23:57:08 for 2.5 min
+
+## GTEx filter
+
+Filtering GTEx eQTL data by p-value <5e-8.
+
+```CMD
+Rscript postgwas-exe.r ^
+	--dbfilt gtex ^
+	--base db_gwas/gtex/Gtex_Analysis_v8_eQTL_rsid.rds ^
+	--out db_gwas
+	--pval 5e-8
+```
+
+> ** Run function: db_filter.r/gtex_filt...
+>   P-value threshold     = [1] 5e-08
+>   GTEx data, dim        = [1] 71478479        9
+>  gtex_sig.pval_nominal
+>  Min.   :0.000e+00
+>  1st Qu.:0.000e+00
+>  Median :8.100e-13
+>  Mean   :3.518e-09
+>  3rd Qu.:9.148e-10
+>  Max.   :5.000e-08
+>   GTEx <5e-08, dim      =[1] 30613850        9
+> Write file: db_gwas/gtex_signif_5e-08.rds
+> Job done: 2020-02-28 00:15:35 for 2.9 min
+
+# 4. Overlapping annotation data
 
 
-# 3. Overlapping with ATAC-seq data
+
+# 5. Overlapping with ATAC-seq data
 
 See details in `db_Meltonlab/README.md`. Original download files are in `db_Meltonlab/UCSC/` folder.
 
