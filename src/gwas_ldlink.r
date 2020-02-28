@@ -13,7 +13,7 @@ Functions:
 Global arguments:
     --base   <EFO0001359.tsv>
              One base TSV file is mendatory.
-    --out    <data>
+    --out    <default: data>
              Out folder path is mendatory. Default is "data" folder.
 
 Required arguments:

@@ -11,6 +11,7 @@ Function calls:
     --gwas    This is a function call for GWAS Catalog data.
     --ldlink  This is a function call for LDlink data.
     --dbdown  This is a function call for downloading databases.
+    --filter  This is a function call for filtering data.
 
 Global arguments:
     --base    Base input file is mendatory.
@@ -47,6 +48,9 @@ if(call=='help') { cat(help_message)
 } else if(call=='dbdown') {
     source('src/db_download.r')
     db_download(args)
+} else if(call=='dbfilt') {
+    source('src/db_filter.r')
+    db_filter(args)
 } else {
     paste0('There is no such function: "',commandLine[1],'". Try again.')
 }

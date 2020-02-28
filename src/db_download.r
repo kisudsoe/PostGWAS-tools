@@ -3,27 +3,73 @@ db_download, v2020-02-27
 This is a function call for downloading databases
     Roadmap, ENCODE, RegulomeDB, GTEx v8, and lncRNASNP2
 
-Usage: Rscript postgwas-exe.r --dbdown <Function> --out <out folder>
+Usage: Rscript postgwas-exe.r --dbdown <function> --out <out folder>
 
 Functions:
     roadmap   Downloading Roadmap data (hg19).
     encode    Downloading ENCODE data (hg19).
-    regulome  Downloading RegulomeDB data (≥2b)
-    gtex      Downloading GTEx v8 data
-    lncrna    Downloading lncRNASNP2 data
+    regulome  Downloading RegulomeDB data (≥2b).
+    gtex      Downloading GTEx v8 data.
+    lncrna    Downloading lncRNASNP2 data.
+    genes     Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
 
 Global arguments:
     --out     <out folder>
               Download folder path is mendatory. Default is "db" folder.
 
 Required arguments:
-    none
+    --hg      <hg19/hg38>
+              A required argument for the "genes" function. Choose one human genome version.
 '
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
 
 ## Functions Start ##
+biomart_gene = function(
+    out = 'data', # Download folder path
+    hg  = 'hg19'  # Human genome version. Choose either 'hg19' or 'hg38'
+) {
+    # Function specific library
+    suppressMessages(library(biomaRt))
+
+    # Get Ensembl BiomaRt
+    paste0('\n** Run function: db_download.r/biomart_gene...\n') %>% cat
+    if(hg=='hg19') { # Ensembl biomart (grch37)
+        hg_gene = useMart(
+            biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org",
+            dataset="hsapiens_gene_ensembl", path="/biomart/martservice")
+        #print(subset(listAttributes(hg19_gene),page=='feature_page')[1:2,])
+        #print(listFilters(hg19_gene))
+    } else if(hg=='hg38') { # Ensembl biomart (grch38)
+        hg_gene = useMart(biomart="ensembl",dataset="hsapiens_gene_ensembl")
+    }
+    gene_attr = c('chromosome_name','start_position','end_position','ensembl_gene_id','external_gene_name')
+    genes = getBM(attributes = gene_attr,
+                filters    = '',
+                values     = '',
+                mart       = hg_gene)
+    genes = as.data.frame(genes)
+    paste0('  BiomaRt table, dim\t= ') %>% cat; dim(genes) %>% print
+
+    # Save as a TSV file
+    f_name1 = paste0(out,'/ensembl_gene_ann_',hg,'.tsv')
+    write.table(genes,f_name1,row.names=F,col.names=T,quote=F,sep='\t')
+    cat(paste0('  File write: ',f_name1,'\n'))
+
+    # Filter genes by chromosomes
+    genes_sub = subset(genes,chromosome_name %in% c(1:22,'X','Y'))
+    chr_ = paste0('chr',genes_sub[,1])
+    genes_ = data.frame(chr_,genes_sub[,2:5])
+    colnames(genes_) = c('chr','start','end','ENSGid','Symbol')
+    paste0('\n  Filtered table, dim\t= ') %>% cat; dim(genes_) %>% print
+
+    # Save as a BED file
+    f_name2 = paste0(out,'/ensembl_gene_',hg,'.bed')
+    write.table(genes[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    paste0('  File write: ',f_name2,'\n\n') %>% cat
+}
+
 roadmap_down = function(
     out = 'db' # Download folder path
 ) {
@@ -231,6 +277,7 @@ db_download = function(
     if(help)                 cat(help_message)
 
     if(length(args$out)>0)   out  = args$out
+    if(length(args$hg)>0)    hg   = args$hg
 
     source('src/pdtime.r'); t0=Sys.time()
     if(args$dbdown == 'roadmap') {
@@ -243,6 +290,8 @@ db_download = function(
         gtex_down(out)
     } else if(args$dbdown == 'lncrna') {
         lncrna_down(out)
+    } else if(args$dbdown == 'gene') {
+        biomart_gene(out,hg)
     } else {
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$dbdown,collapse=', '),'\n') %>% cat
