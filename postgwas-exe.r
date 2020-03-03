@@ -12,6 +12,7 @@ Function calls:
     --ldlink  This is a function call for LDlink data.
     --dbdown  This is a function call for downloading databases.
     --filter  This is a function call for filtering data.
+    --dbvenn  This is a function call for venn analysis.
 
 Global arguments:
     --base    Base input file is mendatory.
@@ -38,7 +39,7 @@ names(args) = args_names
 
 # Run Function ----------
 call = args_names[1]
-if(call=='help') { cat(help_message)
+if(call=='help') { cat(help_message); quit()
 } else if(call=='gwas') {
     source('src/gwas_catalog.r')
     gwas_catalog(args)
@@ -51,6 +52,9 @@ if(call=='help') { cat(help_message)
 } else if(call=='dbfilt') {
     source('src/db_filter.r')
     db_filter(args)
+} else if(call=='dbvenn') {
+    source('src/db_venn.r')
+    db_venn(args)
 } else {
     paste0('There is no such function: "',commandLine[1],'". Try again.')
 }
