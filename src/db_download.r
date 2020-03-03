@@ -39,10 +39,11 @@ biomart_gene = function(
         hg_gene = useMart(
             biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org",
             dataset="hsapiens_gene_ensembl", path="/biomart/martservice")
-        #print(subset(listAttributes(hg19_gene),page=='feature_page')[1:2,])
-        #print(listFilters(hg19_gene))
     } else if(hg=='hg38') { # Ensembl biomart (grch38)
         hg_gene = useMart(biomart="ensembl",dataset="hsapiens_gene_ensembl")
+    } else {
+        paste0('  Please choose the correct --hg options: either "hg19" or "hg38".\n') %>% cat
+        return()
     }
     gene_attr = c('chromosome_name','start_position','end_position','ensembl_gene_id','external_gene_name')
     genes = getBM(attributes = gene_attr,
@@ -66,7 +67,7 @@ biomart_gene = function(
 
     # Save as a BED file
     f_name2 = paste0(out,'/ensembl_gene_',hg,'.bed')
-    write.table(genes[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    write.table(genes_[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('  File write: ',f_name2,'\n\n') %>% cat
 }
 
@@ -274,7 +275,7 @@ db_download = function(
 ) {
     if(length(args$help)>0){ help = args$help
     } else                   help = FALSE
-    if(help)                 cat(help_message)
+    if(help) {               cat(help_message); quit() }
 
     if(length(args$out)>0)   out  = args$out
     if(length(args$hg)>0)    hg   = args$hg

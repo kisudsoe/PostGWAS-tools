@@ -6,9 +6,9 @@ Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out 
     --ldlink <Functions: dn/fl>
 
 Functions:
-    dn       This is a function for LDlink data download.
-    fl       This is a function for LDlink data filter.
-    bed      This is a function to generate two BED files (hg19 and hg38).
+    down     This is a function for LDlink data download.
+    filter   This is a function for LDlink data filter.
+    bed      This is a function for generating two BED files (hg19 and hg38).
 
 Global arguments:
     --base   <EFO0001359.tsv>
@@ -274,7 +274,7 @@ gwas_ldlink = function(
 ) {
     if(length(args$help)>0) {  help    = args$help
     } else                     help    = FALSE
-    if(help)                   cat(help_message)
+    if(help) {                 cat(help_message); quit() }
     
     if(length(args$base)>0)    b_path  = args$base
     if(length(args$out)>0)     out     = args$out
@@ -285,9 +285,9 @@ gwas_ldlink = function(
     if(length(args$r2d)>0)     r2d     = args$r2d
     
     source('src/pdtime.r'); t0=Sys.time()
-    if(args$ldlink == 'dn') {
+    if(args$ldlink == 'down') {
         ldlink_dn(b_path,out,popul,debug)
-    } else if(args$ldlink == 'fl') {
+    } else if(args$ldlink == 'filter') {
         ldlink_fl(b_path[1],b_path[2],out,r2d,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)

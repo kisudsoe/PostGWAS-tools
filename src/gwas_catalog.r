@@ -291,7 +291,7 @@ gwas_catalog = function(
 ) {
     if(length(args$help)>0) {       help    = args$help
     } else                          help    = FALSE
-    if(help)                        cat(help_message)
+    if(help) {                      cat(help_message); quit() }
     
     if(length(args$base)>0)         gwas  = args$base
     if(length(args$out)>0)          out   = args$out
