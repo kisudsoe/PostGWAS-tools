@@ -7,7 +7,23 @@ GWAS Catalog data is currently mapped to Genome Assembly GRCh38.p13 and dbSNP Bu
 
 And LDlink results are returned with **hg19** coordinates.
 
-**Additional tools to be added**
+## Brief result description
+
+![](C:\Users\sk4748\OneDrive\Suh's Lab\2020-03 T1D v2.0\Fig1a.png)
+
+![](C:\Users\sk4748\OneDrive\Suh's Lab\2020-03 T1D v2.0\Fig1b.png)
+
+
+
+![](C:\Users\sk4748\OneDrive\Suh's Lab\2020-03 T1D v2.0\Fig2.png)
+
+
+
+![](C:\Users\sk4748\OneDrive\Suh's Lab\2020-03 T1D v2.0\Fig3.png)
+
+
+
+**Additional tools to be added:**
 
 * De novo motif: TrawlerWeb [http://trawler.erc.monash.edu.au](http://trawler.erc.monash.edu.au/)
   * Dang et al., 2018, BMC Genomics, [10.1186/s12864-018-4630-0](https://doi.org/10.1186/s12864-018-4630-0)
@@ -431,24 +447,67 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/roadmap_total.bed
 > Job done: 2020-02-28 12:00:35 for 5.7 min
 
-### Enhancer in Pancreas Islets (E087)
+### Enhancer in each cell type
+
+To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
+
+| EID  | GROUP          | STD_NAME                                                     | EDACC_NAME                                                   |
+| ---- | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| E033 | Blood & T-cell | Primary T cells from cord blood                              | CD3_Primary_Cells_Cord_BI                                    |
+| E034 | Blood & T-cell | Primary T cells from peripheral blood                        | CD3_Primary_Cells_Peripheral_UW                              |
+| E037 | Blood & T-cell | Primary T helper memory cells from   peripheral blood 2      | CD4_Memory_Primary_Cells                                     |
+| E038 | Blood & T-cell | Primary T helper naive cells from peripheral blood           | CD4_Naive_Primary_Cells                                      |
+| E039 | Blood & T-cell | Primary T helper naive cells from peripheral blood           | CD4+_CD25-_CD45RA+_Naive_Primary_Cells                       |
+| E040 | Blood & T-cell | Primary T helper memory cells from   peripheral blood 1      | CD4+_CD25-_CD45RO+_Memory_Primary_Cells                      |
+| E041 | Blood & T-cell | Primary T helper cells PMA-I stimulated                      | CD4+_CD25-_IL17-_PMA-Ionomycin_stimulated_MACS_purified_Th_Primary_Cells |
+| E042 | Blood & T-cell | Primary T helper 17 cells PMA-I stimulated                   | CD4+_CD25-_IL17+_PMA-Ionomcyin_stimulated_Th17_Primary_Cells |
+| E043 | Blood & T-cell | Primary T helper cells   from peripheral blood               | CD4+_CD25-_Th_Primary_Cells                                  |
+| E044 | Blood & T-cell | Primary T regulatory cells   from peripheral blood           | CD4+_CD25+_CD127-_Treg_Primary_Cells                         |
+| E045 | Blood & T-cell | Primary T cells effector/memory enriched   from peripheral blood | CD4+_CD25int_CD127+_Tmem_Primary_Cells                       |
+| E047 | Blood & T-cell | Primary T CD8+ naive cells from peripheral   blood           | CD8_Naive_Primary_Cells                                      |
+| E048 | Blood & T-cell | Primary T CD8+ memory cells from peripheral   blood          | CD8_Memory_Primary_Cells                                     |
+| E062 | Blood & T-cell | Primary mononuclear cells   from peripheral blood            | Peripheral_Blood_Mononuclear_Primary_Cells                   |
+| E029 | HSC & B-cell   | Primary monocytes from peripheral blood                      | CD14_Primary_Cells                                           |
+| E030 | HSC & B-cell   | Primary neutrophils from peripheral blood                    | CD15_Primary_Cells                                           |
+| E031 | HSC & B-cell   | Primary B cells from cord blood                              | CD19_Primary_Cells_Cord_BI                                   |
+| E032 | HSC & B-cell   | Primary B cells from peripheral blood                        | CD19_Primary_Cells_Peripheral_UW                             |
+| E035 | HSC & B-cell   | Primary hematopoietic stem cells                             | CD34_Primary_Cells                                           |
+| E036 | HSC & B-cell   | Primary hematopoietic stem cells short term   culture        | CD34_Cultured_Cells                                          |
+| E046 | HSC & B-cell   | Primary Natural Killer cells   from peripheral blood         | CD56_Primary_Cells                                           |
+| E050 | HSC & B-cell   | Primary hematopoietic stem cells   G-CSF-mobilized Female    | Mobilized_CD34_Primary_Cells_Female                          |
+| E051 | HSC & B-cell   | Primary hematopoietic stem cells   G-CSF-mobilized Male      | Mobilized_CD34_Primary_Cells_Male                            |
+| E087 | Other          | Pancreatic Islets                                            | Pancreatic_Islets                                            |
+| E098 | Other          | Pancreas                                                     | Pancreas                                                     |
 
 ```CMD
 Rscript postgwas-exe.r ^
 	--dbfilt roadmap ^
 	--base db_gwas/roadmap ^
-	--out db_gwas ^
+	--out db_gwas/roadmap_enh ^
 	--enh TRUE ^
-	--ctype 087
+	--sep TRUE
 ```
 
 > ** Run function: db_filter.r/roadmap_filt...
+>   Directory generated: db_gwas/roadmap_enh
 >   Reading files..
->   db_gwas/roadmap/E087_25_imputed12marks_dense.bed.rds [1] 108890     11
->   Finished reading and filtering 1 files.
+>     10/129 being processed.
+>     ...
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning message:
+> In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds - file not found.
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning message:
+> In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds - file not found.
+>     ...
+>     120/129 being processed.
+>   Finished processing 129 files.
 >
-> Write file: db_gwas/roadmap_087_enh.bed
-> Job done: 2020-03-01 18:07:11 for 2.5 sec
+> Job done: 2020-03-03 22:04:51 for 3.1 min
 
 ## GTEx filter
 
@@ -480,7 +539,7 @@ Rscript postgwas-exe.r ^
 
 ## For General annotations
 
-Using `bedtools closest` in bash, this process required a lot of resouce (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the blow processes:
+Using `bedtools closest` in bash, this process required a lot of resouce (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
 
 ```bash
 ./bin/bedtools sort -i 2020_t1d/db/roadmap_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_enh.tsv
@@ -491,7 +550,7 @@ Using `bedtools closest` in bash, this process required a lot of resouce (e.g., 
 ```
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/roadmap_087_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_087_enh.tsv
+#./bin/bedtools sort -i 2020_t1d/db/roadmap_087_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_087_enh.tsv
 ```
 
 ```bash
@@ -508,6 +567,17 @@ Using `bedtools closest` in bash, this process required a lot of resouce (e.g., 
 
 Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
 
+## For roadmap each cell type
+
+Full code was wrote in `db_gwas/roadmap_dist.sh`:
+
+```bash
+bedtools sort -i roadmap_enh/roadmap_001_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_001_enh.tsv
+bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
+...
+bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
+```
+
 ## Preparing Meltonlab's β-cell ATAC-seq data
 
 See details in `db_Meltonlab/README.md` file. Original download files are in `db_Meltonlab/UCSC/` folder.
@@ -523,41 +593,34 @@ peaks.bed file (mapped on **hg19**) list:
 * GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed
 * GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed
 
-## Overlapping T1D SNPs with Meltonlab's β-cell ATAC-seq data
-
-`YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed` has pseudo_pooled pr1 data overlapped with pr2 data.
-
-`YY005-beta-cell-1_R1.nodup.tn5_pooled.pf_peaks.bed`
-
 Using `bedtools closest` in bash:
 
 ```bash
-bedtools closest -d \
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed \
-	-b db_Meltonlab/GSM4171638_SCbeta_ATAC_rep1.peaks.bed \
-	> r2d1_data_gwas/distance/SCbeta_ATAC-2.tsv
-bedtools closest -d -a a.bed -b db_Meltonlab/GSM4171638_SCbeta_ATAC_rep1.peaks.bed > SCbeta_ATAC-2.tsv
+#bedtools closest -d \
+#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed \
+#	-b db_Meltonlab/GSM4171638_SCbeta_ATAC_rep1.peaks.bed \
+#	> r2d1_data_gwas/distance/SCbeta_ATAC-2.tsv
 ```
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Meltonlab/GSM4171640_Beta_ATAC_rep1.peaks.bed\
-	> r2d1_data_gwas/distance/Beta_ATAC.tsv
+#bedtools closest -d\
+#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
+#	-b db_Meltonlab/GSM4171640_Beta_ATAC_rep1.peaks.bed\
+#	> r2d1_data_gwas/distance/Beta_ATAC.tsv
 ```
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed\
-	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep1.tsv
+#bedtools closest -d\
+#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
+#	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed\
+#	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep1.tsv
 ```
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed\
-	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep2.tsv
+#bedtools closest -d\
+#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
+#	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed\
+#	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep2.tsv
 ```
 
 ```bash
@@ -574,16 +637,25 @@ bedtools closest -d\
 	> r2d1_data_gwas/distance/SCbeta_72h_ATAC.tsv
 ```
 
-## Preparing Yizhou's β-cell ATAC-seq data
+## For Meltonlab each cell type
 
-This result data mapped on **hg19** version. See details in `db_Yizhou/README.md` file. 
-
-Using `bedtools intersect`:
+Full code was wrote in `db_gwas/meltonlab_dist.sh`:
 
 ```bash
-bedtools intersect -u\
-	-a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed\
-	-b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed\
+bedtools sort -i ./meltonlab/GSM4171636_PP2_ATAC_rep1.peaks.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/PP2_ATAC_rep1.tsv
+bedtools sort -i ./meltonlab/GSM4171637_EN_ATAC_rep1.peaks.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/EN_ATAC_rep1.tsv
+...
+bedtools sort -i ./meltonlab/GSE140500_SCbeta_TE.byH3K27ac.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/SCbeta_TE_enh.tsv
+```
+
+## Preparing Yizhou's β-cell ATAC-seq data
+
+This result data mapped on **hg19** version. See details in `db_Yizhou/README.md` file. Using `bedtools intersect`:
+
+```bash
+bedtools intersect -u \
+	-a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed \
+	-b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed \
 	> YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
 ```
 
@@ -667,6 +739,32 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-03-01 18:23:21 for 0.2 sec
 
+## For Roadmap each cell type
+
+```CMD
+Rscript postgwas-exe.r ^
+	--dbfilt dist ^
+	--base r2d1_data_gwas/roadmap_dist ^
+	--out r2d1_data_gwas/roadmap_dist
+```
+
+> ** Run function: db_filter.r/distance_filt...
+> File roadmap_001_enh... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 57
+>   SNPs in annotations           = [1] 77
+>   Write file: r2d1_data_gwas/roadmap_dist/snp_roadmap_001_enh_77.bed
+> Job process: 0.3 sec
+>
+> ...
+>
+> File roadmap_129_enh... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 64
+>   SNPs in annotations           = [1] 82
+>   Write file: r2d1_data_gwas/roadmap_dist/snp_roadmap_129_enh_82.bed
+> Job process: 0 sec
+>
+> Job done: 2020-03-04 12:42:23 for 6.7 secs
+
 ## ATAC-seq data overlapping
 
 To identify ATAC-seq signal overlapped T1D SNPs, result files of the ATAC-seq data from the `bedtools closest` function were used:
@@ -732,6 +830,39 @@ Rscript postgwas-exe.r ^
 > Job process: 0.1 sec
 >
 > Job done: 2020-02-28 18:31:44 for 0.8 sec
+
+## For Meltonlab each cell type
+
+```CMD
+Rscript postgwas-exe.r ^
+	--dbfilt dist ^
+	--base r2d1_data_gwas/meltonlab_dist ^
+	--out r2d1_data_gwas/meltonlab_dist
+```
+
+> ** Run function: db_filter.r/distance_filt...
+> File Alpha_ATAC_rep1... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 8
+>   SNPs in annotations           = [1] 12
+>   Write file: r2d1_data_gwas/snp_Alpha_ATAC_rep1_12.bed
+> Job process: 0.3 sec
+>
+> ...
+>
+>   20/21 being processed.
+> File SCbeta_SE_enh... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 1
+>   SNPs in annotations           = [1] 11
+>   Write file: r2d1_data_gwas/snp_SCbeta_SE_enh_11.bed
+> Job process: 0 sec
+>
+> File SCbeta_TE_enh... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 6
+>   SNPs in annotations           = [1] 10
+>   Write file: r2d1_data_gwas/snp_SCbeta_TE_enh_10.bed
+> Job process: 0 sec
+>
+> Job done: 2020-03-04 12:36:43 for 1.4 sec
 
 ## Regulome overlapping
 
@@ -845,7 +976,21 @@ Rscript postgwas-exe.r ^
 >   Write file: r2d1_data_gwas/lncrnasnp_88.tsv
 > Job done: 2020-03-01 15:56:41 for 28.9 sec
 
-# 6. Venn analysis
+# 6. Summary
+
+## Roadmap cell type union list
+
+Roadmap cell type IDs:
+
+* Blood & T-cells: 33-48, 62
+* HSC & B-cells: 29-32, 35-36, 46, 50-51
+* Pancreas: 87, 98
+
+```CMD
+
+```
+
+
 
 ## Roadmap / ENCODE
 
