@@ -6,6 +6,7 @@ Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out
 
 Functions:
 	venn    Venn analysis of rsids.
+	summ    Generating summary table with annotations.
 
 Global arguments:
 	--base  <base files>
@@ -16,24 +17,40 @@ Global arguments:
 
 Required arguments:
 	--fig   <figure out folder>
-			A required argument for the "venn" function to save figure file.
+			An optional argument for the "venn" function to save figure file.
+			If no figure out path is designated, no venn figure will generated.
+	--uni   <defulat: FALSE>
+			An optional argument for the "venn" function to save union BED file.
+	--ann   <annotation files>
+			An optional argument for the "summ" function. Add annotations to the summary table.
 '
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
-suppressMessages(library(tools))
 
 ## Functions Start ##
-venn = function(
+summ_ann = function(
+	f_paths   = NULL,  # Input BED file paths
+	ann_paths = NULL,  # Add annotation file paths
+	out       = 'data' # Out folder path
+) {
+	# Prepare...
+	paste0('\n** Run function: db_venn.r/venn...\n') %>% cat
+	quit()
+}
+
+venn_bed = function(
 	f_paths  = NULL,   # Input BED file paths
 	out      = 'data', # Out folder path
-	fig_path = 'fig'   # Figure out folder path
+	fig      = NULL,   # Figure out folder path
+	uni_list = FALSE   # 
 ) {
 	# Function specific library
 	suppressMessages(library(eulerr))
+	suppressMessages(library(tools))
 	
 	# Prepare...
-	paste0('\n** Run function: db_venn.r/venn...\n') %>% cat
+	paste0('\n** Run function: db_venn.r/venn_bed...\n') %>% cat
 	n         = length(f_paths)
 	snp_li    = list()
 	snpids_li = list()
@@ -69,8 +86,8 @@ venn = function(
 
 	# Draw Venn plot
 	title  = paste0(' Venn analysis of ',nrow(union),' SNPs')
-	if(n %in% c(2,4)) {
-		fig_name1 = paste0(fig_path,'/venn_',n,'_',paste0(names,collapse=', '),'.png')
+	if(n %in% c(2,4) & !is.null(fig)) {
+		fig_name1 = paste0(fig,'/venn_',n,'_',paste0(names,collapse=', '),'.png')
 		png(fig_name1,width=10,height=10,units='in',res=100)
 		limma::vennDiagram(
 			union,
@@ -82,10 +99,10 @@ venn = function(
 	} else if(n>4) message("\n[Message] Can't plot Venn diagram for more than 5 sets.")
 
 	# Draw Euler plot
-	if(n == 3) {
+	if(n == 3 & !is.null(fig)) {
 		paste0('\n** Euler fitting... ') %>% cat
 		vennCount = limma::vennCounts(union)
-		fig_name2 = paste0(fig_path,'/euler_',n,'_',paste0(names,collapse=', '),'.png')
+		fig_name2 = paste0(fig,'/euler_',n,'_',paste0(names,collapse=', '),'.png')
 		png(fig_name2,width=10,height=10,units='in',res=100)
 		venn_c   = unlist(vennCount[,4])
 		venn_fit = euler(c(
@@ -123,17 +140,19 @@ venn = function(
 	paste0('Write TSV file:\t\t',f_name1,'\n') %>% cat
 
 	# Write core snp list as a BED file
-	if(n == 2) {
+	if(n == 2 & !uni_list) {
 		which_row = which(
 			union_out[,5] == TRUE &
 			union_out[,6] == TRUE
 		)
-	} else if(n == 3) {
+	} else if(n == 3 & !uni_list) {
 		which_row = which(
 			union_out[,5] == TRUE &
 			union_out[,6] == TRUE &
 			union_out[,7] == TRUE
 		)
+	} else if(uni_list) {
+		which_row = c(1:nrow(union_out)) # all union list
 	} else {
 		paste0('\n[Message] If you need a core rsid BED file,
 	please input two or three files.') %>% message
@@ -148,6 +167,7 @@ venn = function(
 db_venn = function(
 	args = NULL
 ) {
+	# Get help
 	if(length(args$help)>0) {   help     = args$help
     } else                      help     = FALSE
     if(help) {                  cat(help_message); quit() }
@@ -160,11 +180,16 @@ db_venn = function(
 
 	# Reguired arguments
 	if(length(args$fig)>0)      fig_path = args$fig
+	if(length(args$uni)>0) {    uni_list = args$uni
+	}                           uni_list = FALSE
+	if(length(args$ann)>0)      anns     = args$ann
 
 	# Run function
 	source('src/pdtime.r'); t0=Sys.time()
     if(args$dbvenn == 'venn') {
-		venn(b_path,out,fig_path)
+		venn_bed(b_path,out,fig_path,uni_list)
+	} else if(args$dbvenn == 'summ') {
+		summ_ann(b_path,anns,out)
 	} else {
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
