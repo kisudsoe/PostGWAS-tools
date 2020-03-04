@@ -25,6 +25,8 @@ Required arguments:
               https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types.
     --enh     <default: TRUE>
               An optional argument for the "roadmap" function to filter enhancer regions.
+    --sep     <default: FALSE>
+              An optional argument for the "roadmap" function to generate cell-type seperated results.
     --pval    <p-value threshold>
               A required argument for the "gtex" function to filter significant eQTLs.
     --gtex    <Filtered GTEx RDS file path>
@@ -196,8 +198,21 @@ distance_filt_multi = function(
     debug
 ) {
     paste0('\n** Run function: db_filter.r/distance_filt...\n') %>% cat
-    o=lapply(f_paths,function(f_path) {
+    # Test folder or file
+    if(length(f_paths)==1) {
+        paths = list.files(f_paths,full.name=T)
+        if(length(paths)==0) paths = f_paths
+    } else paths = f_paths
+
+    # Run function by each file path
+    n = length(paths)
+    o=lapply(c(1:n),function(i) {
         source('src/pdtime.r'); t0=Sys.time()
+        f_path = paths[i]
+        if(i%%10==0) paste0('  ',i,'/',n,' being processed.\n') %>% cat
+        if(n<10) paste0('  ',i,'/',n,' ',path,'\n') %>% cat
+
+        # Run function
         distance_filt(f_path,out,debug)
         paste0(pdtime(t0,2),'\n\n') %>% cat
     })
@@ -297,14 +312,18 @@ gtex_filt = function(
 }
 
 roadmap_filt = function(
-    f_path = NULL, # Download folder path
-    out    = 'db', # Out folder path
-    ctype  = NULL, # Optional: Cell type ID
-    enh    = TRUE, # Optional: Filtering enhancer (Default: TRUE)
+    f_path = NULL,  # Download folder path
+    out    = 'db',  # Out folder path
+    ctype  = NULL,  # Optional: Cell type ID
+    enh    = TRUE,  # Optional: Filtering enhancer (Default: TRUE)
+    sep    = FALSE, # Optional: Cell type separated results (Defualt: FALSE)
     debug
 ) {
     # Preparing...
     paste0('\n** Run function: db_filter.r/roadmap_filt...\n') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),
+        paste0('  Directory generated: ',dir,'\n') %>% cat)
+
     if(length(ctype)>0) {
         cid    = formatC(ctype,width=3,flag='0') %>% as.character # Convert number to '###' format
         f_name = paste0(out,'/roadmap_',ctype,'_enh.bed')
@@ -333,16 +352,27 @@ roadmap_filt = function(
             paste0('  ',path,' ') %>% cat
             dim(road_enh) %>% print
         }
-        return(road_enh)
+        if(sep) {
+            road_enh = road_enh[,c(1:3,6)]
+            write.table(road_enh,paste0(out,'/roadmap_',cid[i],'_enh.bed'),
+                row.names=F,col.names=F,quote=F,sep='\t')
+        } else {
+            return(road_enh)
+        }
     })
-    paste0('  Finished reading and filtering ',n,' files.\n\n') %>% cat
-    road_enh = data.table::rbindlist(road_li)
-    rm(road_li)
 
-    # Save file
-    road_enh = road_enh[,c(1:3,6)]
-    write.table(road_enh,f_name,row.names=F,col.names=F,quote=F,sep='\t')
-    paste0('Write file: ',f_name,'\n') %>% cat
+    if(sep) {
+        paste0('  Finished processing ',n,' files.\n\n') %>% cat
+    } else {
+        paste0('  Finished reading and filtering ',n,' files.\n\n') %>% cat
+        road_enh = data.table::rbindlist(road_li)
+        rm(road_li)
+
+        # Save file
+        road_enh = road_enh[,c(1:3,6)]
+        write.table(road_enh,f_name,row.names=F,col.names=F,quote=F,sep='\t')
+        paste0('Write file: ',f_name,'\n') %>% cat
+    }
 }
 
 db_filter = function(
@@ -363,6 +393,8 @@ db_filter = function(
     } else                      ctype    = NULL
     if(length(args$enh)>0) {    enh      = args$enh
     } else                      enh      = TRUE
+    if(length(args$sep)>0) {    sep      = args$sep
+    } else                      sep      = FALSE
     if(length(args$pval)>0)     pval     = args$pval
     if(length(args$gtex)>0)     gtex     = args$gtex
     if(length(args$tissue)>0) { tissue   = args$tissue
@@ -373,7 +405,7 @@ db_filter = function(
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
     if(args$dbfilt == 'roadmap') {
-        roadmap_filt(b_path,out,ctype,enh,debug)
+        roadmap_filt(b_path,out,ctype,enh,sep,debug)
     } else if(args$dbfilt == 'gtex') {
         gtex_filt(b_path,out,pval,debug)
     } else if(args$dbfilt == 'gtex_ovl') {
