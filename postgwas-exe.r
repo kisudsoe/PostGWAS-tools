@@ -2,7 +2,7 @@
 
 # Help Messages ----------
 help_message = c('
-Version: 2020-03-05
+Version: 2020-03-06
 
 Usage: Rscript postgwas-exe.r <Function calls>
     <--base file(s)> <--out folder> <options> <--debug>
