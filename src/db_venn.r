@@ -1,5 +1,5 @@
 help_message = '
-db_venn, v2020-03-05
+db_venn, v2020-03-06
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
@@ -19,8 +19,10 @@ Required arguments:
 	--fig       <figure out folder>
 			    An optional argument for the "venn" function to save figure file.
 			    If no figure out path is designated, no venn figure will generated.
-	--uni       <defulat: FALSE>
-				An optional argument for the "summ" function to save the union SNP list as a BED file.
+	--uni_list  <default: FALSE>
+				An optional argument for the "venn" function to return the union SNP list.
+	--uni_save  <default: TRUE>
+				An optional argument for the "summ" function to save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
 			    An optional argument for the "summ" function. Add GWAS annotations to the summary table 1.
 	--ann_encd  <ENCODE annotation dist file>
@@ -42,7 +44,7 @@ suppressMessages(library(dplyr))
 summ_ann = function(
 	f_paths  = NULL,   # Input BED file paths
 	out      = 'data', # Out folder path
-	uni_list = FALSE,  # Save the union SNP list as a BED format
+	uni_save = TRUE,   # Save the union SNP list as a BED format
 	ann_gwas = NULL,   # Optional, add GWAS annotation TSV file path        -> CSV file 1
 	ann_encd = NULL,   # Optional, add ENCODE Tfbs dist file path           -> CSV file 2
 	ann_near = NULL,   # Optional, add nearest gene dist file path          -> CSV file 3
@@ -58,32 +60,167 @@ summ_ann = function(
 	dir_name = basename(f_paths)
 	if(length(f_paths)==1) {
         paths  = list.files(f_paths,full.name=T)
-        if(length(paths)==0) paths = f_paths
+        if(length(paths)==0) { paths = f_paths
+		} else paste0(length(paths),' Files in the folder: ',f_paths,'\n') %>% cat
     } else {
 		paths = f_paths
 	}
 
 	# Run venn_bed function
+	uni_list = TRUE
 	union_df = venn_bed(paths,out,fig=NULL,uni_list)
-	paste0('\n** Return function: db_venn.r/summ...\n') %>% cat
+	paste0('** Back to function: db_venn.r/summ...\n') %>% cat
 	paste0('  Returned union list dim\t= ') %>% cat; dim(union_df) %>% print
+	union_summ = union_df[,c(-2,-3,-4)]
 
 	# Write union BED file
-	if(uni_list) {
+	if(uni_save) {
 		if(!is.null(dir_name)) {
 			f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
 		} else f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
-		write.table(union_df[,1:4],f_name1,row.names=F,col.names=F,quote=F,sep='\t')
+		write.table(union_df[,1:4] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
 		paste0('  Write a BED file: ',f_name1,'\n') %>% cat
+	} else paste0('\n  [PASS] uni_save\t= ',uni_save,'\n') %>% cat
+
+	# Generate GWAS summary
+	if(!is.null(ann_gwas)) {
+		## Read GWAS annotation TSV file
+		paste0('\n  GWAS dim\t= ') %>% cat
+		gwas = read.delim(ann_gwas)
+		dim(gwas) %>% print
+
+		## Merge union data and GWAS annotation
+		paste0('  Merge dim\t= ') %>% cat
+		gwas_ann   = gwas[,1:8]
+		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
+		dim(gwas_merge) %>% print
+
+		## Write a summary CSV file
+		f_name2 = paste0(out,'/summary_gwas.csv')
+		write.csv(gwas_merge,f_name2,row.names=F)
+		paste0('  Write a CSV file: ',f_name2,'\n') %>% cat
+	} else paste0('\n  [PASS] GWAS summary.\n')
+
+	# Generate ENCODE summary
+	if(!is.null(ann_encd)) {
+		## Read ENCODE Tfbs distance file
+		paste0('\n  ENCODE dim\t= ') %>% cat
+		enc = read.delim(ann_encd,header=F)
+		dim(enc) %>% print
+
+		## Merge union data and ENCODE annotation
+		paste0('  Merge dim\t= ') %>% cat
+		k = ncol(enc)
+		which_row = which(enc[,k]==0)
+		enc_      = enc[which_row,]
+		tf_range  = paste0(enc_[,5],':',enc_[,6],'-',enc_[,7])
+		enc_ann   = data.frame(
+			rsid    = enc_[,4],
+			tfbs    = enc_[,8],
+			tfbs_rg = tf_range
+		)
+		enc_merge = merge(enc_ann,union_summ,by='rsid',all.x=T) %>% unique
+		dim(enc_merge) %>% print
+
+		## Write a summary CSV file
+		f_name3 = paste0(out,'/summary_encode.csv')
+		write.csv(enc_merge,f_name3,row.names=F)
+		paste0('  Write a CSV file: ',f_name3,'\n') %>% cat
+	} else paste0('\n  [PASS] ENCODE summary.\n')
+
+	# Generate nearest gene summary
+	if(!is.null(ann_near)) {
+		## Read nearest gene distance file
+		paste0('\n  Nearest gene dim\t= ') %>% cat
+		near = read.delim(ann_near,header=F)
+		dim(near) %>% print
+
+		## Extract data to prepare merge
+		near_ann   = near[,c(4,8:9)]
+		colnames(near_ann) = c('rsid','nearest','dist')
+
+		## Read CDS distance file
+		if(!is.null(ann_cds)) {
+			paste0('  CDS dim\t\t= ') %>% cat
+			cds = read.delim(ann_cds,header=F)
+			dim(cds) %>% print
+
+			k = ncol(cds)
+			which_row = which(cds[,k]==0)
+			cds_      = cds[which_row,]
+			cds_rg    = paste0(cds_[,5],':',cds_[,6],'-',cds_[,7])
+			cds_enst  = lapply(cds_[,8], function(ensts) {
+				enst = strsplit(ensts %>% as.character, "\\_")[[1]][1]
+				return(enst)
+			}) %>% unlist
+			cds_ann   = data.frame(
+				rsid     = cds_[,4] %>% as.character,
+				cds_name = cds_[,8] %>% as.character,
+				cds_enst = cds_enst %>% as.character,
+				cds_rg   = cds_rg
+			)
+
+		## Merge union data, nearest gene data, and CDS data
+			paste0('  Merge dim\t\t= ') %>% cat
+			ann_li   = list(near_ann,cds_ann,union_summ)
+			merge_allx = function(x,y) {
+				merge(x,y,by='rsid',all.x=T)
+			}
+			near_merge = Reduce(merge_allx,ann_li) %>% unique
+		} else {
+			paste0('  Merge dim\t\t= ') %>% cat
+			near_merge = merge(near_ann,union_summ,by='rsid',all.x=T)
+		}
+		dim(near_merge) %>% print
+
+		## Write a summary CSV file
+		f_name4 = paste0(out,'/summary_nearest.csv')
+		write.csv(near_merge,f_name4,row.names=F)
+		paste0('  Write a CSV file: ',f_name4,'\n') %>% cat
+	} else {
+		if(!is.null(ann_cds)) {
+			paste0('  [PASS] CDS have to be merged to nearest gene data.\n') %>% cat
+		} else paste0('  [PASS] Nearest gene summary.\n') %>% cat
 	}
-	quit()
 
-	# todo: Merge annotations
-	if(length(ann_gwas)>0) {
+	# Generate GTEx eQTL summary
+	if(!is.null(ann_gtex)) {
+		## Read GTEx eQTL annotation TSV file
+		paste0('\n  GTEx dim\t= ') %>% cat
+		gtex = read.delim(ann_gtex)
+		dim(gtex) %>% print
 
-	}
+		## Merge union data and the GTEx annotation
+		paste0('  Merge dim\t= ') %>% cat
+		gtex_ann   = gtex[,c(-7,-8)]
+		gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
+		dim(gtex_merge) %>% print
 
-	# todo: Write CSV file 1
+		## Write a summary CSV file
+		f_name5 = paste0(out,'/summary_gtex.csv')
+		write.csv(gtex_merge,f_name5,row.names=F)
+		paste0('  Write a CSV file: ',f_name5,'\n') %>% cat
+	} else paste0('\n  [PASS] GTEx summary.\n')
+
+	# Generate lncRNA summary
+	if(!is.null(ann_lnc)) {
+		## Read lncRNA annotation TSV file
+		paste0('\n  lncRNA dim\t= ') %>% cat
+		lnc = read.delim(ann_lnc)
+		dim(lnc) %>% print
+
+		## Merge union data and the GTEx annotation
+		paste0('  Merge dim\t= ') %>% cat
+		lnc_ann   = lnc
+		lnc_merge = merge(lnc_ann,union_summ,by.x='dbsnp',by.y='rsid',all.x=T) %>% unique
+		dim(lnc_merge) %>% print
+
+		## Write a summary CSV file
+		f_name6 = paste0(out,'/summary_lncRNA.csv')
+		write.csv(lnc_merge,f_name6,row.names=F)
+		paste0('  Write a CSV file: ',f_name6,'\n') %>% cat
+	} else paste0('\n  [PASS] lncRNA summary.\n')
+	'\n' %>% cat
 }
 
 venn_bed = function(
@@ -106,9 +243,9 @@ venn_bed = function(
 	# Read BED files
 	for(i in 1:n) {
 		tb = read.delim(f_paths[i],header=F)
-		colnames(tb)   = c('chr','start','end','ann')
+		colnames(tb)   = c('chr','start','end','rsid')
 		snp_li[[i]]    = tb
-		snpids_li[[i]] = tb$ann
+		snpids_li[[i]] = tb$rsid
 		f_base = basename(f_paths[i]) %>% file_path_sans_ext
 		names = c(names,f_base)
 		paste0('  Read ',i,': ',f_base,'\n') %>% cat
@@ -184,8 +321,8 @@ venn_bed = function(
 
 	# Save the venn result as a TSV file
 	colnames(union) = names
-	union_df  = cbind(union,ann=rownames(union))
-	union_out = merge(snp_df,union_df,by='ann',all=T)
+	union_df  = cbind(union,rsid=rownames(union))
+	union_out = merge(snp_df,union_df,by='rsid',all=T)
 	if(!uni_list) {
 		write.table(union_out,f_name1,row.name=F,quote=F,sep='\t')
 		paste0('Write TSV file:\t\t',f_name1,'\n') %>% cat
@@ -238,20 +375,30 @@ db_venn = function(
 
 	# Reguired arguments
 	if(length(args$fig)>0)         fig_path = args$fig
-	if(length(args$uni)>0) {
-		if(args$uni=='TRUE') {     uni_list = TRUE
-		} else                     uni_list = FALSE
-	} else                         uni_list = FALSE
-	if(length(args$ann)>0) {       anns     = args$ann
-	} else                         anns     = NULL
-
+	if(length(args$uni_list)>0) {  uni_list = args$uni_list
+	} else                         uni_list = TRUE
+	if(length(args$uni_save)>0) {  uni_save = args$uni_save
+	} else                         uni_save = TRUE
+	if(length(args$ann_gwas)>0) {  ann_gwas = args$ann_gwas
+	} else                         ann_gwas = NULL
+	if(length(args$ann_encd)>0) {  ann_encd = args$ann_encd
+	} else                         ann_encd = NULL
+	if(length(args$ann_near)>0) {  ann_near = args$ann_near
+	} else                         ann_near = NULL
+	if(length(args$ann_cds )>0) {  ann_cds  = args$ann_cds
+	} else                         ann_cds  = NULL
+	if(length(args$ann_gtex)>0) {  ann_gtex = args$ann_gtex
+	} else                         ann_gtex = NULL
+	if(length(args$ann_lnc )>0) {  ann_lnc  = args$ann_lnc
+	} else                         ann_lnc  = NULL
 
 	# Run function
 	source('src/pdtime.r'); t0=Sys.time()
     if(args$dbvenn == 'venn') {
 		venn_bed(b_path,out,fig_path,uni_list)
 	} else if(args$dbvenn == 'summ') {
-		summ_ann(b_path,out,uni_list,anns)
+		summ_ann(b_path,out,uni_save,ann_gwas,ann_encd,
+			ann_near,ann_cds,ann_gtex,ann_lnc)
 	} else {
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
