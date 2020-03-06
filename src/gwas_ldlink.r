@@ -41,7 +41,7 @@ ldlink_bed = function(
     dim(snps) %>% print
 
     # hg19: save as BED file
-    snps_ = na.omit(snps[,c(1,3:5)])
+    snps_ = na.omit(snps[,c(1,6:8)])
     snps_hg19_length = snps_$hg19_end - snps_$hg19_start
     snp_bed_hg19_li = lapply(c(1:nrow(snps_)),function(i) {
         row = snps_[i,]
@@ -70,7 +70,7 @@ ldlink_bed = function(
     paste0('Write file:\t',f_name1,'\n') %>% cat
 
     # hg38: save as BED file
-    snps_ = na.omit(snps[,c(1,6:8)])
+    snps_ = na.omit(snps[,c(1,9:11)])
     snps_length = snps_$end - snps_$start
     snp_bed_hg38_li = lapply(c(1:nrow(snps_)),function(i) {
         row = snps_[i,]
@@ -99,7 +99,7 @@ ldlink_bed = function(
     paste0('Write file:\t',f_name2,'\n') %>% cat
 }
 
-ldlink_fl = function(
+ldlink_filter = function(
     snp_path = NULL,   # GWAS file path
     ld_path  = NULL,   # LDlink download folder path
     out      = 'data', # Out folder path
@@ -107,10 +107,11 @@ ldlink_fl = function(
     debug    = F
 ) {
     # Function specific library
-    suppressMessages(library(biomaRt))
+    suppressMessages(library(biomaRt))  # download SNP coordiantes (hg19/hg38)
+    #suppressMessages(library(circlize)) # download cytoband data (hg19)
 
-    paste0('\n** Run function ldlink_ln...\n') %>% cat
     # Read downloaded files
+    paste0('\n** Run function ldlink_filter...\n') %>% cat
     paste0('Read download files... ') %>% cat
     snpdf     = read.delim(snp_path) %>% unique
     snpids    = snpdf$rsid %>% unique
@@ -126,7 +127,7 @@ ldlink_fl = function(
                 header=F,skip=1,stringsAsFactors=F,
                 col.names=col_names) )
         if('try-error' %in% class(tb1)) {
-            paste0('  ',row[1],'\n') %>% cat
+            paste0('  [ERROR] ',row[1],'\n') %>% cat
             return(NULL)
         } else { # If no errors occurred,
             tb2 = data.frame(SNPid=rep(row[1],nrow(tb1)),tb1)
@@ -135,7 +136,7 @@ ldlink_fl = function(
     })
     ldlink_df = data.table::rbindlist(ldlink_li) %>% unique
     paste0('  Read LDlink results\t\t= ') %>% cat; dim(ldlink_df) %>% print
-
+    
     # Filter the LDlink data
     if(r2d==1) {
         cat('Filtering by "r2 > 0.6 and Dprime = 1":\n')
@@ -168,7 +169,64 @@ ldlink_fl = function(
     snp_cand = union(ldlink_$ldSNPs,snpids) %>% unique
     snps_ = data.frame(rsid=snp_cand)
     #write.table(snp_cand,'snp_cand.tsv',row.names=F,quote=F,sep='\t') # For debug
-    paste0('  SNP candidates\t= ',length(snp_cand),'\n') %>% cat
+    paste0('  SNP candidates\t\t= ',length(snp_cand),'\n') %>% cat
+
+    # Prepare SNP source annotation table
+    snp_src1 = data.frame(
+        rsid   = snpids,
+        source = rep('GWAS',length(snpids))
+    )
+    snp_src2 = data.frame(
+        rsid   = snp_t2,
+        source = rep('Ldlink',length(snp_t2))
+    )
+    snp_src = rbind(snp_src1,snp_src2)
+    paste0('  SNP source annotation table\t= ') %>% cat; dim(snp_src) %>% print
+
+    # Add LD block annotation
+    paste0('Add annotations:\n') %>% cat
+    paste0('  LD block annotation... ') %>% cat
+    ldlink_2 = ldlink_
+    colnames(ldlink_2)[2] = 'rsid'
+    ldlink_3 = merge(snps_,ldlink_2,by='rsid',all.x=T)
+
+    ## Make group1
+    gwas_snps = ldlink_3$gwasSNPs %>% as.character %>% na.omit %>% unique
+    n = length(gwas_snps)
+    group1 = list()
+    for(i in 1:n) {
+        ldsnps = subset(ldlink_3,gwasSNPs==gwas_snps[i])$rsid %>% as.character
+        block  = c(gwas_snps[i],ldsnps) %>% unique
+        if(i==1) group1[[1]] = block
+        m = length(group1)
+        for(j in 1:m) {
+            inter_N = intersect(group1[[j]],block) %>% length
+            if(inter_N>0) {
+                group1[[j]] = union(group1[[j]],block)
+                break
+            } else if(inter_N==0 & j==m) group1[[j+1]] = block
+        }
+    }
+
+    ## Check duplicate in group1 to generate group2
+    n = length(group1)
+    group2 = list()
+    for(i in 1:n) {
+        if(i==1) group2[[1]] = group1[[i]]
+        m = length(group2)
+        for(j in 1:m) {
+            inter_N = intersect(group1[[i]],group2[[j]]) %>% length
+            if(inter_N>0) {
+                group2[[j]] = union(group1[[i]],group2[[j]])
+                break
+            } else if(inter_N==0 & j==m) group2[[j+1]] = group1[[i]]
+        }
+    }
+    ld_bid = formatC(c(1:length(group2)),width=3,flag='0') %>% as.character # "001"
+    names(group2) = paste0('ld_block',ld_bid)
+    ldblock = stack(group2) %>% unique
+    colnames(ldblock) = c('rsid','ld_blocks')
+    group2 %>% length %>% print
 
     # Search biomart hg19 to get coordinates
     paste0('Search biomart for SNP coordinates:\n') %>% cat
@@ -233,18 +291,61 @@ ldlink_fl = function(
     colnames(ldlink_)[2] = 'rsid'
     snps_li = list(
         snps_,
-        ldlink_,
+        ldlink_[,2:3],
+        ldblock,
+        snp_src,
         snps_hg19_bio_,
         snps_bio_
     )
-    snps_merge = Reduce(merge_multi,snps_li)
+    snps_merge1 = Reduce(merge_multi,snps_li) %>% unique
+
+    # Add Cytoband annotation (hg19)
+    coord    = snps_merge1$ld_coord
+    hg19_chr = snps_merge1$hg19_chr
+    hg19_end = snps_merge1$hg19_end
+
+    ## Download cytoband data from UCSC
+    paste0('  Cytoband annotation... ') %>% cat
+    cyto     = circlize::read.cytoband(species = 'hg19')$df
+    colnames(cyto) = c('chr','start','end','cytoband','tag')
+
+    ## Split SNP coord to CHR and POS
+    coord_li = lapply(coord,function(c) {
+        split = strsplit(c %>% as.character,'\\:') %>% unlist
+        data.frame(
+            chr = split[1],
+            pos = split[2] %>% as.numeric
+        )
+    })
+    coord_df = data.table::rbindlist(coord_li)
+    
+    ## Extract and merge cytoband data
+    n = nrow(coord_df)
+    cytoband = lapply(c(1:n),function(i) {
+        CHR = coord_df[i,1] %>% unlist
+        POS = coord_df[i,2] %>% unlist
+        cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
+        if(length(cyto_sub)==0) {
+            CHR = hg19_chr[i]
+            POS = hg19_end[i]
+            cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
+        }
+        chr = strsplit(CHR %>% as.character,'chr') %>% unlist
+        cytoband = paste0(chr[2],cyto_sub)
+        return(cytoband)
+    }) %>% unlist
+    paste0(length(cytoband),'.. ') %>% cat
+    snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,5:10])
+    paste0('done\n') %>% cat
+
+    # Write a TSV file
     f_name1 = paste0(out,'/gwas_biomart.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
     write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
-    paste0('Write file:\t',f_name1,'\n') %>% cat
+    paste0('Write file: ',f_name1,'\n') %>% cat
 }
 
-ldlink_dn = function(
+ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
     popul    = NULL,   # population filter option for LDlink
@@ -254,7 +355,7 @@ ldlink_dn = function(
     suppressMessages(library(LDlinkR))
 
     # Download from LDlink
-    paste0('\n** Run function ldlink_dn... ') %>% cat
+    paste0('\n** Run function ldlink_down... ') %>% cat
     snps = read.delim(snp_path)
     rsid = snps$rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
@@ -286,9 +387,9 @@ gwas_ldlink = function(
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
-        ldlink_dn(b_path,out,popul,debug)
+        ldlink_down(b_path,out,popul,debug)
     } else if(args$ldlink == 'filter') {
-        ldlink_fl(b_path[1],b_path[2],out,r2d,debug)
+        ldlink_filter(b_path[1],b_path[2],out,r2d,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else {
