@@ -2,7 +2,7 @@
 
 # Help Messages ----------
 help_message = c('
-Version: 2020-02-20
+Version: 2020-03-05
 
 Usage: Rscript postgwas-exe.r <Function calls>
     <--base file(s)> <--out folder> <options> <--debug>
@@ -18,8 +18,8 @@ Global arguments:
     --base    Base input file is mendatory.
     --out     Out folder path is mendatory.
     --debug   TRUE/FALSE: Rich description for debugging. Default is FALSE.
-    
-Running functions with --help or -h arguments prints usage information for the [Function].
+
+Running functions with "--help" argument prints [Function] usage information.
 ')
 
 # Command Input ----------
