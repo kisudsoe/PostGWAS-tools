@@ -198,7 +198,7 @@ distance_filt_multi = function(
     debug
 ) {
     paste0('\n** Run function: db_filter.r/distance_filt...\n') %>% cat
-    # Test folder or file
+    # If the base path is folder, get the file list
     if(length(f_paths)==1) {
         paths = list.files(f_paths,full.name=T)
         if(length(paths)==0) paths = f_paths
@@ -230,7 +230,7 @@ gtex_overlap = function(
     snp = read.delim(f_path,header=F)
     colnames(snp) = c('chr','start','end','ann')
     rsids = gsub('(.*)_.*','\\1',snp[,4])
-    paste0('Input GWAS SNPs N = ',length(rsids),'\n') %>% cat
+    paste0('Input GWAS SNPs N\t= ',length(rsids),'\n') %>% cat
 
     # Load filtered GTEx RDS file
     f_ext = tools::file_ext(f_gtex)
@@ -322,7 +322,7 @@ roadmap_filt = function(
     # Preparing...
     paste0('\n** Run function: db_filter.r/roadmap_filt...\n') %>% cat
     ifelse(!dir.exists(out), dir.create(out),
-        paste0('  Directory generated: ',dir,'\n') %>% cat)
+        paste0('  Directory already exists: ',out,'\n') %>% cat)
 
     if(length(ctype)>0) {
         cid    = formatC(ctype,width=3,flag='0') %>% as.character # Convert number to '###' format
