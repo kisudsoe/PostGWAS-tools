@@ -9,9 +9,7 @@ And LDlink results are returned with **hg19** coordinates.
 
 ## Brief result description
 
-![](Fig1a.png)
-
-![](Fig1b.png)
+![](Fig1.png)
 
 
 
@@ -31,6 +29,9 @@ And LDlink results are returned with **hg19** coordinates.
 * Core transcriptional Regulatory Circuitries: dbCoRC http://dbcorc.cam-su.org/
   * Huang et al., 2018, Nucleic Acids Res, [10.1093/nar/gkx796](https://dx.doi.org/10.1093%2Fnar%2Fgkx796), pmid [28977473](https://www.ncbi.nlm.nih.gov/pubmed/28977473)
   * Gene symbol list entry (gh19)
+* LOLA
+* Hi-C-coupled multimarker analysis tool: H-MAGMA
+  * Sey et al., 2020, Nature Neuroscience, [10.1038/s41593-020-0603-0](https://doi.org/10.1038/s41593-020-0603-0)
 
 # 1. From the seed SNPs (EFO0001359) to candidate risk SNPs
 
@@ -456,33 +457,7 @@ Rscript postgwas-exe.r ^
 
 To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
 
-| EID  | GROUP          | STD_NAME                                                     | EDACC_NAME                                                   |
-| ---- | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| E033 | Blood & T-cell | Primary T cells from cord blood                              | CD3_Primary_Cells_Cord_BI                                    |
-| E034 | Blood & T-cell | Primary T cells from peripheral blood                        | CD3_Primary_Cells_Peripheral_UW                              |
-| E037 | Blood & T-cell | Primary T helper memory cells from   peripheral blood 2      | CD4_Memory_Primary_Cells                                     |
-| E038 | Blood & T-cell | Primary T helper naive cells from peripheral blood           | CD4_Naive_Primary_Cells                                      |
-| E039 | Blood & T-cell | Primary T helper naive cells from peripheral blood           | CD4+_CD25-_CD45RA+_Naive_Primary_Cells                       |
-| E040 | Blood & T-cell | Primary T helper memory cells from   peripheral blood 1      | CD4+_CD25-_CD45RO+_Memory_Primary_Cells                      |
-| E041 | Blood & T-cell | Primary T helper cells PMA-I stimulated                      | CD4+_CD25-_IL17-_PMA-Ionomycin_stimulated_MACS_purified_Th_Primary_Cells |
-| E042 | Blood & T-cell | Primary T helper 17 cells PMA-I stimulated                   | CD4+_CD25-_IL17+_PMA-Ionomcyin_stimulated_Th17_Primary_Cells |
-| E043 | Blood & T-cell | Primary T helper cells   from peripheral blood               | CD4+_CD25-_Th_Primary_Cells                                  |
-| E044 | Blood & T-cell | Primary T regulatory cells   from peripheral blood           | CD4+_CD25+_CD127-_Treg_Primary_Cells                         |
-| E045 | Blood & T-cell | Primary T cells effector/memory enriched   from peripheral blood | CD4+_CD25int_CD127+_Tmem_Primary_Cells                       |
-| E047 | Blood & T-cell | Primary T CD8+ naive cells from peripheral   blood           | CD8_Naive_Primary_Cells                                      |
-| E048 | Blood & T-cell | Primary T CD8+ memory cells from peripheral   blood          | CD8_Memory_Primary_Cells                                     |
-| E062 | Blood & T-cell | Primary mononuclear cells   from peripheral blood            | Peripheral_Blood_Mononuclear_Primary_Cells                   |
-| E029 | HSC & B-cell   | Primary monocytes from peripheral blood                      | CD14_Primary_Cells                                           |
-| E030 | HSC & B-cell   | Primary neutrophils from peripheral blood                    | CD15_Primary_Cells                                           |
-| E031 | HSC & B-cell   | Primary B cells from cord blood                              | CD19_Primary_Cells_Cord_BI                                   |
-| E032 | HSC & B-cell   | Primary B cells from peripheral blood                        | CD19_Primary_Cells_Peripheral_UW                             |
-| E035 | HSC & B-cell   | Primary hematopoietic stem cells                             | CD34_Primary_Cells                                           |
-| E036 | HSC & B-cell   | Primary hematopoietic stem cells short term   culture        | CD34_Cultured_Cells                                          |
-| E046 | HSC & B-cell   | Primary Natural Killer cells   from peripheral blood         | CD56_Primary_Cells                                           |
-| E050 | HSC & B-cell   | Primary hematopoietic stem cells   G-CSF-mobilized Female    | Mobilized_CD34_Primary_Cells_Female                          |
-| E051 | HSC & B-cell   | Primary hematopoietic stem cells   G-CSF-mobilized Male      | Mobilized_CD34_Primary_Cells_Male                            |
-| E087 | Other          | Pancreatic Islets                                            | Pancreatic_Islets                                            |
-| E098 | Other          | Pancreas                                                     | Pancreas                                                     |
+
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -547,11 +522,11 @@ Rscript postgwas-exe.r ^
 Using `bedtools closest` in bash, this process required a lot of resouce (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/roadmap_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_enh.tsv
+bedtools sort -i db/roadmap_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_enh.tsv # Error: std::bad_alloc <- memory shortage error
 ```
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/roadmap_total.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_total.tsv
+#bedtools sort -i db/roadmap_total.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_total.tsv
 ```
 
 ```bash
@@ -559,15 +534,15 @@ Using `bedtools closest` in bash, this process required a lot of resouce (e.g., 
 ```
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/wgEncodeRegTfbsClusteredV3.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/encode_tfbs.tsv
+bedtools sort -i db/wgEncodeRegTfbsClusteredV3.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/encode_tfbs.tsv
 ```
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/ensembl_gene_hg19.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/ensGene_hg19.tsv
+bedtools sort -i db/ensembl_gene_hg19.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/ensGene_hg19.tsv
 ```
 
 ```bash
-./bin/bedtools sort -i 2020_t1d/db/ucsc_tbBrowser_ensGene_CDS_hg19.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/ensGene_cds_hg19.tsv
+bedtools sort -i db/ucsc_tbBrowser_ensGene_CDS_hg19.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/ensGene_cds_hg19.tsv
 ```
 
 Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
@@ -583,7 +558,9 @@ bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_h
 bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
 ```
 
-## Preparing Meltonlab's β-cell ATAC-seq data
+## Preparing β-cell ATAC-seq data
+
+### Distance of Meltonlab's β-cell ATAC-seq data
 
 See details in `db_Meltonlab/README.md` file. Original download files are in `db_Meltonlab/UCSC/` folder.
 
@@ -601,48 +578,48 @@ peaks.bed file (mapped on **hg19**) list:
 Using `bedtools closest` in bash:
 
 ```bash
-#bedtools closest -d \
-#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed \
-#	-b db_Meltonlab/GSM4171638_SCbeta_ATAC_rep1.peaks.bed \
-#	> r2d1_data_gwas/distance/SCbeta_ATAC-2.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171638_SCbeta_ATAC_rep1.peaks.bed
+	> data/SCbeta_ATAC.tsv
 ```
 
 ```bash
-#bedtools closest -d\
-#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-#	-b db_Meltonlab/GSM4171640_Beta_ATAC_rep1.peaks.bed\
-#	> r2d1_data_gwas/distance/Beta_ATAC.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171640_Beta_ATAC_rep1.peaks.bed
+	> data/Beta_ATAC.tsv
 ```
 
 ```bash
-#bedtools closest -d\
-#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-#	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed\
-#	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep1.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed
+	> data/SCbeta_in_vivo_ATAC_rep1.tsv
 ```
 
 ```bash
-#bedtools closest -d\
-#	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-#	-b db_Meltonlab/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed\
-#	> r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep2.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171643_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed
+	> data/SCbeta_in_vivo_ATAC_rep2.tsv
 ```
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Meltonlab/GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed\
-	> r2d1_data_gwas/distance/SCbeta_12h_ATAC.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed
+	> data/SCbeta_12h_ATAC.tsv
 ```
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Meltonlab/GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed\
-	> r2d1_data_gwas/distance/SCbeta_72h_ATAC.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed
+	> data/SCbeta_72h_ATAC.tsv
 ```
 
-## For Meltonlab each cell type
+### Distance of Meltonlab each cell type data
 
 Full code was wrote in `db_gwas/meltonlab_dist.sh`:
 
@@ -653,14 +630,14 @@ bedtools sort -i ./meltonlab/GSM4171637_EN_ATAC_rep1.peaks.bed | bedtools closes
 bedtools sort -i ./meltonlab/GSE140500_SCbeta_TE.byH3K27ac.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/SCbeta_TE_enh.tsv
 ```
 
-## Preparing Yizhou's β-cell ATAC-seq data
+### Preparing Yizhou's β-cell ATAC-seq data
 
 This result data mapped on **hg19** version. See details in `db_Yizhou/README.md` file. Using `bedtools intersect`:
 
 ```bash
-bedtools intersect -u \
-	-a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed \
-	-b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed \
+bedtools intersect -u
+	-a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed
+	-b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed
 	> YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
 ```
 
@@ -668,16 +645,20 @@ bedtools intersect -u \
 
 Here, we used the background corrected (peudo) and union (pooled) pr1 peaks overlapped with pr2 peaks.
 
-## Overlapping T1D SNPs with Yizhou's β-cell ATAC-seq data
+### Distance of Yizhou's β-cell ATAC-seq data
 
 Using `bedtools closest`:
 
 ```bash
-bedtools closest -d\
-	-a r2d1_data_gwas/gwas_hg19_biomart_2003.bed\
-	-b db_Yizhou/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed\
-	> r2d1_data_gwas/distance/SCbeta_YZ_pseudo_pool_ATAC.tsv
+bedtools closest -d
+	-a gwas_hg19_biomart_2003.bed
+	-b db/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
+	> data/SCbeta_YZ_pseudo_pool_ATAC.tsv
 ```
+
+## Preparing Enhancer data of blood cells
+
+
 
 # 5. Overlapping the annotations
 
@@ -726,7 +707,7 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-02-28 18:31:08 for 5.8 sec
 
-### Enhancer in Pancreas Islets
+**Enhancer in Pancreas Islets**
 
 ```CMD
 #Rscript postgwas-exe.r ^
@@ -838,6 +819,8 @@ Rscript postgwas-exe.r ^
 
 ## For Meltonlab each cell type
 
+Stem cell-derived/primary β-cell ATAC-seq and ChIP-seq (H3K4me1 and H3K21ac) enhancer data.
+
 ```CMD
 Rscript postgwas-exe.r ^
 	--dbfilt dist ^
@@ -868,6 +851,27 @@ Rscript postgwas-exe.r ^
 > Job process: 0 sec
 >
 > Job done: 2020-03-04 12:36:43 for 1.4 sec
+
+## For Pritchardlab each cell type
+
+25 blood immune cell types ATAC-seq data:
+
+```CMD
+Rscript postgwas-exe.r
+	--dbfilt dist
+	--base r2d1_data_gwas/pritchardlab_dist
+	--out r2d1_data_gwas/pritchardlab_dist
+```
+
+> ...
+>
+> File 1011.Naive_Teffs.S... nrow= 2004.. done
+>   Annotations occupied by SNPs  = [1] 257
+>   SNPs in annotations           = [1] 413
+>   Write file: r2d1_data_gwas/pritchardlab_dist/snp_1011.Naive_Teffs.S_413.bed
+> Job process: 0.1 sec
+>
+> Job done: 2020-03-08 23:54:36 for 12.6 sec
 
 ## Regulome overlapping
 
@@ -967,7 +971,22 @@ Rscript postgwas-exe.r ^
 	--tissue Whole_Blood
 ```
 
-> 
+> ** Run function: db_filter.r/gtex_overlap...
+> Input GWAS SNPs N       = 2003
+>   gtex_signif_5e-08.rds, dim    = [1] 30613850        9
+>   Overlapped eQTL-gene pairs    = [1] 68822
+>
+> [Option] Whole_Blood, dim = [1] 2675    9
+>   eQTLs N               = [1] 670
+>   Associated eGenes     = [1] 72
+>
+> Write file: r2d1_data_gwas/gtex_signif_Whole_Blood_670.tsv
+>
+>   GTEx eQTL BED, dim    = [1] 670   4
+>   eQTL SNP N            = [1] 670
+>
+> Write file: r2d1_data_gwas/snp_gtex_Whole_Blood_670.bed
+> Job done: 2020-03-08 23:58:09 for 3.1 min
 
 ## lncRNASNP overlapping
 
@@ -998,7 +1017,7 @@ Rscript postgwas-exe.r ^
 
 # 6. Table summary
 
-## Roadmap summary
+## Roadmap union list
 
 Roadmap cell type IDs:
 
@@ -1006,7 +1025,7 @@ Roadmap cell type IDs:
 - Move the HSC & B-cell files (IDs: 29-32, 35-36, 46, 50-51) from `roadmap_dist` to `roadmap_dist/hsc_b_cells`
 - Move the Pancreas files (IDs: 87, 98) from `roadmap_dist` to `roadmap_dist/pancreas`
 
-### Blood & T-cell union list
+### Blood & T-cell
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -1046,7 +1065,7 @@ Rscript postgwas-exe.r ^
 > Warning message:
 > package 'eulerr' was built under R version 3.6.2
 
-### HSC & B-cell union list
+### HSC & B-cell
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -1077,7 +1096,7 @@ Rscript postgwas-exe.r ^
 > Warning message:
 > package 'eulerr' was built under R version 3.6.2
 
-### Pancreas union list
+### Pancreas
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -1100,6 +1119,394 @@ Rscript postgwas-exe.r ^
 >   Write a BED file: r2d1_data_gwas/snp_union_bed_pancreas_134.bed
 > Warning message:
 > package 'eulerr' was built under R version 3.6.2
+
+## Pritchardlab union list
+
+25 Human blood cell types:
+
+* 3 B-cells in rest/stimulated conditions:
+  * Bulk B
+  * Naive B
+  * Memory B
+* 3 NK-cells in rest/stimulated conditions:
+  * Immature NK
+  * Mature NK
+  * Memory NK
+* 10 CD4+ T-cells
+  * Effector CD4+ T
+  * Follicular T helper
+  * Memory T effector
+  * Memory T regulatory
+  * Naive T regulatory
+  * Naive T effector
+  * Regulatory T
+  * Th1 precursors
+  * Th2 precursors
+  * Th17 precursors
+* 4 CD8+ T-cells
+  * CD8+ T
+  * Central memory CD8+ T
+  * Effector memory CD8+ T
+  * Naive CD8 T
+* 5 Other
+  * Gamma delta T
+  * Monocytes
+  * Myeloid
+  * pDC
+  * Plasmablasts
+
+### B-cells
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/B-cells_rest ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 12 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Bulk_B.U_407
+>   Read 2: snp_1001.Mem_B.U_407
+>   Read 3: snp_1001.Naive_B.U_399
+>   Read 4: snp_1002.Bulk_B.U_411
+>   Read 5: snp_1002.Mem_B.U_406
+>   Read 6: snp_1002.Naive_B.U_411
+>   Read 7: snp_1003.Bulk_B.U_410
+>   Read 8: snp_1003.Mem_B.U_407
+>   Read 9: snp_1003.Naive_B.U_408
+>   Read 10: snp_1004.Bulk_B.U_421
+>   Read 11: snp_1004.Mem_B.U_426
+>   Read 12: snp_1004.Naive_B.U_428
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 431  16
+>   Write a BED file: r2d1_data_gwas/snp_union_B-cells_rest_431.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:37:38 for 3.1 sec
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/B-cells_stim ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 10 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Bulk_B.S_409
+>   Read 2: snp_1001.Mem_B.S_408
+>   Read 3: snp_1001.Naive_B.S_407
+>   Read 4: snp_1002.Bulk_B.S_412
+>   Read 5: snp_1002.Mem_B.S_411
+>   Read 6: snp_1002.Naive_B.S_408
+>   Read 7: snp_1003.Bulk_B.S_416
+>   Read 8: snp_1003.Mem_B.S_414
+>   Read 9: snp_1003.Naive_B.S_413
+>   Read 10: snp_1010.Mem_B.S_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  14
+>   Write a BED file: r2d1_data_gwas/snp_union_B-cells_stim_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:38:01 for 3.1 sec
+
+### NK-cells
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/NK-cells_rest ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Immature_NK.U_372
+>   Read 2: snp_1001.Mature_NK.U_407
+>   Read 3: snp_1001.Memory_NK.U_362
+>   Read 4: snp_1002.Immature_NK.U_382
+>   Read 5: snp_1002.Memory_NK.U_412
+>   Read 6: snp_1003.Immature_NK.U_307
+>   Read 7: snp_1003.Mature_NK.U_403
+>   Read 8: snp_1003.Memory_NK.U_358
+>   Read 9: snp_1004.Immature_NK.U_414
+>   Read 10: snp_1004.Mature_NK.U_429
+>   Read 11: snp_1004.Memory_NK.U_403
+>   Read 12: snp_1008.Immature_NK.U_415
+>   Read 13: snp_1008.Mature_NK.U_412
+>   Read 14: snp_1008.Memory_NK.U_418
+>   Read 15: snp_1010.Memory_NK.U_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  19
+>   Write a BED file: r2d1_data_gwas/snp_union_NK-cells_rest_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:40:37 for 3.1 sec
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/NK-cells_stim ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 6 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Mature_NK.S_408
+>   Read 2: snp_1002.Mature_NK.S_409
+>   Read 3: snp_1003.Mature_NK.S_415
+>   Read 4: snp_1004.Mature_NK.S_429
+>   Read 5: snp_1008.Mature_NK.S_414
+>   Read 6: snp_1010.Mature_NK.S_430
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  10
+>   Write a BED file: r2d1_data_gwas/snp_union_NK-cells_stim_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:40:54 for 3 sec
+
+### CD4+ T-cells
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 38 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Effector_CD4pos_T.U_407
+>   Read 2: snp_1001.Follicular_T_Helper.U_408
+>   Read 3: snp_1001.Memory_Teffs.U_387
+>   Read 4: snp_1001.Memory_Tregs.U_385
+>   Read 5: snp_1001.Naive_Teffs.U_395
+>   Read 6: snp_1001.Regulatory_T.U_377
+>   Read 7: snp_1001.Th1_precursors.U_397
+>   Read 8: snp_1001.Th17_precursors.U_407
+>   Read 9: snp_1001.Th2_precursors.U_405
+>   Read 10: snp_1002.Effector_CD4pos_T.U_408
+>   Read 11: snp_1002.Follicular_T_Helper.U_413
+>   Read 12: snp_1002.Memory_Teffs.U_411
+>   Read 13: snp_1002.Memory_Tregs.U_412
+>   Read 14: snp_1002.Naive_Teffs.U_412
+>   Read 15: snp_1002.Regulatory_T.U_413
+>   Read 16: snp_1002.Th1_precursors.U_403
+>   Read 17: snp_1002.Th17_precursors.U_401
+>   Read 18: snp_1002.Th2_precursors.U_413
+>   Read 19: snp_1003.Effector_CD4pos_T.U_398
+>   Read 20: snp_1003.Follicular_T_Helper.U_369
+>   Read 21: snp_1003.Memory_Teffs.U_402
+>   Read 22: snp_1003.Memory_Tregs.U_416
+>   Read 23: snp_1003.Naive_Teffs.U_406
+>   Read 24: snp_1003.Regulatory_T.U_411
+>   Read 25: snp_1003.Th1_precursors.U_359
+>   Read 26: snp_1003.Th2_precursors.U_415
+>   Read 27: snp_1004.Effector_CD4pos_T.U_427
+>   Read 28: snp_1004.Follicular_T_Helper.U_420
+>   Read 29: snp_1004.Memory_Teffs.U_417
+>   Read 30: snp_1004.Memory_Tregs.U_429
+>   Read 31: snp_1004.Naive_Teffs.U_425
+>   Read 32: snp_1004.Naive_Tregs.U_419
+>   Read 33: snp_1004.Regulatory_T.U_412
+>   Read 34: snp_1004.Th1_precursors.U_424
+>   Read 35: snp_1004.Th17_precursors.U_415
+>   Read 36: snp_1004.Th2_precursors.U_408
+>   Read 37: snp_1008.Naive_Tregs.U_426
+>   Read 38: snp_1010.Follicular_T_Helper.U_430
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  42
+>   Write a BED file: r2d1_data_gwas/snp_union_T-CD4-cells_rest_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:41:10 for 3.2 sec
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 41 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Effector_CD4pos_T.S_410
+>   Read 2: snp_1001.Follicular_T_Helper.S_407
+>   Read 3: snp_1001.Memory_Teffs.S_406
+>   Read 4: snp_1001.Memory_Tregs.S_409
+>   Read 5: snp_1001.Naive_Teffs.S_406
+>   Read 6: snp_1001.Regulatory_T.S_399
+>   Read 7: snp_1001.Th1_precursors.S_402
+>   Read 8: snp_1001.Th17_precursors.S_410
+>   Read 9: snp_1001.Th2_precursors.S_405
+>   Read 10: snp_1002.Effector_CD4pos_T.S_405
+>   Read 11: snp_1002.Follicular_T_Helper.S_407
+>   Read 12: snp_1002.Gamma_delta_T.S_412
+>   Read 13: snp_1002.Memory_Teffs.S_393
+>   Read 14: snp_1002.Memory_Tregs.S_409
+>   Read 15: snp_1002.Naive_Teffs.S_407
+>   Read 16: snp_1002.Regulatory_T.S_409
+>   Read 17: snp_1002.Th1_precursors.S_407
+>   Read 18: snp_1002.Th17_precursors.S_405
+>   Read 19: snp_1002.Th2_precursors.S_407
+>   Read 20: snp_1003.Effector_CD4pos_T.S_378
+>   Read 21: snp_1003.Follicular_T_Helper.S_400
+>   Read 22: snp_1003.Gamma_delta_T.S_403
+>   Read 23: snp_1003.Memory_Teffs.S_406
+>   Read 24: snp_1003.Memory_Tregs.S_416
+>   Read 25: snp_1003.Naive_Teffs.S_400
+>   Read 26: snp_1003.Regulatory_T.S_407
+>   Read 27: snp_1003.Th1_precursors.S_412
+>   Read 28: snp_1003.Th17_precursors.S_393
+>   Read 29: snp_1003.Th2_precursors.S_378
+>   Read 30: snp_1004.Follicular_T_Helper.S_422
+>   Read 31: snp_1004.Gamma_delta_T.S_427
+>   Read 32: snp_1004.Memory_Teffs.S_422
+>   Read 33: snp_1004.Memory_Tregs.S_422
+>   Read 34: snp_1004.Naive_Teffs.S_425
+>   Read 35: snp_1004.Naive_Tregs.S_416
+>   Read 36: snp_1004.Regulatory_T.S_422
+>   Read 37: snp_1004.Th1_precursors.S_423
+>   Read 38: snp_1004.Th17_precursors.S_426
+>   Read 39: snp_1004.Th2_precursors.S_417
+>   Read 40: snp_1010.Naive_Tregs.S_430
+>   Read 41: snp_1011.Naive_Teffs.S_413
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  45
+>   Write a BED file: r2d1_data_gwas/snp_union_T-CD4-cells_stim_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:41:40 for 3.2 sec
+
+### CD8+ T-cells
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 16 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.CD8pos_T.U_411
+>   Read 2: snp_1001.Central_memory_CD8pos_T.U_406
+>   Read 3: snp_1001.Effector_memory_CD8pos_T.U_411
+>   Read 4: snp_1001.Naive_CD8_T.U_406
+>   Read 5: snp_1002.CD8pos_T.U_413
+>   Read 6: snp_1002.Central_memory_CD8pos_T.U_413
+>   Read 7: snp_1002.Effector_memory_CD8pos_T.U_407
+>   Read 8: snp_1002.Naive_CD8_T.U_411
+>   Read 9: snp_1003.CD8pos_T.U_413
+>   Read 10: snp_1003.Central_memory_CD8pos_T.U_386
+>   Read 11: snp_1003.Effector_memory_CD8pos_T.U_390
+>   Read 12: snp_1003.Naive_CD8_T.U_409
+>   Read 13: snp_1004.CD8pos_T.U_425
+>   Read 14: snp_1004.Central_memory_CD8pos_T.U_423
+>   Read 15: snp_1004.Effector_memory_CD8pos_T.U_412
+>   Read 16: snp_1004.Naive_CD8_T.U_422
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  20
+>   Write a BED file: r2d1_data_gwas/snp_union_T-CD8-cells_rest_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:42:06 for 2.8 sec
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbvenn summ ^
+  --base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim ^
+  --out r2d1_data_gwas ^
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.CD8pos_T.S_406
+>   Read 2: snp_1001.Central_memory_CD8pos_T.S_407
+>   Read 3: snp_1001.Effector_memory_CD8pos_T.S_410
+>   Read 4: snp_1001.Naive_CD8_T.S_406
+>   Read 5: snp_1002.CD8pos_T.S_410
+>   Read 6: snp_1002.Central_memory_CD8pos_T.S_401
+>   Read 7: snp_1002.Effector_memory_CD8pos_T.S_408
+>   Read 8: snp_1002.Naive_CD8_T.S_412
+>   Read 9: snp_1003.CD8pos_T.S_407
+>   Read 10: snp_1003.Central_memory_CD8pos_T.S_409
+>   Read 11: snp_1003.Effector_memory_CD8pos_T.S_381
+>   Read 12: snp_1003.Naive_CD8_T.S_402
+>   Read 13: snp_1004.Central_memory_CD8pos_T.S_410
+>   Read 14: snp_1004.Effector_memory_CD8pos_T.S_420
+>   Read 15: snp_1004.Naive_CD8_T.S_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  19
+>   Write a BED file: r2d1_data_gwas/snp_union_T-CD8-cells_stim_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 00:42:29 for 3.2 sec
 
 ## Meltonlab & YZ summary
 
@@ -1162,29 +1569,15 @@ Rscript postgwas-exe.r ^
 > Warning message:
 > package 'eulerr' was built under R version 3.6.2
 
-## GWAS summary
+## Generating summary tables
 
+### Base file list in `summary` folder
 
+**CDS region**
 
-## ENCODE summary
+- `r2d1_data_gwas/snp_ensGene_cds_hg19_61.bed`
 
-
-
-## Nearest gene summary
-
-
-
-## GTEx summary
-
-
-
-## lncRNA summary
-
-
-
-## Summary table
-
-Roadmap results
+**Roadmap results**
 
 * `r2d1_data_gwas/summary/snp_roadmap_enh_688.bed`
 * `r2d1_data_gwas/summary/snp_union_bed_blood_t_cells_420.bed`
@@ -1193,28 +1586,24 @@ Roadmap results
 * `r2d1_data_gwas/summary/snp_roadmap_087_enh_79.bed`: Pancreas Islets
 * ~~`r2d1_data_gwas/snp_roadmap_total_2003.bed`~~
 
-ENCODE result
+**ENCODE result**
 
 * `r2d1_data_gwas/summary/snp_encode_tfbs_429.bed`
 
-RegulomeDB result
+**RegulomeDB result**
 
 * `r2d1_data_gwas/summary/snp_regulome2b_104.bed`
 
-GTEx results
+**GTEx results**
 
 * `r2d1_data_gwas/snp_gtex_1349.bed`
 * `r2d1_data_gwas/snp_gtex_Pancreas_493.bed`
 
-lncRNASNP2 result
+**lncRNASNP2 result**
 
 * `r2d1_data_gwas/snp_lncrnasnp_88.bed`
 
-CDS region
-
-* `r2d1_data_gwas/snp_ensGene_cds_hg19_61.bed`
-
-ATAC-seq results
+**ATAC-seq results**
 
 * `r2d1_data_gwas/snp_Beta_ATAC_12.bed`
 * `r2d1_data_gwas/snp_SCbeta_12h_ATAC_40.bed`
@@ -1224,41 +1613,558 @@ ATAC-seq results
 * `r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep2_24.bed`
 * `r2d1_data_gwas/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed`
 
+### Annotation file list
+
+* GWAS: `r2d1_data_gwas/gwas_biomart_fill.tsv`
+* ENCODE: `r2d1_data_gwas/distance/encode_tfbs.tsv`
+* Nearest genes: `r2d1_data_gwas/distance/ensGene_hg19.tsv`
+* Gene CDS: `r2d1_data_gwas/distance/ensGene_cds_hg19.tsv`
+* GTEx: `r2d1_data_gwas/gtex_signif_1349.tsv`
+* lncRNAs: `r2d1_data_gwas/lncrnasnp_88.tsv`
+
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbvenn venn ^
-	--base r2d1_data_gwas/snp_roadmap_enh_688.bed r2d1_data_gwas/snp_roadmap_087_enh_79.bed r2d1_data_gwas/snp_roadmap_total_2003.bed r2d1_data_gwas/snp_encode_tfbs_429.bed r2d1_data_gwas/snp_regulome2b_104.bed r2d1_data_gwas/snp_gtex_1349.bed r2d1_data_gwas/snp_gtex_Pancreas_493.bed r2d1_data_gwas/snp_lncrnasnp_88.bed r2d1_data_gwas/snp_ensGene_cds_hg19_61.bed r2d1_data_gwas/snp_Beta_ATAC_12.bed r2d1_data_gwas/snp_SCbeta_12h_ATAC_40.bed r2d1_data_gwas/snp_SCbeta_72h_ATAC_39.bed r2d1_data_gwas/snp_SCbeta_ATAC_56.bed r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep1_24.bed r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep2_24.bed r2d1_data_gwas/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed ^
-	--out r2d1_data_gwas ^
-	--fig r2d1_fig_gwas
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/summary
+	--out r2d1_data_gwas
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+	--ann_encd r2d1_data_gwas/distance/encode_tfbs.tsv
+	--ann_near r2d1_data_gwas/distance/ensGene_hg19.tsv
+	--ann_cds r2d1_data_gwas/distance/ensGene_cds_hg19.tsv
+	--ann_gtex r2d1_data_gwas/gtex_signif_1349.tsv
+	--ann_lnc r2d1_data_gwas/lncrnasnp_88.tsv
 ```
 
-> ** Run function: db_venn.r/venn...
-> Read: snp_roadmap_enh_688
-> Read: snp_roadmap_087_enh_79
-> Read: snp_roadmap_total_2003
-> Read: snp_encode_tfbs_429
-> Read: snp_regulome2b_104
-> Read: snp_gtex_1349
-> Read: snp_gtex_Pancreas_493
-> Read: snp_lncrnasnp_88
-> Read: snp_ensGene_cds_hg19_61
-> Read: snp_Beta_ATAC_12
-> Read: snp_SCbeta_12h_ATAC_40
-> Read: snp_SCbeta_72h_ATAC_39
-> Read: snp_SCbeta_ATAC_56
-> Read: snp_SCbeta_in_vivo_ATAC_rep1_24
-> Read: snp_SCbeta_in_vivo_ATAC_rep2_24
-> Read: snp_SCbeta_YZ_pseudo_pool_ATAC_58
+> ** Run function: db_venn.r/summ...
+> 23 Files in the folder: r2d1_data_gwas/summary
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_01_ensGene_cds_hg19_61
+>   Read 2: snp_02_roadmap_enh_688
+>   Read 3: snp_03_roadmap_bed_pancreas_134
+>   Read 4: snp_04_roadmap_bed_blood_t_cells_394
+>   Read 5: snp_05_roadmap_bed_hsc_b_cells_372
+>   Read 6: snp_06_roadmap_087_enh_79
+>   Read 7: snp_07_encode_tfbs_429
+>   Read 8: snp_08_regulome2b_104
+>   Read 9: snp_09-1_Suh_YZ_SCbeta_ATAC_58
+>   Read 10: snp_09_melton_bed_beta_ATAC_96
+>   Read 11: snp_10_melton_bed_beta_enh_73
+>   Read 12: snp_11_pritchard_T-CD4-cells_rest_432
+>   Read 13: snp_12_pritchard_T-CD4-cells_stim_432
+>   Read 14: snp_13_pritchard_T-CD8-cells_rest_432
+>   Read 15: snp_14_pritchard_T-CD8-cells_stim_432
+>   Read 16: snp_15_pritchard_NK-cells_rest_432
+>   Read 17: snp_16_pritchard_NK-cells_stim_432
+>   Read 18: snp_17_pritchard_B-cells_rest_431
+>   Read 19: snp_18_pritchard_B-cells_stim_432
+>   Read 20: snp_19_gtex_1349
+>   Read 21: snp_20_gtex_Pancreas_493
+>   Read 22: snp_21_gtex_Whole_Blood_670
+>   Read 23: snp_22_lncrnasnp_88
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
-> Write TSV file:         r2d1_data_gwas/venn_16_snp_roadmap_enh_688-snp_SCbeta_YZ_pseudo_pool_ATAC_58.tsv
 >
-> [Message] If you need a core rsid BED file,
->      please input two or three files.
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 1742   27
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   31
+>   Write a CSV file: r2d1_data_gwas/summary_gwas.csv
+>
+>   ENCODE dim    = [1] 4237   13
+>   Merge dim     = [1] 2662   26
+>   Write a CSV file: r2d1_data_gwas/summary_encode.csv
+>
+>   Nearest gene dim      = [1] 2315    9
+>   Search biomaRt... 220.. Cache found
+> 213.. [1] 2315    5
+>   CDS dim               = [1] 5791   11
+>   Merge dim             = [1] 2424   31
+>   Write a CSV file: r2d1_data_gwas/summary_nearest.csv
+>
+>   GTEx dim      = [1] 68822     9
+>   Merge dim     = [1] 68822    30
+>   Write a CSV file: r2d1_data_gwas/summary_gtex.csv
+>
+>   lncRNA dim    = [1] 132   7
+>   Merge dim     = [1] 132  30
+>   Write a CSV file: r2d1_data_gwas/summary_lncRNA.csv
+>
+> Job done: 2020-03-09 00:55:14 for 10.9 sec
+
+### Meltonlab GWAS summary
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/meltonlab_dist/bed_beta_ATAC
+	--out r2d1_data_gwas/meltonlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 9 Files in the folder: r2d1_data_gwas/meltonlab_dist/bed_beta_ATAC
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_Beta_ATAC_12
+>   Read 2: snp_Beta_ATAC_rep1_5
+>   Read 3: snp_SCbeta_12h_ATAC_40
+>   Read 4: snp_SCbeta_72h_ATAC_39
+>   Read 5: snp_SCbeta_ATAC_56
+>   Read 6: snp_SCbeta_ATAC_rep1_56
+>   Read 7: snp_SCbeta_in_vivo_ATAC_rep1_24
+>   Read 8: snp_SCbeta_in_vivo_ATAC_rep2_24
+>   Read 9: snp_SCbeta_YZ_pseudo_pool_ATAC_58
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 96 13
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   17
+>   Write a CSV file: r2d1_data_gwas/meltonlab_dist/summary_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:12:18 for 3 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/meltonlab_dist/bed_beta_enh
+	--out r2d1_data_gwas/meltonlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 4 Files in the folder: r2d1_data_gwas/meltonlab_dist/bed_beta_enh
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_Beta_SE_enh_22
+>   Read 2: snp_Beta_TE_enh_35
+>   Read 3: snp_SCbeta_SE_enh_11
+>   Read 4: snp_SCbeta_TE_enh_10
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 73  8
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   12
+>   Write a CSV file: r2d1_data_gwas/meltonlab_dist/summary_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:12:36 for 3 sec
+
+### Pritchardlab GWAS summary
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/B-cells_rest
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 12 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Bulk_B.U_407
+>   Read 2: snp_1001.Mem_B.U_407
+>   Read 3: snp_1001.Naive_B.U_399
+>   Read 4: snp_1002.Bulk_B.U_411
+>   Read 5: snp_1002.Mem_B.U_406
+>   Read 6: snp_1002.Naive_B.U_411
+>   Read 7: snp_1003.Bulk_B.U_410
+>   Read 8: snp_1003.Mem_B.U_407
+>   Read 9: snp_1003.Naive_B.U_408
+>   Read 10: snp_1004.Bulk_B.U_421
+>   Read 11: snp_1004.Mem_B.U_426
+>   Read 12: snp_1004.Naive_B.U_428
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 431  16
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   20
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/B-cells_rest_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:25:34 for 2.8 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/B-cells_stim
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 10 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Bulk_B.S_409
+>   Read 2: snp_1001.Mem_B.S_408
+>   Read 3: snp_1001.Naive_B.S_407
+>   Read 4: snp_1002.Bulk_B.S_412
+>   Read 5: snp_1002.Mem_B.S_411
+>   Read 6: snp_1002.Naive_B.S_408
+>   Read 7: snp_1003.Bulk_B.S_416
+>   Read 8: snp_1003.Mem_B.S_414
+>   Read 9: snp_1003.Naive_B.S_413
+>   Read 10: snp_1010.Mem_B.S_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  14
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   18
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/B-cells_stim_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:25:54 for 3.1 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/NK-cells_rest
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Immature_NK.U_372
+>   Read 2: snp_1001.Mature_NK.U_407
+>   Read 3: snp_1001.Memory_NK.U_362
+>   Read 4: snp_1002.Immature_NK.U_382
+>   Read 5: snp_1002.Memory_NK.U_412
+>   Read 6: snp_1003.Immature_NK.U_307
+>   Read 7: snp_1003.Mature_NK.U_403
+>   Read 8: snp_1003.Memory_NK.U_358
+>   Read 9: snp_1004.Immature_NK.U_414
+>   Read 10: snp_1004.Mature_NK.U_429
+>   Read 11: snp_1004.Memory_NK.U_403
+>   Read 12: snp_1008.Immature_NK.U_415
+>   Read 13: snp_1008.Mature_NK.U_412
+>   Read 14: snp_1008.Memory_NK.U_418
+>   Read 15: snp_1010.Memory_NK.U_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  19
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   23
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/NK-cells_rest_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:26:11 for 3.1 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/NK-cells_stim
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 6 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Mature_NK.S_408
+>   Read 2: snp_1002.Mature_NK.S_409
+>   Read 3: snp_1003.Mature_NK.S_415
+>   Read 4: snp_1004.Mature_NK.S_429
+>   Read 5: snp_1008.Mature_NK.S_414
+>   Read 6: snp_1010.Mature_NK.S_430
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  10
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   14
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/NK-cells_stim_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:26:26 for 3 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 38 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Effector_CD4pos_T.U_407
+>   Read 2: snp_1001.Follicular_T_Helper.U_408
+>   Read 3: snp_1001.Memory_Teffs.U_387
+>   Read 4: snp_1001.Memory_Tregs.U_385
+>   Read 5: snp_1001.Naive_Teffs.U_395
+>   Read 6: snp_1001.Regulatory_T.U_377
+>   Read 7: snp_1001.Th1_precursors.U_397
+>   Read 8: snp_1001.Th17_precursors.U_407
+>   Read 9: snp_1001.Th2_precursors.U_405
+>   Read 10: snp_1002.Effector_CD4pos_T.U_408
+>   Read 11: snp_1002.Follicular_T_Helper.U_413
+>   Read 12: snp_1002.Memory_Teffs.U_411
+>   Read 13: snp_1002.Memory_Tregs.U_412
+>   Read 14: snp_1002.Naive_Teffs.U_412
+>   Read 15: snp_1002.Regulatory_T.U_413
+>   Read 16: snp_1002.Th1_precursors.U_403
+>   Read 17: snp_1002.Th17_precursors.U_401
+>   Read 18: snp_1002.Th2_precursors.U_413
+>   Read 19: snp_1003.Effector_CD4pos_T.U_398
+>   Read 20: snp_1003.Follicular_T_Helper.U_369
+>   Read 21: snp_1003.Memory_Teffs.U_402
+>   Read 22: snp_1003.Memory_Tregs.U_416
+>   Read 23: snp_1003.Naive_Teffs.U_406
+>   Read 24: snp_1003.Regulatory_T.U_411
+>   Read 25: snp_1003.Th1_precursors.U_359
+>   Read 26: snp_1003.Th2_precursors.U_415
+>   Read 27: snp_1004.Effector_CD4pos_T.U_427
+>   Read 28: snp_1004.Follicular_T_Helper.U_420
+>   Read 29: snp_1004.Memory_Teffs.U_417
+>   Read 30: snp_1004.Memory_Tregs.U_429
+>   Read 31: snp_1004.Naive_Teffs.U_425
+>   Read 32: snp_1004.Naive_Tregs.U_419
+>   Read 33: snp_1004.Regulatory_T.U_412
+>   Read 34: snp_1004.Th1_precursors.U_424
+>   Read 35: snp_1004.Th17_precursors.U_415
+>   Read 36: snp_1004.Th2_precursors.U_408
+>   Read 37: snp_1008.Naive_Tregs.U_426
+>   Read 38: snp_1010.Follicular_T_Helper.U_430
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  42
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   46
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:26:41 for 3.4 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 41 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Effector_CD4pos_T.S_410
+>   Read 2: snp_1001.Follicular_T_Helper.S_407
+>   Read 3: snp_1001.Memory_Teffs.S_406
+>   Read 4: snp_1001.Memory_Tregs.S_409
+>   Read 5: snp_1001.Naive_Teffs.S_406
+>   Read 6: snp_1001.Regulatory_T.S_399
+>   Read 7: snp_1001.Th1_precursors.S_402
+>   Read 8: snp_1001.Th17_precursors.S_410
+>   Read 9: snp_1001.Th2_precursors.S_405
+>   Read 10: snp_1002.Effector_CD4pos_T.S_405
+>   Read 11: snp_1002.Follicular_T_Helper.S_407
+>   Read 12: snp_1002.Gamma_delta_T.S_412
+>   Read 13: snp_1002.Memory_Teffs.S_393
+>   Read 14: snp_1002.Memory_Tregs.S_409
+>   Read 15: snp_1002.Naive_Teffs.S_407
+>   Read 16: snp_1002.Regulatory_T.S_409
+>   Read 17: snp_1002.Th1_precursors.S_407
+>   Read 18: snp_1002.Th17_precursors.S_405
+>   Read 19: snp_1002.Th2_precursors.S_407
+>   Read 20: snp_1003.Effector_CD4pos_T.S_378
+>   Read 21: snp_1003.Follicular_T_Helper.S_400
+>   Read 22: snp_1003.Gamma_delta_T.S_403
+>   Read 23: snp_1003.Memory_Teffs.S_406
+>   Read 24: snp_1003.Memory_Tregs.S_416
+>   Read 25: snp_1003.Naive_Teffs.S_400
+>   Read 26: snp_1003.Regulatory_T.S_407
+>   Read 27: snp_1003.Th1_precursors.S_412
+>   Read 28: snp_1003.Th17_precursors.S_393
+>   Read 29: snp_1003.Th2_precursors.S_378
+>   Read 30: snp_1004.Follicular_T_Helper.S_422
+>   Read 31: snp_1004.Gamma_delta_T.S_427
+>   Read 32: snp_1004.Memory_Teffs.S_422
+>   Read 33: snp_1004.Memory_Tregs.S_422
+>   Read 34: snp_1004.Naive_Teffs.S_425
+>   Read 35: snp_1004.Naive_Tregs.S_416
+>   Read 36: snp_1004.Regulatory_T.S_422
+>   Read 37: snp_1004.Th1_precursors.S_423
+>   Read 38: snp_1004.Th17_precursors.S_426
+>   Read 39: snp_1004.Th2_precursors.S_417
+>   Read 40: snp_1010.Naive_Tregs.S_430
+>   Read 41: snp_1011.Naive_Teffs.S_413
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  45
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   49
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:27:03 for 3.5 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 16 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.CD8pos_T.U_411
+>   Read 2: snp_1001.Central_memory_CD8pos_T.U_406
+>   Read 3: snp_1001.Effector_memory_CD8pos_T.U_411
+>   Read 4: snp_1001.Naive_CD8_T.U_406
+>   Read 5: snp_1002.CD8pos_T.U_413
+>   Read 6: snp_1002.Central_memory_CD8pos_T.U_413
+>   Read 7: snp_1002.Effector_memory_CD8pos_T.U_407
+>   Read 8: snp_1002.Naive_CD8_T.U_411
+>   Read 9: snp_1003.CD8pos_T.U_413
+>   Read 10: snp_1003.Central_memory_CD8pos_T.U_386
+>   Read 11: snp_1003.Effector_memory_CD8pos_T.U_390
+>   Read 12: snp_1003.Naive_CD8_T.U_409
+>   Read 13: snp_1004.CD8pos_T.U_425
+>   Read 14: snp_1004.Central_memory_CD8pos_T.U_423
+>   Read 15: snp_1004.Effector_memory_CD8pos_T.U_412
+>   Read 16: snp_1004.Naive_CD8_T.U_422
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  20
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   24
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:27:29 for 3.4 sec
+
+```CMD
+Rscript postgwas-exe.r
+	--dbvenn summ
+	--base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim
+	--out r2d1_data_gwas/pritchardlab_dist
+	--uni_save FALSE
+	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
+```
+
+> ** Run function: db_venn.r/summ...
+> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.CD8pos_T.S_406
+>   Read 2: snp_1001.Central_memory_CD8pos_T.S_407
+>   Read 3: snp_1001.Effector_memory_CD8pos_T.S_410
+>   Read 4: snp_1001.Naive_CD8_T.S_406
+>   Read 5: snp_1002.CD8pos_T.S_410
+>   Read 6: snp_1002.Central_memory_CD8pos_T.S_401
+>   Read 7: snp_1002.Effector_memory_CD8pos_T.S_408
+>   Read 8: snp_1002.Naive_CD8_T.S_412
+>   Read 9: snp_1003.CD8pos_T.S_407
+>   Read 10: snp_1003.Central_memory_CD8pos_T.S_409
+>   Read 11: snp_1003.Effector_memory_CD8pos_T.S_381
+>   Read 12: snp_1003.Naive_CD8_T.S_402
+>   Read 13: snp_1004.Central_memory_CD8pos_T.S_410
+>   Read 14: snp_1004.Effector_memory_CD8pos_T.S_420
+>   Read 15: snp_1004.Naive_CD8_T.S_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  19
+>
+>   [PASS] uni_save       = FALSE
+>
+>   GWAS dim      = [1] 2003   11
+>   Merge dim     = [1] 2003   23
+>   Write a CSV file: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim_gwas.csv
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-09 01:27:47 for 3.1 sec
 
 # 7. Venn summary
 
@@ -1377,10 +2283,6 @@ Rscript postgwas-exe.r ^
 > Job done: 2020-03-01 17:46:14 for 0.5 sec
 
 Change the result file name: `snp_core_47.bed` to `snp_core_high_eqtl_47.bed`
-
-## lncRNA analysis summary
-
-
 
 # #. DeapSEA results
 
