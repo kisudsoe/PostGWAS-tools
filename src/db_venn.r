@@ -52,6 +52,8 @@ summ_ann = function(
 	ann_gtex = NULL,   # Optional, add GTEx significant eQTL TSV file path  -> CSV file 4
 	ann_lnc  = NULL    # Optional, add lncRNA TSV file path                 -> CSV file 5
 ) {
+	suppressMessages(library(biomaRt))
+
 	# Prepare...
 	paste0('\n** Run function: db_venn.r/summ... ') %>% cat
 	ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat
@@ -78,7 +80,7 @@ summ_ann = function(
 		if(!is.null(dir_name)) {
 			f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
 		} else f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
-		write.table(union_df[,1:4] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
+		write.table(union_df[,c(2:4,1)] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
 		paste0('  Write a BED file: ',f_name1,'\n') %>% cat
 	} else paste0('\n  [PASS] uni_save\t= ',uni_save,'\n') %>% cat
 
@@ -96,7 +98,7 @@ summ_ann = function(
 		dim(gwas_merge) %>% print
 
 		## Write a summary CSV file
-		f_name2 = paste0(out,'/summary_gwas.csv')
+		f_name2 = paste0(out,'/',dir_name,'_gwas.csv')
 		write.csv(gwas_merge,f_name2,row.names=F)
 		paste0('  Write a CSV file: ',f_name2,'\n') %>% cat
 	} else paste0('\n  [PASS] GWAS summary.\n')
@@ -123,7 +125,7 @@ summ_ann = function(
 		dim(enc_merge) %>% print
 
 		## Write a summary CSV file
-		f_name3 = paste0(out,'/summary_encode.csv')
+		f_name3 = paste0(out,'/',dir_name,'_encode.csv')
 		write.csv(enc_merge,f_name3,row.names=F)
 		paste0('  Write a CSV file: ',f_name3,'\n') %>% cat
 	} else paste0('\n  [PASS] ENCODE summary.\n')
@@ -138,6 +140,30 @@ summ_ann = function(
 		## Extract data to prepare merge
 		near_ann   = near[,c(4,8:9)]
 		colnames(near_ann) = c('rsid','nearest','dist')
+
+		# Search biomaRt for gene symbol and name
+		paste0('  Search biomaRt... ') %>% cat
+		genes = near_ann$nearest %>% unique
+		paste0(length(genes),'.. ') %>% cat
+		ensembl   = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+		gene_attr = c("ensembl_gene_id","hgnc_symbol","description")
+		gene_ens  = getBM(
+    		attributes = gene_attr,
+    		filters = "ensembl_gene_id",
+    		values = genes,
+    		mart = ensembl
+		) %>% unique
+
+		# Parsing biomaRt gene name
+		gene_name = lapply(gene_ens$description,function(desc) {
+    		g_name = strsplit(desc,"\\ \\[") %>% unlist
+    		return(g_name[1])
+		}) %>% unlist
+		gene_ens$name = gene_name
+		paste0(length(gene_ens$ensembl_gene_id %>% unique),'.. ') %>% cat
+		gene_ann = merge(near_ann,gene_ens[,c(1:2,4)],
+    		by.x='nearest',by.y='ensembl_gene_id',all.x=T)
+		dim(gene_ann) %>% print
 
 		## Read CDS distance file
 		if(!is.null(ann_cds)) {
@@ -162,19 +188,19 @@ summ_ann = function(
 
 		## Merge union data, nearest gene data, and CDS data
 			paste0('  Merge dim\t\t= ') %>% cat
-			ann_li   = list(near_ann,cds_ann,union_summ)
-			merge_allx = function(x,y) {
-				merge(x,y,by='rsid',all.x=T)
-			}
-			near_merge = Reduce(merge_allx,ann_li) %>% unique
+			ann_li   = list(gene_ann,cds_ann,union_summ)
 		} else {
 			paste0('  Merge dim\t\t= ') %>% cat
-			near_merge = merge(near_ann,union_summ,by='rsid',all.x=T)
+			ann_li   = list(gene_ann,union_summ)
 		}
+		merge_allx = function(x,y) {
+			merge(x,y,by='rsid',all.x=T)
+		}
+		near_merge = Reduce(merge_allx,ann_li) %>% unique
 		dim(near_merge) %>% print
 
 		## Write a summary CSV file
-		f_name4 = paste0(out,'/summary_nearest.csv')
+		f_name4 = paste0(out,'/',dir_name,'_nearest.csv')
 		write.csv(near_merge,f_name4,row.names=F)
 		paste0('  Write a CSV file: ',f_name4,'\n') %>% cat
 	} else {
@@ -197,7 +223,7 @@ summ_ann = function(
 		dim(gtex_merge) %>% print
 
 		## Write a summary CSV file
-		f_name5 = paste0(out,'/summary_gtex.csv')
+		f_name5 = paste0(out,'/',dir_name,'_gtex.csv')
 		write.csv(gtex_merge,f_name5,row.names=F)
 		paste0('  Write a CSV file: ',f_name5,'\n') %>% cat
 	} else paste0('\n  [PASS] GTEx summary.\n')
@@ -216,7 +242,7 @@ summ_ann = function(
 		dim(lnc_merge) %>% print
 
 		## Write a summary CSV file
-		f_name6 = paste0(out,'/summary_lncRNA.csv')
+		f_name6 = paste0(out,'/',dir_name,'_lncRNA.csv')
 		write.csv(lnc_merge,f_name6,row.names=F)
 		paste0('  Write a CSV file: ',f_name6,'\n') %>% cat
 	} else paste0('\n  [PASS] lncRNA summary.\n')
