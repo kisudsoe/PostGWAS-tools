@@ -1,4 +1,4 @@
-# Post-GWAS analysis : Type 1 Diabetes
+# Post-GWAS analysis: Type 1 Diabetes
 
 This is a log file for analyzing "Type I Diabetes Mellitus" (EFO0001359) from GWAS Catalog.
 
@@ -767,11 +767,15 @@ Rscript postgwas-exe.r
 	--meta db_gwas/roadmap_metadata.tsv
 ```
 
-> ** Run function: db_filter.r/distance_filt...
+> Input file/folder N     = [1] 1
+>
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 127
+>   Read metadata file dim        = [1] 127  13
 > File roadmap_001_enh... nrow= 2003.. done
 >   Annotations occupied by SNPs  = [1] 57
 >   SNPs in annotations           = [1] 77
->   Write file: r2d1_data_gwas/roadmap_dist/snp_roadmap_001_enh_77.bed
+>   Write file: r2d1_data/roadmap_dist/ESC/snp_roadmap_001_enh_77.bed
 > Job process: 0.3 sec
 >
 > ...
@@ -779,10 +783,10 @@ Rscript postgwas-exe.r
 > File roadmap_129_enh... nrow= 2003.. done
 >   Annotations occupied by SNPs  = [1] 64
 >   SNPs in annotations           = [1] 82
->   Write file: r2d1_data_gwas/roadmap_dist/snp_roadmap_129_enh_82.bed
-> Job process: 0 sec
+>   Write file: r2d1_data/roadmap_dist/BONE/snp_roadmap_129_enh_82.bed
+> Job process: 0.1 sec
 >
-> Job done: 2020-03-04 12:42:23 for 6.7 secs
+> Job done: 2020-03-10 19:36:52 for 9.8 sec
 
 ## ATAC-seq data overlapping
 
@@ -1048,98 +1052,612 @@ Rscript postgwas-exe.r ^
 >   Write file: r2d1_data_gwas/lncrnasnp_88.tsv
 > Job done: 2020-03-01 15:56:41 for 28.9 sec
 
-# 6. Table summary
+# 6. BED summary
 
 ## Roadmap union list
 
-Roadmap cell type IDs:
+Roadmap cell types following the ANATOMY groups in metadata:
 
-- Move the Blood & T-cell files (IDs: 33-45,47-48, 62) from `roadmap_dist` to `roadmap_dist/blood_t_cells`
-- Move the HSC & B-cell files (IDs: 29-32, 35-36, 46, 50-51) from `roadmap_dist` to `roadmap_dist/hsc_b_cells`
-- Move the Pancreas files (IDs: 87, 98) from `roadmap_dist` to `roadmap_dist/pancreas`
-
-### Blood & T-cell
+### ADRENAL
 
 ```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/roadmap_dist/bed_blood_t_cells ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ADRENAL
+  --out r2d1_data/summary --uni TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/ADRENAL
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_033_enh_275
->   Read 2: snp_roadmap_034_enh_236
->   Read 3: snp_roadmap_035_enh_184
->   Read 4: snp_roadmap_036_enh_173
->   Read 5: snp_roadmap_037_enh_254
->   Read 6: snp_roadmap_038_enh_233
->   Read 7: snp_roadmap_039_enh_229
->   Read 8: snp_roadmap_040_enh_249
->   Read 9: snp_roadmap_041_enh_215
->   Read 10: snp_roadmap_042_enh_232
->   Read 11: snp_roadmap_043_enh_241
->   Read 12: snp_roadmap_044_enh_250
->   Read 13: snp_roadmap_045_enh_239
->   Read 14: snp_roadmap_047_enh_243
->   Read 15: snp_roadmap_048_enh_242
->   Read 16: snp_roadmap_062_enh_247
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
+>   Read 1: snp_roadmap_080_enh_120
 >
 > [Message] Can't plot Euler plot.
 >
-> ** Return function: db_venn.r/summ...
->   Returned union list dim       = [1] 420  20
->   Write a BED file: r2d1_data_gwas/snp_union_bed_blood_t_cells_420.bed
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 120   5
+>   Write a BED file: r2d1_data/summary/snp_union_ADRENAL_120.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 22:51:47 for 2.6 sec
 
-### HSC & B-cell
+### BLOOD
 
 ```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/roadmap_dist/bed_hsc_b_cells ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BLOOD
+  --out r2d1_data/summary --uni TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
+> 27 Files in the folder: r2d1_data/roadmap_dist/BLOOD
 >
 > ** Run function: db_venn.r/venn_bed...
 >   Read 1: snp_roadmap_029_enh_163
 >   Read 2: snp_roadmap_030_enh_214
 >   Read 3: snp_roadmap_031_enh_245
 >   Read 4: snp_roadmap_032_enh_246
->   Read 5: snp_roadmap_046_enh_227
->   Read 6: snp_roadmap_050_enh_219
->   Read 7: snp_roadmap_051_enh_153
+>   Read 5: snp_roadmap_033_enh_275
+>   Read 6: snp_roadmap_034_enh_236
+>   Read 7: snp_roadmap_035_enh_184
+>   Read 8: snp_roadmap_036_enh_173
+>   Read 9: snp_roadmap_037_enh_254
+>   Read 10: snp_roadmap_038_enh_233
+>   Read 11: snp_roadmap_039_enh_229
+>   Read 12: snp_roadmap_040_enh_249
+>   Read 13: snp_roadmap_041_enh_215
+>   Read 14: snp_roadmap_042_enh_232
+>   Read 15: snp_roadmap_043_enh_241
+>   Read 16: snp_roadmap_044_enh_250
+>   Read 17: snp_roadmap_045_enh_239
+>   Read 18: snp_roadmap_046_enh_227
+>   Read 19: snp_roadmap_047_enh_243
+>   Read 20: snp_roadmap_048_enh_242
+>   Read 21: snp_roadmap_050_enh_219
+>   Read 22: snp_roadmap_051_enh_153
+>   Read 23: snp_roadmap_062_enh_247
+>   Read 24: snp_roadmap_115_enh_238
+>   Read 25: snp_roadmap_116_enh_268
+>   Read 26: snp_roadmap_123_enh_180
+>   Read 27: snp_roadmap_124_enh_172
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
-> ** Return function: db_venn.r/summ...
->   Returned union list dim       = [1] 363  11
->   Write a BED file: r2d1_data_gwas/snp_union_bed_hsc_b_cells_363.bed
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 492  31
+>   Write a BED file: r2d1_data/summary/snp_union_BLOOD_492.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 22:54:24 for 2.8 sec
 
-### Pancreas
+### BONE
 
 ```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/roadmap_dist/bed_pancreas ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BONE
+  --out r2d1_data/summary --uni TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/BONE
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_129_enh_82
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 82  5
+>   Write a BED file: r2d1_data/summary/snp_union_BONE_82.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:12:29 for 3 sec
+
+### BRAIN
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BRAIN
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 13 Files in the folder: r2d1_data/roadmap_dist/BRAIN
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_053_enh_69
+>   Read 2: snp_roadmap_054_enh_74
+>   Read 3: snp_roadmap_067_enh_74
+>   Read 4: snp_roadmap_068_enh_87
+>   Read 5: snp_roadmap_069_enh_74
+>   Read 6: snp_roadmap_070_enh_66
+>   Read 7: snp_roadmap_071_enh_89
+>   Read 8: snp_roadmap_072_enh_80
+>   Read 9: snp_roadmap_073_enh_94
+>   Read 10: snp_roadmap_074_enh_86
+>   Read 11: snp_roadmap_081_enh_91
+>   Read 12: snp_roadmap_082_enh_54
+>   Read 13: snp_roadmap_125_enh_83
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 211  17
+>   Write a BED file: r2d1_data/summary/snp_union_BRAIN_211.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:15:03 for 3 sec
+
+### BREAST
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BREAST
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files in the folder: r2d1_data/roadmap_dist/BREAST
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_027_enh_100
+>   Read 2: snp_roadmap_028_enh_101
+>   Read 3: snp_roadmap_119_enh_76
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 140   7
+>   Write a BED file: r2d1_data/summary/snp_union_BREAST_140.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:15:20 for 2.8 sec
+
+### CERVIX
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/CERVIX
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/CERVIX
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_117_enh_95
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 95  5
+>   Write a BED file: r2d1_data/summary/snp_union_CERVIX_95.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:15:39 for 2.9 sec
+
+### ESC
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ESC
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 8 Files in the folder: r2d1_data/roadmap_dist/ESC
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_001_enh_77
+>   Read 2: snp_roadmap_002_enh_78
+>   Read 3: snp_roadmap_003_enh_50
+>   Read 4: snp_roadmap_008_enh_77
+>   Read 5: snp_roadmap_014_enh_62
+>   Read 6: snp_roadmap_015_enh_57
+>   Read 7: snp_roadmap_016_enh_51
+>   Read 8: snp_roadmap_024_enh_65
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 113  12
+>   Write a BED file: r2d1_data/summary/snp_union_ESC_113.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:15:57 for 3 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ESC_DERIVED
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 9 Files in the folder: r2d1_data/roadmap_dist/ESC_DERIVED
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_004_enh_73
+>   Read 2: snp_roadmap_005_enh_120
+>   Read 3: snp_roadmap_006_enh_85
+>   Read 4: snp_roadmap_007_enh_94
+>   Read 5: snp_roadmap_009_enh_73
+>   Read 6: snp_roadmap_010_enh_69
+>   Read 7: snp_roadmap_011_enh_77
+>   Read 8: snp_roadmap_012_enh_77
+>   Read 9: snp_roadmap_013_enh_73
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 220  13
+>   Write a BED file: r2d1_data/summary/snp_union_ESC_DERIVED_220.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:16:13 for 2.8 sec
+
+### FAT
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/FAT
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files in the folder: r2d1_data/roadmap_dist/FAT
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_023_enh_133
+>   Read 2: snp_roadmap_025_enh_113
+>   Read 3: snp_roadmap_063_enh_139
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 204   7
+>   Write a BED file: r2d1_data/summary/snp_union_FAT_204.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:16:31 for 2.8 sec
+
+### GI
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_COLON
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files in the folder: r2d1_data/roadmap_dist/GI_COLON
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_075_enh_117
+>   Read 2: snp_roadmap_076_enh_114
+>   Read 3: snp_roadmap_106_enh_160
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 207   7
+>   Write a BED file: r2d1_data/summary/snp_union_GI_COLON_207.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:16:46 for 2.6 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_DUODENUM
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/GI_DUODENUM
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_077_enh_137
+>   Read 2: snp_roadmap_078_enh_143
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 183   6
+>   Write a BED file: r2d1_data/summary/snp_union_GI_DUODENUM_183.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:17:00 for 3 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_ESOPHAGUS
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/GI_ESOPHAGUS
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_079_enh_101
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 101   5
+>   Write a BED file: r2d1_data/summary/snp_union_GI_ESOPHAGUS_101.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:17:14 for 2.9 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_INTESTINE
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files in the folder: r2d1_data/roadmap_dist/GI_INTESTINE
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_084_enh_106
+>   Read 2: snp_roadmap_085_enh_113
+>   Read 3: snp_roadmap_109_enh_146
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 178   7
+>   Write a BED file: r2d1_data/summary/snp_union_GI_INTESTINE_178.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:17:29 for 2.8 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_RECTUM
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files in the folder: r2d1_data/roadmap_dist/GI_RECTUM
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_101_enh_150
+>   Read 2: snp_roadmap_102_enh_134
+>   Read 3: snp_roadmap_103_enh_107
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 192   7
+>   Write a BED file: r2d1_data/summary/snp_union_GI_RECTUM_192.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:17:42 for 3 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_STOMACH
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 4 Files in the folder: r2d1_data/roadmap_dist/GI_STOMACH
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_092_enh_86
+>   Read 2: snp_roadmap_094_enh_91
+>   Read 3: snp_roadmap_110_enh_143
+>   Read 4: snp_roadmap_111_enh_111
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 209   8
+>   Write a BED file: r2d1_data/summary/snp_union_GI_STOMACH_209.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:17:56 for 2.8 sec
+
+### HEART
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/HEART
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 4 Files in the folder: r2d1_data/roadmap_dist/HEART
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_083_enh_100
+>   Read 2: snp_roadmap_095_enh_87
+>   Read 3: snp_roadmap_104_enh_70
+>   Read 4: snp_roadmap_105_enh_106
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 152   8
+>   Write a BED file: r2d1_data/summary/snp_union_HEART_152.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:18:10 for 2.8 sec
+
+### IPSC
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/IPSC
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 5 Files in the folder: r2d1_data/roadmap_dist/IPSC
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_018_enh_76
+>   Read 2: snp_roadmap_019_enh_54
+>   Read 3: snp_roadmap_020_enh_53
+>   Read 4: snp_roadmap_021_enh_52
+>   Read 5: snp_roadmap_022_enh_73
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 108   9
+>   Write a BED file: r2d1_data/summary/snp_union_IPSC_108.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:18:24 for 2.7 sec
+
+### KIDNEY
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/KIDNEY
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/KIDNEY
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_086_enh_109
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 109   5
+>   Write a BED file: r2d1_data/summary/snp_union_KIDNEY_109.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:18:38 for 2.6 sec
+
+### LIVER
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/LIVER
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/LIVER
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_066_enh_132
+>   Read 2: snp_roadmap_118_enh_114
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 182   6
+>   Write a BED file: r2d1_data/summary/snp_union_LIVER_182.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:18:49 for 2.6 sec
+
+### LUNG
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/LUNG
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 5 Files in the folder: r2d1_data/roadmap_dist/LUNG
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_017_enh_85
+>   Read 2: snp_roadmap_088_enh_107
+>   Read 3: snp_roadmap_096_enh_136
+>   Read 4: snp_roadmap_114_enh_84
+>   Read 5: snp_roadmap_128_enh_90
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 212   9
+>   Write a BED file: r2d1_data/summary/snp_union_LUNG_212.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:19:01 for 2.6 sec
+
+### MUSCLE
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/MUSCLE
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 7 Files in the folder: r2d1_data/roadmap_dist/MUSCLE
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_052_enh_82
+>   Read 2: snp_roadmap_089_enh_91
+>   Read 3: snp_roadmap_100_enh_93
+>   Read 4: snp_roadmap_107_enh_119
+>   Read 5: snp_roadmap_108_enh_134
+>   Read 6: snp_roadmap_120_enh_89
+>   Read 7: snp_roadmap_121_enh_93
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 218  11
+>   Write a BED file: r2d1_data/summary/snp_union_MUSCLE_218.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:19:14 for 2.7 sec
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/MUSCLE_LEG
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/MUSCLE_LEG
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_090_enh_89
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 89  5
+>   Write a BED file: r2d1_data/summary/snp_union_MUSCLE_LEG_89.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:19:27 for 2.7 sec
+
+### OVARY
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/OVARY
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/OVARY
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_097_enh_87
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 87  5
+>   Write a BED file: r2d1_data/summary/snp_union_OVARY_87.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:19:40 for 2.9 sec
+
+### PANCREAS
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/PANCREAS
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/PANCREAS
 >
 > ** Run function: db_venn.r/venn_bed...
 >   Read 1: snp_roadmap_087_enh_79
@@ -1147,11 +1665,157 @@ Rscript postgwas-exe.r ^
 >
 > [Message] Can't plot Euler plot.
 >
-> ** Return function: db_venn.r/summ...
+> ** Back to function: db_venn.r/summ...
 >   Returned union list dim       = [1] 134   6
->   Write a BED file: r2d1_data_gwas/snp_union_bed_pancreas_134.bed
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+>   Write a BED file: r2d1_data/summary/snp_union_PANCREAS_134.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:19:57 for 2.6 sec
+
+### PLACENTA
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/PLACENTA
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/PLACENTA
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_091_enh_155
+>   Read 2: snp_roadmap_099_enh_108
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 174   6
+>   Write a BED file: r2d1_data/summary/snp_union_PLACENTA_174.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:20:08 for 2.7 sec
+
+### SKIN
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/SKIN
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 8 Files in the folder: r2d1_data/roadmap_dist/SKIN
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_055_enh_81
+>   Read 2: snp_roadmap_056_enh_79
+>   Read 3: snp_roadmap_057_enh_85
+>   Read 4: snp_roadmap_058_enh_76
+>   Read 5: snp_roadmap_059_enh_70
+>   Read 6: snp_roadmap_061_enh_80
+>   Read 7: snp_roadmap_126_enh_88
+>   Read 8: snp_roadmap_127_enh_74
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 163  12
+>   Write a BED file: r2d1_data/summary/snp_union_SKIN_163.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:20:24 for 2.7 sec
+
+### SPLEEN
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/SPLEEN
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 1 Files in the folder: r2d1_data/roadmap_dist/SPLEEN
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_113_enh_154
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 154   5
+>   Write a BED file: r2d1_data/summary/snp_union_SPLEEN_154.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:20:40 for 2.6 sec
+
+### STROMAL_CONNECTIVE
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/STROMAL_CONNECTIVE
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/STROMAL_CONNECTIVE
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_026_enh_82
+>   Read 2: snp_roadmap_049_enh_87
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 100   6
+>   Write a BED file: r2d1_data/summary/snp_union_STROMAL_CONNECTIVE_100.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:20:56 for 2.6 sec
+
+### THYMUS
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/THYMUS
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/THYMUS
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_093_enh_236
+>   Read 2: snp_roadmap_112_enh_226
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 285   6
+>   Write a BED file: r2d1_data/summary/snp_union_THYMUS_285.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:21:08 for 2.6 sec
+
+### VASCULAR
+
+```CMD
+Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/VASCULAR
+  --out r2d1_data/summary --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 2 Files in the folder: r2d1_data/roadmap_dist/VASCULAR
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_roadmap_065_enh_67
+>   Read 2: snp_roadmap_122_enh_79
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 112   6
+>   Write a BED file: r2d1_data/summary/snp_union_VASCULAR_112.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-10 23:21:21 for 2.6 sec
 
 ## Pritchardlab union list
 
@@ -1187,6 +1851,48 @@ Rscript postgwas-exe.r ^
   * Myeloid
   * pDC
   * Plasmablasts
+
+### Total summary
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist
+  --dir_only TRUE
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 22 Files/folders input.
+>   Add 12 files in the r2d1_data/pritchardlab_dist/B-cells_rest
+>   Add 10 files in the r2d1_data/pritchardlab_dist/B-cells_stim
+>   Add 4 files in the r2d1_data/pritchardlab_dist/Gamma_delta_T_rest
+>   Add 3 files in the r2d1_data/pritchardlab_dist/Monocytes_rest
+>   Add 6 files in the r2d1_data/pritchardlab_dist/Monocytes_stim
+>   Add 3 files in the r2d1_data/pritchardlab_dist/Myeloid_DCs_rest
+>   Add 15 files in the r2d1_data/pritchardlab_dist/NK-cells_rest
+>   Add 6 files in the r2d1_data/pritchardlab_dist/NK-cells_stim
+>   Add 3 files in the r2d1_data/pritchardlab_dist/pDCs_rest
+>   Add 3 files in the r2d1_data/pritchardlab_dist/Plasmablasts_rest
+>   Add 38 files in the r2d1_data/pritchardlab_dist/T-CD4-cells_rest
+>   Add 41 files in the r2d1_data/pritchardlab_dist/T-CD4-cells_stim
+>   Add 16 files in the r2d1_data/pritchardlab_dist/T-CD8-cells_rest
+>   Add 15 files in the r2d1_data/pritchardlab_dist/T-CD8-cells_stim
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 175 files
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432 179
+>   Write a BED file: r2d1_data/summary/snp_union_pritchardlab_dist_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:30:13 for 3.5 sec
 
 ### B-cells
 
@@ -1541,9 +2247,199 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-03-09 00:42:29 for 3.2 sec
 
+### Other cells
+
+**Gamma delta T-cells**
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/Gamma_delta_T_rest
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 4 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1001.Gamma_delta_T.U_389.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1002.Gamma_delta_T.U_410.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1003.Gamma_delta_T.U_408.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1004.Gamma_delta_T.U_419.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Gamma_delta_T.U_389
+>   Read 2: snp_1002.Gamma_delta_T.U_410
+>   Read 3: snp_1003.Gamma_delta_T.U_408
+>   Read 4: snp_1004.Gamma_delta_T.U_419
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 427   8
+>   Write a BED file: r2d1_data/summary/snp_union_Gamma_delta_T_rest_427.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:46:25 for 2.7 sec
+
+**Monocytes**
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/Monocytes_rest
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1001.Monocytes.U_413.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1003.Monocytes.U_413.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1004.Monocytes.U_421.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Monocytes.U_413
+>   Read 2: snp_1003.Monocytes.U_413
+>   Read 3: snp_1004.Monocytes.U_421
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 431   7
+>   Write a BED file: r2d1_data/summary/snp_union_Monocytes_rest_431.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:46:53 for 2.9 sec
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/Monocytes_stim
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 6 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1001.Monocytes.S_412.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1002.Monocytes.S_412.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1003.Monocytes.S_406.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1004.Monocytes.S_428.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1008.Monocytes.S_417.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1010.Monocytes.S_429.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Monocytes.S_412
+>   Read 2: snp_1002.Monocytes.S_412
+>   Read 3: snp_1003.Monocytes.S_406
+>   Read 4: snp_1004.Monocytes.S_428
+>   Read 5: snp_1008.Monocytes.S_417
+>   Read 6: snp_1010.Monocytes.S_429
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 432  10
+>   Write a BED file: r2d1_data/summary/snp_union_Monocytes_stim_432.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:47:07 for 2.8 sec
+
+**DCs**
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/Myeloid_DCs_rest
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1001.Myeloid_DCs.U_390.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1002.Myeloid_DCs.U_412.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1008.Myeloid_DCs.U_407.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Myeloid_DCs.U_390
+>   Read 2: snp_1002.Myeloid_DCs.U_412
+>   Read 3: snp_1008.Myeloid_DCs.U_407
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 414   7
+>   Write a BED file: r2d1_data/summary/snp_union_Myeloid_DCs_rest_414.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:47:32 for 3 sec
+> Warning message:
+> package 'eulerr' was built under R version 3.6.2
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/pDCs_rest
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1001.pDCs.U_360.bed
+>   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1002.pDCs.U_396.bed
+>   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1008.pDCs.U_413.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.pDCs.U_360
+>   Read 2: snp_1002.pDCs.U_396
+>   Read 3: snp_1008.pDCs.U_413
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 415   7
+>   Write a BED file: r2d1_data/summary/snp_union_pDCs_rest_415.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:48:00 for 3.1 sec
+
+**Plasmablasts**
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/pritchardlab_dist/Plasmablasts_rest
+  --out r2d1_data/summary
+  --uni TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files/folders input.
+>   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1001.Plasmablasts.U_411.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1002.Plasmablasts.U_407.bed
+>   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1010.Plasmablasts.U_429.bed
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 1: snp_1001.Plasmablasts.U_411
+>   Read 2: snp_1002.Plasmablasts.U_407
+>   Read 3: snp_1010.Plasmablasts.U_429
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 431   7
+>   Write a BED file: r2d1_data/summary/snp_union_Plasmablasts_rest_431.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-11 00:48:13 for 2.7 sec
+
 ## Meltonlab & YZ summary
 
-### Stem cell-derived/primary β-cell ATAC-seq union list
+### Stem cell (SC)-derived/primary β-cell ATAC-seq union list
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -1576,7 +2472,7 @@ Rscript postgwas-exe.r ^
 > Warning message:
 > package 'eulerr' was built under R version 3.6.2
 
-### Stem cell-derived/primary β-cell enhancer union list
+### SC-derived/primary β-cell enhancer union list
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -1606,47 +2502,16 @@ Rscript postgwas-exe.r ^
 
 ### Base file list in `summary` folder
 
-**CDS region**
+* **CDS region**: snp_01
+* **Roadmap results**: snp_02-01~30 by the anatomy groups
+* **ENCODE result**: snp_03
+* **RegulomeDB result**: snp_04
+* **Melton lab's ATAC-seq/enhancer results**: snp_05-1,3
+* **Pritchard lab's immune cell atlas ATAC-seq restuls**: snp_06-0~8
+* **GTEx results**: snp_07-0~2
+* **lncRNASNP2 result**: snp_08
 
-- `r2d1_data_gwas/snp_ensGene_cds_hg19_61.bed`
-
-**Roadmap results**
-
-* `r2d1_data_gwas/summary/snp_roadmap_enh_688.bed`
-* `r2d1_data_gwas/summary/snp_union_bed_blood_t_cells_420.bed`
-* `r2d1_data_gwas/summary/snp_union_bed_hsc_b_cells_363.bed`
-* `r2d1_data_gwas/summary/snp_union_bed_pancreas_134.bed`
-* `r2d1_data_gwas/summary/snp_roadmap_087_enh_79.bed`: Pancreas Islets
-* ~~`r2d1_data_gwas/snp_roadmap_total_2003.bed`~~
-
-**ENCODE result**
-
-* `r2d1_data_gwas/summary/snp_encode_tfbs_429.bed`
-
-**RegulomeDB result**
-
-* `r2d1_data_gwas/summary/snp_regulome2b_104.bed`
-
-**GTEx results**
-
-* `r2d1_data_gwas/snp_gtex_1349.bed`
-* `r2d1_data_gwas/snp_gtex_Pancreas_493.bed`
-
-**lncRNASNP2 result**
-
-* `r2d1_data_gwas/snp_lncrnasnp_88.bed`
-
-**ATAC-seq results**
-
-* `r2d1_data_gwas/snp_Beta_ATAC_12.bed`
-* `r2d1_data_gwas/snp_SCbeta_12h_ATAC_40.bed`
-* `r2d1_data_gwas/snp_SCbeta_72h_ATAC_39.bed`
-* `r2d1_data_gwas/snp_SCbeta_ATAC_56.bed`
-* `r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep1_24.bed`
-* `r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep2_24.bed`
-* `r2d1_data_gwas/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed`
-
-### Annotation file list
+### Annotation file list:
 
 * GWAS: `r2d1_data_gwas/gwas_biomart_fill.tsv`
 * ENCODE: `r2d1_data_gwas/distance/encode_tfbs.tsv`
@@ -1658,15 +2523,15 @@ Rscript postgwas-exe.r ^
 ```CMD
 Rscript postgwas-exe.r
 	--dbvenn summ
-	--base r2d1_data_gwas/summary
-	--out r2d1_data_gwas
+	--base r2d1_data/summary
+	--out r2d1_data
 	--uni_save FALSE
-	--ann_gwas r2d1_data_gwas/gwas_biomart_fill.tsv
-	--ann_encd r2d1_data_gwas/distance/encode_tfbs.tsv
-	--ann_near r2d1_data_gwas/distance/ensGene_hg19.tsv
-	--ann_cds r2d1_data_gwas/distance/ensGene_cds_hg19.tsv
-	--ann_gtex r2d1_data_gwas/gtex_signif_1349.tsv
-	--ann_lnc r2d1_data_gwas/lncrnasnp_88.tsv
+	--ann_gwas r2d1_data/gwas_biomart_fill.tsv
+	--ann_encd r2d1_data/distance/encode_tfbs.tsv
+	--ann_near r2d1_data/distance/ensGene_hg19.tsv
+	--ann_cds r2d1_data/distance/ensGene_cds_hg19.tsv
+	--ann_gtex r2d1_data/gtex_signif_1349.tsv
+	--ann_lnc r2d1_data/lncrnasnp_88.tsv
 ```
 
 > ** Run function: db_venn.r/summ...
@@ -2316,6 +3181,14 @@ Rscript postgwas-exe.r ^
 > Job done: 2020-03-01 17:46:14 for 0.5 sec
 
 Change the result file name: `snp_core_47.bed` to `snp_core_high_eqtl_47.bed`
+
+# #. LOLA results
+
+
+
+# #. H-MAGMA results
+
+ 
 
 # #. DeapSEA results
 
