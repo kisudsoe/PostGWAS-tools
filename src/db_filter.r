@@ -1,5 +1,5 @@
 help_message = '
-db_filter, v2020-02-28
+db_filter, v2020-03-10
 This is a function call for filtering data.
 
 Usage: Rscript postgwas-exe.r --dbfilt <function> --base <base file(s)> --out <out folder> <...>
@@ -27,6 +27,10 @@ Required arguments:
               An optional argument for the "roadmap" function to filter enhancer regions.
     --sep     <default: FALSE>
               An optional argument for the "roadmap" function to generate cell-type seperated results.
+    --meta    <roadmap meta file path>
+              An optional argument for the "roadmap", "dist" function.
+              For "roadmap" function, this argument needs "--sep TRUE" argument.
+              Output file will be organized by the cell types.
     --pval    <p-value threshold>
               A required argument for the "gtex" function to filter significant eQTLs.
     --gtex    <Filtered GTEx RDS file path>
@@ -158,6 +162,7 @@ regulome_filt = function(
 distance_filt = function(
     f_path = NULL,   # Bedtools closest result paths
     out    = 'data', # Out folder path
+    meta   = NULL,   # Optional: Meta data file
     debug
 ) {
     # Preparing..
@@ -195,25 +200,54 @@ distance_filt = function(
 distance_filt_multi = function(
     f_paths = NULL,
     out     = 'data',
+    meta    = NULL,
     debug
 ) {
-    paste0('\n** Run function: db_filter.r/distance_filt...\n') %>% cat
+    paste0('\n** Run function: db_filter.r/distance_filt_multi...\n') %>% cat
     # If the base path is folder, get the file list
     if(length(f_paths)==1) {
         paths = list.files(f_paths,full.name=T)
         if(length(paths)==0) paths = f_paths
     } else paths = f_paths
+    paste0('Input file N\t= ') %>% cat; length(paths) %>% print
+
+    # For roadmap metadata,
+    if(!is.null(meta)) {
+        # Extract cid from base file names
+        cid = sapply(basename(paths),function(path) {
+            strsplit(path,"\\_")[[1]][2]
+        })
+
+        meta_dat = read.delim(meta)
+        sub_dir = paste0(out,'/',meta_dat$ANATOMY)
+        paste0('  Read metadata file dim\t= ') %>% cat; dim(meta_dat) %>% print
+    }
 
     # Run function by each file path
     n = length(paths)
     o=lapply(c(1:n),function(i) {
-        source('src/pdtime.r'); t0=Sys.time()
-        f_path = paths[i]
-        if(i%%10==0) paste0('  ',i,'/',n,' being processed.\n') %>% cat
-        if(n<10) paste0('  ',i,'/',n,' ',path,'\n') %>% cat
+        # Prepare..
+        # find metadata by EID
+        if(!is.null(meta)) {
+            E_cid = paste0('E',cid[i])
+            j = which(meta_dat$EID==E_cid)
+            if(length(j)==0) {
+                paste0('[BREAK] ',E_cid,' is not existing in meta file.')
+                return(NULL)
+            }
+            # mkdir by meta_dat$ANATOMY
+            ifelse(!dir.exists(sub_dir[j]), dir.create(sub_dir[j]),'')
+            out = sub_dir[j]
+        }
 
         # Run function
+        source('src/pdtime.r'); t0=Sys.time()
+        f_path = paths[i]
         distance_filt(f_path,out,debug)
+
+        # Print process
+        if(i%%10==0) paste0('  ',i,'/',n,' being processed.\n') %>% cat
+        if(n<10) paste0('  ',i,'/',n,' ',path,'\n') %>% cat
         paste0(pdtime(t0,2),'\n\n') %>% cat
     })
 }
@@ -317,14 +351,14 @@ roadmap_filt = function(
     ctype  = NULL,  # Optional: Cell type ID
     enh    = TRUE,  # Optional: Filtering enhancer (Default: TRUE)
     sep    = FALSE, # Optional: Cell type separated results (Defualt: FALSE)
+    meta   = NULL,  # Optional: Meta data file
     debug
 ) {
     # Preparing...
     paste0('\n** Run function: db_filter.r/roadmap_filt...\n') %>% cat
-    ifelse(!dir.exists(out), dir.create(out),
-        paste0('  Directory already exists: ',out,'\n') %>% cat)
-
-    if(length(ctype)>0) {
+    ifelse(!dir.exists(out), dir.create(out),'')
+    
+    if(!is.null(ctype)) {
         cid    = formatC(ctype,width=3,flag='0') %>% as.character # Convert number to '###' format
         f_name = paste0(out,'/roadmap_',ctype,'_enh.bed')
     } else {
@@ -332,12 +366,16 @@ roadmap_filt = function(
         if(enh) { f_name = paste0(out,'/roadmap_enh.bed')
         } else    f_name = paste0(out,'/roadmap_total.bed')
     }
+    if(!is.null(meta)) {
+        meta_dat = read.delim(meta)
+        sub_dir = paste0(out,'/',meta_dat$ANATOMY)
+        paste0('  Read metadata file dim\t= ') %>% cat; dim(meta_dat) %>% print
+    }
 
     # Read Roadmap files
     paste0('  Reading files..\n') %>% cat
-    n=length(cid)
+    n = length(cid)
     road_li = lapply(c(1:n), function(i) {
-        if(i%%10==0) paste0('    ',i,'/',n,' being processed.\n') %>% cat
         #path = paste0(f_path,'E',cid[i],'_25_imputed12marks_hg38lift_dense.bed.rds') # hg38 by liftover
         path = paste0(f_path,'/E',cid[i],'_25_imputed12marks_dense.bed.rds') # hg19 original
         road = try(readRDS(path))
@@ -348,14 +386,31 @@ roadmap_filt = function(
             road_enh = subset(road,
                 name %in% c("13_EnhA1","14_EnhA2","15_EnhAF","16_EnhW1","17_EnhW2","18_EnhAc"))
         } else road_enh = road
+
+        # Print process
         if(n<10) {
-            paste0('  ',path,' ') %>% cat
+            paste0('  ',i,' ',path,' ') %>% cat
             dim(road_enh) %>% print
-        }
+        } else if(i%%10==0) paste0('    ',i,'/',n,' being processed.\n') %>% cat
+
+        # For --sep and --meta arguments
         if(sep) {
             road_enh = road_enh[,c(1:3,6)]
-            write.table(road_enh,paste0(out,'/roadmap_',cid[i],'_enh.bed'),
-                row.names=F,col.names=F,quote=F,sep='\t')
+            if(!is.null(meta)) {
+                # find metadata by EID
+                E_cid = paste0('E',cid[i])
+                j = which(meta_dat$EID==E_cid)
+                if(length(j)==0) {
+                    paste0('[BREAK] ',E_cid,' is not existing in meta file.')
+                    return(NULL)
+                }
+                # mkdir by meta_dat$ANATOMY
+                ifelse(!dir.exists(sub_dir[j]), dir.create(sub_dir[j]),'')
+                f_name = paste0(sub_dir[j],'/roadmap_',cid[i],'_enh.bed')
+            } else {
+                f_name = paste0(out,'/roadmap_',cid[i],'_enh.bed')
+            }
+            write.table(road_enh,f_name,row.names=F,col.names=F,quote=F,sep='\t')
         } else {
             return(road_enh)
         }
@@ -389,6 +444,8 @@ db_filter = function(
     } else                      debug    = FALSE
 
     # Reguired arguments
+    if(length(args$meta)>0) {   meta     = args$meta
+    } else                      meta     = NULL
     if(length(args$ctype)>0) {  ctype    = args$ctype
     } else                      ctype    = NULL
     if(length(args$enh)>0) {    enh      = args$enh
@@ -405,14 +462,14 @@ db_filter = function(
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
     if(args$dbfilt == 'roadmap') {
-        roadmap_filt(b_path,out,ctype,enh,sep,debug)
+        roadmap_filt(b_path,out,ctype,enh,sep,meta,debug)
     } else if(args$dbfilt == 'gtex') {
         gtex_filt(b_path,out,pval,debug)
     } else if(args$dbfilt == 'gtex_ovl') {
         gtex_overlap(b_path,gtex,out,tissue,debug)
     } else if(args$dbfilt == 'dist') {
-        paste0('Input file N\t= ') %>% cat; length(b_path) %>% print
-        distance_filt_multi(b_path,out,debug)
+        paste0('Input file/folder N\t= ') %>% cat; length(b_path) %>% print
+        distance_filt_multi(b_path,out,meta,debug)
     } else if(args$dbfilt == 'regulome') {
         regulome_filt(b_path,reg_path,out)
     } else if(args$dbfilt == 'lnc_ovl') {
