@@ -84,6 +84,7 @@ roadmap_down = function(
     cid = as.character(formatC(c(1:129),width=3,flag='0'))
     #urls = paste0('https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/imputed12marks/jointModel/final/E',cid,'_25_imputed12marks_hg38lift_dense.bed.gz')
     urls = paste0('https://egg2.wustl.edu/roadmap/data/byFileType/chromhmmSegmentations/ChmmModels/imputed12marks/jointModel/final/E',cid,'_25_imputed12marks_dense.bed.gz')
+    urls = c(urls,'https://raw.githubusercontent.com/Bioconductor/BioC2015Introduction/master/inst/extdata/epi_metadata.txt')
     o=lapply(urls,function(url) {
         f_name = paste0(out,'/',basename(url))
         tb = try(download.file(url,destfile=f_name)) # debug no file error
