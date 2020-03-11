@@ -21,6 +21,8 @@ Required arguments:
 			    If no figure out path is designated, no venn figure will generated.
 	--uni_list  <default: FALSE>
 				An optional argument for the "venn" function to return the union SNP list.
+	--dir_only  <default: FALSE>
+				An optional argument for the "summ" function to get file paths only in the subfoler.
 	--uni_save  <default: TRUE>
 				An optional argument for the "summ" function to save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
@@ -43,6 +45,7 @@ suppressMessages(library(dplyr))
 ## Functions Start ##
 summ_ann = function(
 	f_paths  = NULL,   # Input BED file paths
+	dir_only = FALSE,  # Getting file paths only in the subfolder
 	out      = 'data', # Out folder path
 	uni_save = TRUE,   # Save the union SNP list as a BED format
 	ann_gwas = NULL,   # Optional, add GWAS annotation TSV file path        -> CSV file 1
@@ -60,12 +63,22 @@ summ_ann = function(
 
 	# If the base path is folder, get the file list
 	dir_name = basename(f_paths)
-	if(length(f_paths)==1) {
-        paths  = list.files(f_paths,full.name=T)
-        if(length(paths)==0) { paths = f_paths
-		} else paste0(length(paths),' Files in the folder: ',f_paths,'\n') %>% cat
-    } else {
-		paths = f_paths
+	paths1 = list.files(f_paths,full.name=T)
+	n = length(paths1)
+	paste0(n,' Files/folders input.\n') %>% cat
+
+	paths = NULL
+	for(i in 1:n) {
+		paths2  = list.files(paths1[i],full.name=T)
+		if(length(paths2)==0) {
+			if(dir_only==FALSE) {
+				paths = c(paths,paths1[i])
+				paste0('  ',i,' ',paths1[i],'\n') %>% cat
+			}
+		} else {
+			paths = c(paths,paths2)
+			paste0('  ',i,' ',length(paths2),' files in the ',paths1[i],'\n') %>% cat
+		}
 	}
 
 	# Run venn_bed function
@@ -268,13 +281,14 @@ venn_bed = function(
 
 	# Read BED files
 	for(i in 1:n) {
-		tb = read.delim(f_paths[i],header=F)
+		tb             = read.delim(f_paths[i],header=F)
 		colnames(tb)   = c('chr','start','end','rsid')
 		snp_li[[i]]    = tb
 		snpids_li[[i]] = tb$rsid
-		f_base = basename(f_paths[i]) %>% file_path_sans_ext
-		names = c(names,f_base)
-		paste0('  Read ',i,': ',f_base,'\n') %>% cat
+		f_base         = basename(f_paths[i]) %>% file_path_sans_ext
+		names          = c(names,f_base)
+		if(n<10) {       paste0('  Read ',i,': ',f_base,'\n') %>% cat
+		} else if(i==n)  paste0('  Read ',n,' files\n') %>% cat
 	}
 	snp_df    = data.table::rbindlist(snp_li) %>% unique
 	unionlist = Reduce(union,snpids_li)
@@ -403,6 +417,8 @@ db_venn = function(
 	if(length(args$fig)>0)         fig_path = args$fig
 	if(length(args$uni_list)>0) {  uni_list = args$uni_list
 	} else                         uni_list = TRUE
+	if(length(args$dir_only)>0) {  dir_only = args$dir_only
+	} else                         dir_only = FALSE
 	if(length(args$uni_save)>0) {  uni_save = args$uni_save
 	} else                         uni_save = TRUE
 	if(length(args$ann_gwas)>0) {  ann_gwas = args$ann_gwas
@@ -423,7 +439,7 @@ db_venn = function(
     if(args$dbvenn == 'venn') {
 		venn_bed(b_path,out,fig_path,uni_list)
 	} else if(args$dbvenn == 'summ') {
-		summ_ann(b_path,out,uni_save,ann_gwas,ann_encd,
+		summ_ann(b_path,dir_only,out,uni_save,ann_gwas,ann_encd,
 			ann_near,ann_cds,ann_gtex,ann_lnc)
 	} else {
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
