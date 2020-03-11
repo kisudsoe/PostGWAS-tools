@@ -1,7 +1,7 @@
 # Post GWAS tools
 
 ```CMD
-Version: 2020-03-05
+Version: 2020-03-06
 
 Usage: Rscript postgwas-exe.r <Function calls>
     <--base file(s)> <--out folder> <options> <--debug>
@@ -114,7 +114,7 @@ Required arguments:
 ## --dbfilt
 
 ```CMD
-db_filter, v2020-02-28
+db_filter, v2020-03-10
 This is a function call for filtering data.
 
 Usage: Rscript postgwas-exe.r --dbfilt <function> --base <base file(s)> --out <out folder> <...>
@@ -142,6 +142,10 @@ Required arguments:
               An optional argument for the "roadmap" function to filter enhancer regions.
     --sep     <default: FALSE>
               An optional argument for the "roadmap" function to generate cell-type seperated results.
+    --meta    <roadmap meta file path>
+              An optional argument for the "roadmap", "dist" function.
+              For "roadmap" function, this argument needs "--sep TRUE" argument.
+              Output file will be organized by the cell types.
     --pval    <p-value threshold>
               A required argument for the "gtex" function to filter significant eQTLs.
     --gtex    <Filtered GTEx RDS file path>
@@ -158,7 +162,7 @@ Required arguments:
 ## --dbvenn
 
 ```CMD
-db_venn, v2020-03-05
+db_venn, v2020-03-06
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
@@ -178,8 +182,12 @@ Required arguments:
 	--fig       <figure out folder>
 			    An optional argument for the "venn" function to save figure file.
 			    If no figure out path is designated, no venn figure will generated.
-	--uni       <defulat: FALSE>
-				An optional argument for the "summ" function to save the union SNP list as a BED file.
+	--uni_list  <default: FALSE>
+				An optional argument for the "venn" function to return the union SNP list.
+	--dir_only  <default: FALSE>
+				An optional argument for the "summ" function to get file paths only in the subfoler.
+	--uni_save  <default: TRUE>
+				An optional argument for the "summ" function to save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
 			    An optional argument for the "summ" function. Add GWAS annotations to the summary table 1.
 	--ann_encd  <ENCODE annotation dist file>
