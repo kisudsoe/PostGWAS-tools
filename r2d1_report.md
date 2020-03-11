@@ -30,6 +30,10 @@ And LDlink results are returned with **hg19** coordinates.
   * Huang et al., 2018, Nucleic Acids Res, [10.1093/nar/gkx796](https://dx.doi.org/10.1093%2Fnar%2Fgkx796), pmid [28977473](https://www.ncbi.nlm.nih.gov/pubmed/28977473)
   * Gene symbol list entry (gh19)
 * LOLA
+  * Need ATAC-seq/Enhancer bed file as input
+  * Bioconductor, LOLA: https://bioconductor.org/packages/release/bioc/html/LOLA.html
+  * Downlaod LOLA DB files from http://databio.org/regiondb
+  * LOLAweb: http://lolaweb.databio.org/
 * Hi-C-coupled multimarker analysis tool: H-MAGMA
   * Sey et al., 2020, Nature Neuroscience, [10.1038/s41593-020-0603-0](https://doi.org/10.1038/s41593-020-0603-0)
 
@@ -42,9 +46,9 @@ From the downloaded GWAS Catalog data, basic statistics of the trait are need to
 Usage: `Rscript postgwas-exe.r --gwas <options> --base <input file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--gwas trait gene study ^
-    --base db_gwas/EFO0001359_2020-02-19.tsv ^
+Rscript postgwas-exe.r
+	--gwas trait gene study
+    --base db_gwas/EFO0001359_2020-02-19.tsv
     --out db_gwas
 ```
 
@@ -64,10 +68,10 @@ Using the downloaded GWAS Catalog file, SNPs are needed to filter by the P-value
 Usage: `Rscript postgwas-exe.r --gwas <option> --base <input file> --out <out folder> --p.criteria <number>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--gwas filter ^
-    --base db_gwas/EFO0001359_2020-02-19.tsv ^
-    --out db_gwas ^
+Rscript postgwas-exe.r
+	--gwas filter
+    --base db_gwas/EFO0001359_2020-02-19.tsv
+    --out db_gwas
     --p.criteria 5e-8
 ```
 
@@ -86,10 +90,10 @@ Usage: `Rscript postgwas-exe.r --ldlink down --base <input file> --out <out fold
 
 ```CMD
 # Download LD SNPs from 152 query SNPs takes about ~1.2 hrs
-Rscript postgwas-exe.r ^
-    --ldlink down ^
-    --base db_db/gwas_5e-08_152.tsv ^
-    --out db_gwas/ldlink ^
+Rscript postgwas-exe.r
+    --ldlink down
+    --base db_db/gwas_5e-08_152.tsv
+    --out db_gwas/ldlink
     --popul CEU TSI FIN GBR IBS
 ```
 
@@ -106,10 +110,10 @@ Filtering the LDlink data by the criteria, r<sup>2</sup> > 0.6 and D' = 1.
 Usage: `Rscript postgwas-exe.r --ldlink filter --base <input file> <input folder> --out <out folder> --r2d <option>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-  --ldlink filter ^
-  --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink ^
-  --out r2d1_data_gwas ^
+Rscript postgwas-exe.r
+  --ldlink filter
+  --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink
+  --out r2d1_data_gwas
   --r2d 1
 ```
 
@@ -150,9 +154,9 @@ For further analysis, you have to generate **BED** format files for both **hg19*
 Usage: `Rscript postgwas-exe.r --ldlink bed --base <input file> <input folder> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-    --ldlink bed ^
-    --base r2d1_data_gwas/gwas_biomart_fill.tsv ^
+Rscript postgwas-exe.r
+    --ldlink bed
+    --base r2d1_data_gwas/gwas_biomart_fill.tsv
     --out r2d1_data_gwas
 ```
 
@@ -171,8 +175,8 @@ Usage: `Rscript postgwas-exe.r --dbdown roadmap --out <out folder>`
 
 ```cmd
 # Downloading roadmap data takes ~35 min
-Rscript postgwas-exe.r ^
-	--dbdown roadmap ^
+Rscript postgwas-exe.r
+	--dbdown roadmap
 	--out db_gwas/roadmap
 ```
 
@@ -197,8 +201,8 @@ Downloading `wgEncodeRegTfbsClusteredV3.bed.gz` file (81 MB) which is regulatory
 Usage: `Rscript postgwas-exe.r --dbdown encode --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbdown encode ^
+Rscript postgwas-exe.r
+	--dbdown encode
 	--out db_gwas/encode
 ```
 
@@ -224,8 +228,8 @@ Downloading files:
 Usage: `Rscript postgwas-exe.r --dbdown regulome --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbdown regulome ^
+Rscript postgwas-exe.r
+	--dbdown regulome
 	--out db_gwas/regulome
 ```
 
@@ -255,8 +259,8 @@ Usage: `Rscript postgwas-exe.r --dbdown gtex --out <out folder>`
 
 ```CMD
 # Converting gtex data takes ~1 hr
-Rscript postgwas-exe.r ^
-	--dbdown gtex ^
+Rscript postgwas-exe.r
+	--dbdown gtex
 	--out db_gwas/gtex
 ```
 
@@ -296,8 +300,8 @@ Rscript postgwas-exe.r ^
 In lncRNASNP2, 141,353 human lncRNAs and 10,205,295 SNPs were archived.
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbdown lncrna ^
+Rscript postgwas-exe.r
+	--dbdown lncrna
 	--out db_gwas/lncrna
 ```
 
@@ -328,9 +332,9 @@ Rscript postgwas-exe.r ^
 Downloading Ensembl gene coordinates through biomaRt (hg19)
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbdown gene ^
-	--out db_gwas ^
+Rscript postgwas-exe.r
+	--dbdown gene
+	--out db_gwas
 	--hg hg19
 ```
 
@@ -453,19 +457,21 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/roadmap_total.bed
 > Job done: 2020-02-28 12:00:35 for 5.7 min
 
-### Enhancer in each cell type
+### Enhancer in each cell type with metadata
 
 To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
 
-
+* Original data at Roadmap homepage: https://egg2.wustl.edu/roadmap/web_portal/meta.html
+* Google doc: https://docs.google.com/spreadsheets/u/0/d/1yikGx4MsO9Ei36b64yOy9Vb6oPC5IBGlFbYEt-N6gOM/edit?usp=sharing#gid=15
+* mdozmorov's Github: https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt roadmap ^
-	--base db_gwas/roadmap ^
-	--out db_gwas/roadmap_enh ^
-	--enh TRUE ^
-	--sep TRUE
+Rscript postgwas-exe.r
+	--dbfilt roadmap
+	--base db_gwas/roadmap
+	--out  db_gwas/roadmap_enh
+	--enh  TRUE
+	--sep  TRUE
 ```
 
 > ** Run function: db_filter.r/roadmap_filt...
@@ -658,6 +664,50 @@ bedtools closest -d
 
 ## Preparing Enhancer data of blood cells
 
+From Pritchard Lab's blood immune cells ATAC-seq data `GSE118189_ATAC_counts.tsv`, I prepared BED files through this code lines in jupyter lab:
+
+```R
+source('src/pdtime.r'); t0=Sys.time()
+prit = read.delim('db_Pritchardlab/GSE118189_ATAC_counts.tsv')
+dim(prit) %>% print
+
+n = ncol(prit)
+row_names = rownames(prit)
+col_names = colnames(prit)
+
+# Extract data count>0 range and save as BED format file by each cell types.
+paste0('GSE118189_ATAC_counts, col N = ',n,'\n') %>% cat
+paste0('  Prepare range to BED df... ') %>% cat
+atac_li = lapply(row_names,function(row) {
+    split = strsplit(row,"\\_")[[1]]
+    data.frame(
+        chr   = split[1],
+        start = split[2],
+        end   = split[3],
+        name  = row
+    )
+})
+atac_df = data.table::rbindlist(atac_li)
+paste0(pdtime(t0,2),'\n') %>% cat
+
+a = lapply(c(1:n),function(i) {
+    if(i %in% c(1,n)) paste0('\n  ',i,' dim = ') %>% cat
+    col = prit[,i]
+    which_row = which(col>0)
+    atac_sub  = atac_df[which_row,]
+    value     = col[which_row] 
+    atac_out  = data.frame(
+        atac_sub,
+        value = value
+    )
+    if(i %in% c(1,n)) dim(atac_out) %>% print
+    # Write BED file
+    f_name = paste0('db_Pritchardlab/bed_ATAC_counts/Pritchard_',col_names[i],'.bed')
+    write.table(atac_out,f_name,sep='\t',row.names=F,col.names=F,quote=F)
+    if(i %in% c(1,n)) paste0('  Write file: ',f_name,'\n') %>% cat
+})
+```
+
 
 
 # 5. Overlapping the annotations
@@ -707,31 +757,14 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-02-28 18:31:08 for 5.8 sec
 
-**Enhancer in Pancreas Islets**
-
-```CMD
-#Rscript postgwas-exe.r ^
-#	--dbfilt dist ^
-#	--base r2d1_data_gwas/distance/roadmap_087_enh.tsv ^
-#	--out r2d1_data_gwas
-```
-
-> ** Run function: db_filter.r/distance_filt...
-> File roadmap_087_enh... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 53
->   SNPs in annotations           = [1] 79
->   Write file: r2d1_data_gwas/snp_roadmap_087_enh_79.bed
-> Job process: 0.2 sec
->
-> Job done: 2020-03-01 18:23:21 for 0.2 sec
-
 ## For Roadmap each cell type
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt dist ^
-	--base r2d1_data_gwas/roadmap_dist ^
-	--out r2d1_data_gwas/roadmap_dist
+Rscript postgwas-exe.r
+	--dbfilt dist
+	--base r2d1_data/roadmap_dist/0_distance
+	--out r2d1_data/roadmap_dist
+	--meta db_gwas/roadmap_metadata.tsv
 ```
 
 > ** Run function: db_filter.r/distance_filt...
