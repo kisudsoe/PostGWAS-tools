@@ -5,7 +5,7 @@ This is a function for GWAS Catalog data.
 Usage: Rscript postgwas-exe.r --gwas <functions> --base <base file> --out <out folder> <...>
 
 Functions:
-    tarit   Generating pivot table for traits
+    trait   Generating pivot table for traits
     gene    Generating pivot table for genes
     study   Generating summary table for studies
     filt    Filtering SNPs by P-values
