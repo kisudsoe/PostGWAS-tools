@@ -1,5 +1,5 @@
 help_message = '
-gwas_ldlink, v2020-01-21
+gwas_ldlink, v2020-03-14
 This is a function for LDlink data.
 
 Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out folder> <...>
@@ -21,10 +21,11 @@ Required arguments:
              An argument for the "--ldlink dn". One or more population option have to be included.
     --r2d    <1/2/3/4>
              An argument for the "--ldlink fl". Choose one number among these options:
-                1) r2>0.6 and Dprime=1  <- The most stringent criteria.
-                2) r2>0.6               <- Usual choice to define LD association.
-                3) Dprime=1
-                4) r2>0.6 or Dprime=1
+                1) r2 >0.6 and Dprime =1  <- The most stringent criteria.
+                2) r2 >0.6               <- Usual choice to define LD association.
+                3) Dprime =1
+                4) r2 >0.6 or Dprime =1
+                5) r2 >0.8
 '
 
 ## Load global libraries ##
@@ -113,10 +114,10 @@ ldlink_filter = function(
     # Read downloaded files
     paste0('\n** Run function ldlink_filter...\n') %>% cat
     paste0('Read download files... ') %>% cat
-    snpdf     = read.delim(snp_path) %>% unique
+    snpdf     = read.delim(snp_path,stringsAsFactors=F) %>% unique
     snpids    = snpdf$rsid %>% unique
-    col_names = c('No','RS_Number','Coord','Alleles','MAF',
-        'Distance','Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
+    col_names = c('RS_Number','Coord','Alleles','MAF','Distance',
+        'Dprime','R2','Correlated_Alleles','RegulomeDB','Function') # 'No',
     ldlink    = paste0(ld_path,'/',snpids,'.txt')
     snptb     = data.frame(snpids=snpids, ldlink=ldlink)
     
@@ -150,6 +151,9 @@ ldlink_filter = function(
     } else if(r2d==4) {
         cat('Filtering by "r2 > 0.6 or Dprime = 1":\n')
 	    ldlink_1 = subset(ldlink_df,R2>0.6 | Dprime==1) # r2 > 0.6 or D' = 1
+    } else if(r2d==5) {
+        cat('Filtering by "r2 > 0.8":\n')
+	    ldlink_1 = subset(ldlink_df,R2>0.8) # r2 > 0.8
     } else cat('Which filtering option is not supported.\n')
     ldlink_2 = data.frame(
         gwasSNPs = ldlink_1$SNPid,
@@ -243,16 +247,19 @@ ldlink_filter = function(
     snps_merge = merge(snps_,snps_hg19_bio1,
                        by.x='rsid',by.y='refsnp_id',all.x=T)
     which_na = is.na(snps_merge$chr_name) %>% which
-    snps_na = snps_merge[which_na,1]
-    snp_attr2 = c("refsnp_id",'synonym_name',"chr_name","chrom_start","chrom_end")
-    snps_hg19_bio2 = getBM(
-        attributes = snp_attr2,
-        filters    = "snp_synonym_filter",
-        values     = snps_na,
-        mart       = hg19_snp) %>% unique
-    snps_hg19_bio2 = snps_hg19_bio2[,c(2:5)]
-    colnames(snps_hg19_bio2)[1] = "refsnp_id"
-    snps_hg19_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
+
+    if(length(which_na)>0) {
+        snps_na = snps_merge[which_na,1]
+        snp_attr2 = c("refsnp_id",'synonym_name',"chr_name","chrom_start","chrom_end")
+        snps_hg19_bio2 = getBM(
+            attributes = snp_attr2,
+            filters    = "snp_synonym_filter",
+            values     = snps_na,
+            mart       = hg19_snp) %>% unique
+        snps_hg19_bio2 = snps_hg19_bio2[,c(2:5)]
+        colnames(snps_hg19_bio2)[1] = "refsnp_id"
+        snps_hg19_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
+    } else snps_hg19_bio = snps_hg19_bio1
     colnames(snps_hg19_bio) = c('rsid','hg19_chr','hg19_start','hg19_end')
     snps_hg19_bio_ = subset(snps_hg19_bio,hg19_chr %in% c(1:22,'X','Y'))
     snps_hg19_bio_[,2] = paste0('chr',snps_hg19_bio_[,2])
@@ -270,15 +277,18 @@ ldlink_filter = function(
     snps_merge = merge(snps_,snps_bio1,
                        by.x='rsid',by.y='refsnp_id',all.x=T)
     which_na = is.na(snps_merge$chr_name) %>% which
-    snps_na = snps_merge[which_na,1]
-    snps_bio2 = getBM(
-        attributes = snp_attr2,
-        filters    = "snp_synonym_filter",
-        values     = snps_na,
-        mart       = hg38_snp) %>% unique
-    snps_bio2 = snps_bio2[,c(2:5)]
-    colnames(snps_bio2)[1] = "refsnp_id"
-    snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
+
+    if(length(which_na)>0) {
+        snps_na = snps_merge[which_na,1]
+        snps_bio2 = getBM(
+            attributes = snp_attr2,
+            filters    = "snp_synonym_filter",
+            values     = snps_na,
+            mart       = hg38_snp) %>% unique
+        snps_bio2 = snps_bio2[,c(2:5)]
+        colnames(snps_bio2)[1] = "refsnp_id"
+        snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
+    } else snps_bio = snps_bio1
     colnames(snps_bio) = c('rsid','chr','start','end')
     snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
     snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
@@ -356,9 +366,11 @@ ldlink_down = function(
 
     # Download from LDlink
     paste0('\n** Run function ldlink_down... ') %>% cat
-    snps = read.delim(snp_path)
+    snps = read.delim(snp_path,)
     rsid = snps$rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
+
+    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     token = '669e9dc0b428' # Seungsoo Kim's personal token
     LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token, append=F)
     paste0('done\n') %>% cat
