@@ -92,7 +92,7 @@ Usage: `Rscript postgwas-exe.r --ldlink down --base <input file> --out <out fold
 # Download LD SNPs from 152 query SNPs takes about ~1.2 hrs
 Rscript postgwas-exe.r
     --ldlink down
-    --base db_db/gwas_5e-08_152.tsv
+    --base db_gwas/gwas_5e-08_152.tsv
     --out db_gwas/ldlink
     --popul CEU TSI FIN GBR IBS
 ```
@@ -662,7 +662,9 @@ bedtools closest -d
 	> data/SCbeta_YZ_pseudo_pool_ATAC.tsv
 ```
 
-## Preparing Enhancer data of blood cells
+## For Pritchard lab's immune cell ATAC-seq atlas
+
+### Preparing ATAC-seq data
 
 From Pritchard Lab's blood immune cells ATAC-seq data `GSE118189_ATAC_counts.tsv`, I prepared BED files through this code lines in jupyter lab:
 
@@ -706,6 +708,37 @@ a = lapply(c(1:n),function(i) {
     write.table(atac_out,f_name,sep='\t',row.names=F,col.names=F,quote=F)
     if(i %in% c(1,n)) paste0('  Write file: ',f_name,'\n') %>% cat
 })
+```
+
+### Distance of Pritchard lab's data
+
+For 175 data files:
+
+```bash
+bedtools	sort	-i	./2_pritchardlab/Pritchard_X1001.Bulk_B.S.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./2_pritchardlab_dist/1001.Bulk_B.S.tsv
+...
+bedtools	sort	-i	./2_pritchardlab/Pritchard_X1011.Naive_Teffs.S.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./2_pritchardlab_dist/1011.Naive_Teffs.S.tsv
+```
+
+## For Tan lab's Th1 and Treg enhancer data
+
+### Preparing the ChIP-seq data
+
+Data extracted from their paper:
+
+* `Supplementary Dataset S6` -> `db_3_Tanlab/Th1_enh.bed` and `db_3_Tanlab/Treg/enh.bed`
+* `db_3_Tanlab/Th1_enh.bed` was split to `Th1_enh_control.bed` and `Th1_enh_t1d.bed`
+* `db_3_Tanlab/Treg/enh.bed` was split to `Treg_enh_control.bed` and `Treg_enh_t1d.bed`
+
+### Distance of Tan lab's data
+
+```bash
+bedtools	sort	-i	./3_tanlab/Th1_enh.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Th1_enh.tsv
+bedtools	sort	-i	./3_tanlab/Th1_enh_control.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Th1_enh_control.tsv
+bedtools	sort	-i	./3_tanlab/Th1_enh_t1d.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Th1_enh_t1d.tsv
+bedtools	sort	-i	./3_tanlab/Treg_enh.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh.tsv
+bedtools	sort	-i	./3_tanlab/Treg_enh_control.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh_control.tsv
+bedtools	sort	-i	./3_tanlab/Treg_enh_t1d.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh_t1d.tsv
 ```
 
 
@@ -758,6 +791,16 @@ Rscript postgwas-exe.r ^
 > Job done: 2020-02-28 18:31:08 for 5.8 sec
 
 ## For Roadmap each cell type
+
+```CMD
+Rscript postgwas-exe.r
+	--dbfilt dist
+	--base r2_ins_data/0_roadmap_dist
+	--out r2_ins_data/0_roadmap_dist
+	--meta db_gwas/roadmap_metadata.tsv
+```
+
+
 
 ```CMD
 Rscript postgwas-exe.r
@@ -854,7 +897,7 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-02-28 18:31:44 for 0.8 sec
 
-## For Meltonlab each cell type
+## For Melton lab's data
 
 Stem cell-derived/primary β-cell ATAC-seq and ChIP-seq (H3K4me1 and H3K21ac) enhancer data.
 
@@ -889,7 +932,7 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-03-04 12:36:43 for 1.4 sec
 
-## For Pritchardlab each cell type
+## For Pritchard lab's data
 
 25 blood immune cell types ATAC-seq data:
 
