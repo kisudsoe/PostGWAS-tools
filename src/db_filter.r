@@ -162,7 +162,6 @@ regulome_filt = function(
 distance_filt = function(
     f_path = NULL,   # Bedtools closest result paths
     out    = 'data', # Out folder path
-    meta   = NULL,   # Optional: Meta data file
     debug
 ) {
     # Preparing..
@@ -211,31 +210,34 @@ distance_filt_multi = function(
     } else paths = f_paths
     paste0('Input file N\t= ') %>% cat; length(paths) %>% print
 
-    # For roadmap metadata,
+    # For metadata,
     if(!is.null(meta)) {
         # Extract cid from base file names
-        cid = sapply(basename(paths),function(path) {
-            strsplit(path,"\\_")[[1]][2]
-        })
+        #cid = sapply(basename(paths),function(path) {
+            #strsplit(path,"\\_")[[1]][2]
+        #})
+        base_f = basename(paths)
 
-        meta_dat = read.delim(meta)
-        sub_dir = paste0(out,'/',meta_dat$ANATOMY)
+        meta_dat = read.delim(meta,stringsAsFactors=F)
+        sub_dir = paste0(out,'/',meta_dat$groups)
         paste0('  Read metadata file dim\t= ') %>% cat; dim(meta_dat) %>% print
     }
 
     # Run function by each file path
+    ifelse(!dir.exists(out), dir.create(out),'')
     n = length(paths)
     o=lapply(c(1:n),function(i) {
         # Prepare..
         # find metadata by EID
         if(!is.null(meta)) {
-            E_cid = paste0('E',cid[i])
-            j = which(meta_dat$EID==E_cid)
+            #E_cid = paste0('E',cid[i])
+            #j = which(meta_dat$EID==E_cid)
+            j = which(meta_dat$f_name==base_f[i])
             if(length(j)==0) {
-                paste0('[BREAK] ',E_cid,' is not existing in meta file.')
+                paste0('[BREAK] ',base_f[i],' is not existing in meta file.')
                 return(NULL)
             }
-            # mkdir by meta_dat$ANATOMY
+            # mkdir by groups column in meta_dat file
             ifelse(!dir.exists(sub_dir[j]), dir.create(sub_dir[j]),'')
             out = sub_dir[j]
         }
@@ -247,7 +249,7 @@ distance_filt_multi = function(
 
         # Print process
         if(i%%10==0) paste0('  ',i,'/',n,' being processed.\n') %>% cat
-        if(n<10) paste0('  ',i,'/',n,' ',path,'\n') %>% cat
+        if(n<10) paste0('  ',i,'/',n,' ',f_path,'\n') %>% cat
         paste0(pdtime(t0,2),'\n\n') %>% cat
     })
 }
