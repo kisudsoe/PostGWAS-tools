@@ -32,7 +32,7 @@ This is a function for GWAS Catalog data.
 Usage: Rscript postgwas-exe.r --gwas <functions> --base <base file> --out <out folder> <...>
 
 Functions:
-    tarit   Generating pivot table for traits
+    trait   Generating pivot table for traits
     gene    Generating pivot table for genes
     study   Generating summary table for studies
     filt    Filtering SNPs by P-values
@@ -53,7 +53,7 @@ Required arguments:
 ## --ldlink
 
 ```CMD
-gwas_ldlink, v2020-01-21
+gwas_ldlink, v2020-03-14
 This is a function for LDlink data.
 
 Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out folder> <...>
@@ -75,10 +75,11 @@ Required arguments:
              An argument for the "--ldlink dn". One or more population option have to be included.
     --r2d    <1/2/3/4>
              An argument for the "--ldlink fl". Choose one number among these options:
-                1) r2>0.6 and Dprime=1  <- The most stringent criteria.
-                2) r2>0.6               <- Usual choice to define LD association.
-                3) Dprime=1
-                4) r2>0.6 or Dprime=1
+                1) r2 >0.6 and Dprime =1  <- The most stringent criteria.
+                2) r2 >0.6               <- Usual choice to define LD association.
+                3) Dprime =1
+                4) r2 >0.6 or Dprime =1
+                5) r2 >0.8
 ```
 
 
@@ -162,7 +163,7 @@ Required arguments:
 ## --dbvenn
 
 ```CMD
-db_venn, v2020-03-06
+db_venn, v2020-03-13
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
@@ -184,8 +185,8 @@ Required arguments:
 			    If no figure out path is designated, no venn figure will generated.
 	--uni_list  <default: FALSE>
 				An optional argument for the "venn" function to return the union SNP list.
-	--dir_only  <default: FALSE>
-				An optional argument for the "summ" function to get file paths only in the subfoler.
+	--sub_dir   <default: FALSE>
+				An optional argument for the "summ" function to get file paths grouped by the subfoler.
 	--uni_save  <default: TRUE>
 				An optional argument for the "summ" function to save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
