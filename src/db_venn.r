@@ -1,5 +1,5 @@
 help_message = '
-db_venn, v2020-03-06
+db_venn, v2020-03-13
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
@@ -21,8 +21,8 @@ Required arguments:
 			    If no figure out path is designated, no venn figure will generated.
 	--uni_list  <default: FALSE>
 				An optional argument for the "venn" function to return the union SNP list.
-	--dir_only  <default: FALSE>
-				An optional argument for the "summ" function to get file paths only in the subfoler.
+	--sub_dir   <default: FALSE>
+				An optional argument for the "summ" function to get file paths grouped by the subfoler.
 	--uni_save  <default: TRUE>
 				An optional argument for the "summ" function to save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
@@ -45,7 +45,7 @@ suppressMessages(library(dplyr))
 ## Functions Start ##
 summ_ann = function(
 	f_paths  = NULL,   # Input BED file paths
-	dir_only = FALSE,  # Getting file paths only in the subfolder
+	sub_dir  = FALSE,  # Getting file paths only in the subfolder
 	out      = 'data', # Out folder path
 	uni_save = TRUE,   # Save the union SNP list as a BED format
 	ann_gwas = NULL,   # Optional, add GWAS annotation TSV file path        -> CSV file 1
@@ -67,23 +67,52 @@ summ_ann = function(
 	n = length(paths1)
 	paste0(n,' Files/folders input.\n') %>% cat
 
-	paths = NULL
+	paths = NULL; paths_li = list(); dir_nm_li = list(); j = 0
 	for(i in 1:n) {
 		paths2  = list.files(paths1[i],full.name=T)
 		if(length(paths2)==0) {
-			if(dir_only==FALSE) {
-				paths = c(paths,paths1[i])
-				paste0('  ',i,' ',paths1[i],'\n') %>% cat
-			}
+			paths = c(paths,paths1[i])
+			paste0('  ',i,' ',paths1[i],'\n') %>% cat
 		} else {
-			paths = c(paths,paths2)
-			paste0('  ',i,' ',length(paths2),' files in the ',paths1[i],'\n') %>% cat
+			if(sub_dir) {
+				j = j+1
+				dir_nm_li[[j]] = paths1[i] %>% basename
+				paths_li[[j]]  = paths2
+				paste0('  ',i,' sub_dir ',j,': ',length(paths2),' file(s) in the ',
+					dir_nm_li[[j]],' folder\n') %>% cat
+			} else {
+				paths = c(paths,paths2)
+				paste0('  ',i,' ',length(paths2),' files in the ',
+					paths1[i] %>% basename,'\n') %>% cat
+			}
 		}
 	}
+	if(sub_dir) {
+		paste0('Total ',length(paths_li),' sub-folder(s) is/are input\n') %>% cat
+	}
+	paste0('Total ',length(paths),' file(s) is/are input.\n') %>% cat
 
 	# Run venn_bed function
-	uni_list = TRUE
-	union_df = venn_bed(paths,out,fig=NULL,uni_list)
+	if(sub_dir =='TRUE') { sub_dir  = TRUE
+	} else                 sub_dir  = FALSE
+	if(uni_save=='TRUE') { uni_save = TRUE
+	} else                 uni_save = FALSE
+	if(sub_dir & uni_save) {
+		paste0('\nOption sub_dir = TRUE, summary table are not going to be generated.\n') %>% cat
+		for(k in 1:j) {
+			union_df = venn_bed(paths_li[[k]],out,fig=NULL,uni_list=TRUE,debug=FALSE)
+			if(is.null(union_df)) { nrow_union_df = 0
+			} else                  nrow_union_df = unique(union_df)%>% nrow
+			f_name1 = paste0(out,'/snp_union_',dir_name,'_',dir_nm_li[[k]],'_',
+				nrow_union_df,'.bed')
+			write.table(union_df[,c(2:4,1)] %>% unique,f_name1,
+				col.names=F,row.names=F,quote=F,sep='\t')
+			paste0('  ',k,' Write a BED file: ',f_name1,'\n') %>% cat
+		}
+		quit()
+	} else if(length(paths)>0) {
+		union_df = venn_bed(paths,out,fig=NULL,uni_list=TRUE)
+	}
 	paste0('** Back to function: db_venn.r/summ...\n') %>% cat
 	paste0('  Returned union list dim\t= ') %>% cat; dim(union_df) %>% print
 	union_summ = union_df[,c(-2,-3,-4)]
@@ -92,7 +121,7 @@ summ_ann = function(
 	if(uni_save) {
 		if(!is.null(dir_name)) {
 			f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
-		} else f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
+		} else f_name1 = paste0(out,'/snp_union_',unique(union_df)%>%nrow,'.bed')
 		write.table(union_df[,c(2:4,1)] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
 		paste0('  Write a BED file: ',f_name1,'\n') %>% cat
 	} else paste0('\n  [PASS] uni_save\t= ',uni_save,'\n') %>% cat
@@ -101,7 +130,7 @@ summ_ann = function(
 	if(!is.null(ann_gwas)) {
 		## Read GWAS annotation TSV file
 		paste0('\n  GWAS dim\t= ') %>% cat
-		gwas = read.delim(ann_gwas)
+		gwas = read.delim(ann_gwas,stringsAsFactors=F)
 		dim(gwas) %>% print
 
 		## Merge union data and GWAS annotation
@@ -266,30 +295,38 @@ venn_bed = function(
 	f_paths  = NULL,   # Input BED file paths
 	out      = 'data', # Out folder path
 	fig      = NULL,   # Figure out folder path
-	uni_list = FALSE   # return the union SNP list as a BED format
+	uni_list = FALSE,  # return the union SNP list as a BED format
+	debug    = TRUE
 ) {
 	# Function specific library
 	suppressMessages(library(eulerr))
 	suppressMessages(library(tools))
 	
 	# Prepare...
-	paste0('\n** Run function: db_venn.r/venn_bed...\n') %>% cat
+	if(debug) paste0('\n** Run function: db_venn.r/venn_bed...\n') %>% cat
 	n         = length(f_paths)
 	snp_li    = list()
 	snpids_li = list()
 	names     = NULL
-
+	
 	# Read BED files
+	j = 0
 	for(i in 1:n) {
-		tb             = read.delim(f_paths[i],header=F)
+		tb = try(read.delim(f_paths[i],header=F,stringsAsFactors=F))
+		if('try-error' %in% class(tb)) {
+			paste0('  [ERROR] ',f_paths[i],'\n') %>% cat
+			next
+		}
 		colnames(tb)   = c('chr','start','end','rsid')
-		snp_li[[i]]    = tb
-		snpids_li[[i]] = tb$rsid
+		j = j+1
+		snp_li[[j]]    = tb
+		snpids_li[[j]] = tb$rsid
 		f_base         = basename(f_paths[i]) %>% file_path_sans_ext
 		names          = c(names,f_base)
-		if(n<10) {       paste0('  Read ',i,': ',f_base,'\n') %>% cat
-		} else if(i==n)  paste0('  Read ',n,' files\n') %>% cat
+		if(n<10 & debug) {       paste0('  Read ',i,': ',f_base,'\n') %>% cat
+		} else if(i==n & debug)  paste0('  Read ',n,' files\n') %>% cat
 	}
+	if(length(snp_li)==0) return(NULL)
 	snp_df    = data.table::rbindlist(snp_li) %>% unique
 	unionlist = Reduce(union,snpids_li)
 
@@ -320,7 +357,9 @@ venn_bed = function(
 		)
 		dev.off()
 		paste0('\nFigure draw:\t\t',fig_name1,'\n') %>% cat
-	} else if(n>4) message("\n[Message] Can't plot Venn diagram for more than 5 sets.")
+	} else if(n>4) {
+		if(debug) message("\n[Message] Can't plot Venn diagram for more than 5 sets.")
+	}
 
 	# Draw Euler plot
 	if(n == 3 & !is.null(fig)) {
@@ -350,8 +389,10 @@ venn_bed = function(
 		print(p)
 		dev.off()
 		paste0('\nFigure draw:\t\t',fig_name2,'\n') %>% cat
-	} else message("\n[Message] Can't plot Euler plot.")
-	cat('\n')
+	} else {
+		if(debug) message("\n[Message] Can't plot Euler plot.")
+	}
+	if(debug) cat('\n')
 
 	# Set the TSV file name
 	if(n>3) {
@@ -417,8 +458,8 @@ db_venn = function(
 	if(length(args$fig)>0)         fig_path = args$fig
 	if(length(args$uni_list)>0) {  uni_list = args$uni_list
 	} else                         uni_list = TRUE
-	if(length(args$dir_only)>0) {  dir_only = args$dir_only
-	} else                         dir_only = FALSE
+	if(length(args$sub_dir )>0) {  sub_dir  = args$sub_dir
+	} else                         sub_dir  = FALSE
 	if(length(args$uni_save)>0) {  uni_save = args$uni_save
 	} else                         uni_save = TRUE
 	if(length(args$ann_gwas)>0) {  ann_gwas = args$ann_gwas
@@ -439,7 +480,7 @@ db_venn = function(
     if(args$dbvenn == 'venn') {
 		venn_bed(b_path,out,fig_path,uni_list)
 	} else if(args$dbvenn == 'summ') {
-		summ_ann(b_path,dir_only,out,uni_save,ann_gwas,ann_encd,
+		summ_ann(b_path,sub_dir,out,uni_save,ann_gwas,ann_encd,
 			ann_near,ann_cds,ann_gtex,ann_lnc)
 	} else {
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
