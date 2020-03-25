@@ -11,7 +11,7 @@ Functions:
 Global arguments:
 	--base      <base files>
 			    At least 2 Base BED file paths are mendatory.
-			    If the base file number is over 4, then venn diagram is not generated.
+			    For the venn function,if the base file number is over 4, then venn diagram is not generated.
 	--out       <out folder>
 			    Out folder path is mendatory. Default is "data" folder.
 
@@ -20,23 +20,32 @@ Required arguments:
 			    An optional argument for the "venn" function to save figure file.
 			    If no figure out path is designated, no venn figure will generated.
 	--uni_list  <default: FALSE>
-				An optional argument for the "venn" function to return the union SNP list.
+				An optional argument for the "venn" function.
+				To return the union SNP list.
 	--sub_dir   <default: FALSE>
-				An optional argument for the "summ" function to get file paths grouped by the subfoler.
+				An optional argument for the "summ" function.
+				To get file paths grouped by the subfoler.
 	--uni_save  <default: TRUE>
-				An optional argument for the "summ" function to save to union SNP list as a BED file.
+				An optional argument for the "summ" function.
+				To save to union SNP list as a BED file.
 	--ann_gwas  <GWAS annotation TSV file>
-			    An optional argument for the "summ" function. Add GWAS annotations to the summary table 1.
+			    An optional argument for the "summ" function.
+				Add GWAS annotations to the summary table 1.
 	--ann_encd  <ENCODE annotation dist file>
-			    An optional argument for the "summ" function. Add ENCODE annotations to the summary table 2.
+			    An optional argument for the "summ" function.
+				Add ENCODE annotations to the summary table 2.
 	--ann_near  <Nearest gene annotation dist file>
-			    An optional argument for the "summ" function. Add nearest gene annotations to the summary table 3.
+			    An optional argument for the "summ" function.
+				Add nearest gene annotations to the summary table 3.
 	--ann_cds   <Gene CDS annotation dist file>
-			    An optional argument for the "summ" function. Add gene CDS annotations to the summary table 3.
+			    An optional argument for the "summ" function.
+				Add gene CDS annotations to the summary table 3.
 	--ann_gtex  <GTEx eQTL annotation TSV file>
-			    An optional argument for the "summ" function. Add GTEx eQTL annotations to the summary table 4.
+			    An optional argument for the "summ" function.
+				Add GTEx eQTL annotations to the summary table 4.
 	--ann_lnc   <lncRNA annotation TSV file>
-			    An optional argument for the "summ" function. Add lncRNA annotations to the summary table 5.
+			    An optional argument for the "summ" function.
+				Add lncRNA annotations to the summary table 5.
 '
 
 ## Load global libraries ##
@@ -55,11 +64,12 @@ summ_ann = function(
 	ann_gtex = NULL,   # Optional, add GTEx significant eQTL TSV file path  -> CSV file 4
 	ann_lnc  = NULL    # Optional, add lncRNA TSV file path                 -> CSV file 5
 ) {
+	# Load function-specific library
 	suppressMessages(library(biomaRt))
 
 	# Prepare...
 	paste0('\n** Run function: db_venn.r/summ... ') %>% cat
-	ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat
+	ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
 	# If the base path is folder, get the file list
 	dir_name = basename(f_paths)
@@ -92,7 +102,7 @@ summ_ann = function(
 	}
 	paste0('Total ',length(paths),' file(s) is/are input.\n') %>% cat
 
-	# Run venn_bed function
+	# Run venn_bed function to get union table
 	if(sub_dir =='TRUE') { sub_dir  = TRUE
 	} else                 sub_dir  = FALSE
 	if(uni_save=='TRUE') { uni_save = TRUE
@@ -109,7 +119,7 @@ summ_ann = function(
 				col.names=F,row.names=F,quote=F,sep='\t')
 			paste0('  ',k,' Write a BED file: ',f_name1,'\n') %>% cat
 		}
-		quit()
+		return('')
 	} else if(length(paths)>0) {
 		union_df = venn_bed(paths,out,fig=NULL,uni_list=TRUE)
 	}
@@ -118,6 +128,7 @@ summ_ann = function(
 	union_summ = union_df[,c(-2,-3,-4)]
 
 	# Write union BED file
+	dir_name = dir_name[1] # debug 2020-03-17
 	if(uni_save) {
 		if(!is.null(dir_name)) {
 			f_name1 = paste0(out,'/snp_union_',dir_name,'_',unique(union_df)%>%nrow,'.bed')
