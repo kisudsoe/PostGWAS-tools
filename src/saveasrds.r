@@ -1,9 +1,11 @@
 # This file was edited for postgwastools at 2020-02-27 by Seungsoo Kim
 
 # Read file and save as rds file
-suppressMessages(library(data.table))
+#suppressMessages(library(data.table))
 suppressMessages(library(tools))
 suppressMessages(library(dplyr))
+suppressMessages(library(rtracklayer))
+
 saveasrds = function(f_paths) {
     n = length(f_paths); df.li = list()
     df.li=lapply(c(1:n),function(i) {
@@ -20,14 +22,12 @@ saveasrds = function(f_paths) {
             print(paste0('[Error] File type ',file_ext(f_paths[i],' is not support yet.')))
         }
     })
-    df = rbindlist(df.li) # data.table
+    df = data.table::rbindlist(df.li)
     dim(df) %>% print
     f_name = paste0(f_paths[1],'.rds')
     saveRDS(df,file=f_name)
     cat(paste0('File write: ',f_name,'\n'))
 }
-
-suppressMessages(library(rtracklayer))
 
 bedasrds = function(f_path) {
     df = as.data.frame(import(f_path,format='bed'))
