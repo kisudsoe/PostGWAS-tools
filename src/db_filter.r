@@ -5,54 +5,189 @@ This is a function call for filtering data.
 Usage: Rscript postgwas-exe.r --dbfilt <function> --base <base file(s)> --out <out folder> <...>
 
 Functions:
-    roadmap   Filtering Roadmap data by enhancer tags.
-    gtex      Filtering GTEx data by eQTL p-value.
-    gtex_ovl  Overlapping the GTEx data with the input GWAS SNPs.
-    dist      Filtering distance data from Bedtools closest function.
-    regulome  Filtering and overlapping by Regulome score ≥2b.
-    lnc_ovl   Overlapping the lncRNASNP2 data with the input GWAS SNPs.
+    ucsc        Compile the ucsc downloaded promoter/gene/cds region annotations.
+    roadmap     Filtering Roadmap data by enhancer tags.
+    gtex        Filtering GTEx data by eQTL p-value.
+    gtex_ovl    Overlapping the GTEx data with the input GWAS SNPs.
+    hic_bed     Converting the hiC data to the BED format.
+    dist        Filtering distance data from Bedtools closest function.
+    regulome    Filtering and overlapping by Regulome score ≥2b.
+    lnc_ovl     Overlapping the lncRNASNP2 data with the input GWAS SNPs.
 
 Global arguments:
-    --base    <base file/folder>
-              Base file/folder path is mendatory.
-    --out     <out folder>
-              Out folder path is mendatory. Default is "db" folder.
+    --base      <base file/folder>
+                Base file/folder path is mendatory.
+                For ucsc function, you have to input three UCSC downloaded BED files by this order:
+                  [1] cds region file, [2] whole gene region file, [3] proximal promoter region file
+    --out       <out folder>
+                Out folder path is mendatory. Default is "db" folder.
 
 Required arguments:
-    --ctype   <cell type id>
-              An optional argument for the "roadmap" function.
-              See cell-type number information at
-              https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types.
-    --enh     <default: TRUE>
-              An optional argument for the "roadmap" function to filter enhancer regions.
-    --sep     <default: FALSE>
-              An optional argument for the "roadmap" function to generate cell-type seperated results.
-    --meta    <roadmap meta file path>
-              An optional argument for the "roadmap", "dist" function.
-              For "roadmap" function, this argument needs "--sep TRUE" argument.
-              Output file will be organized by the cell types.
-    --pval    <p-value threshold>
-              A required argument for the "gtex" function to filter significant eQTLs.
-    --gtex    <Filtered GTEx RDS file path>
-              A required argument for the "gtex_ovl" function to overlap GWAS SNPs with GTEx data.
-    --tissue  <GTEx tissue name>
-              An optional argument for the "gtex_ovl" function to filter a specific tissue.
-    --regulm  <Regulome data folder>
-              A required argument for the "regulome" function to load the data.
-    --lncrna  <lncRNASNP2 data folder>
+    --ctype     <cell type id>
+                An optional argument for the "roadmap" function.
+                See cell-type number information at
+                https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types.
+    --enh       <default: TRUE>
+                An optional argument for the "roadmap" function to filter enhancer regions.
+    --sep       <default: FALSE>
+                An optional argument for the "roadmap" function to generate cell-type seperated results.
+    --meta      <roadmap meta file path>
+                An optional argument for the "roadmap", "dist" function.
+                For "roadmap" function, this argument needs "--sep TRUE" argument.
+                Output file will be organized by the cell types.
+    --infotype  <default: FALSE>
+                An optional argument for the "dist" function.
+                If input as "ucsc", three output files will be generated.
+                  [1] cds region, [2] whole gene region, [3] proximal promoter region
+                If input as "tags", This option allows to generate seperated output files by the tags.
+    --pval      <p-value threshold>
+                A required argument for the "gtex" function to filter significant eQTLs.
+    --gtex      <Filtered GTEx RDS file path>
+                A required argument for the "gtex_ovl" function to overlap GWAS SNPs with GTEx data.
+    --tissue    <GTEx tissue name>
+                An optional argument for the "gtex_ovl" function to filter a specific tissue.
+    --regulm    <Regulome data folder>
+                A required argument for the "regulome" function to load the data.
+    --lncrna    <lncRNASNP2 data folder>
 '
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
 
 ## Functions Start ##
+hic_bed = function(
+    f_hics = NULL,  # Input Hi-C file
+    out    = 'data' # Out folder path
+) {
+    # Preparing...
+    paste0('\n** Run function: db_filter.r/hic_bed... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
+
+    # If the base path is folder, get the file list
+    fl_name = basename(f_hics)
+    file_nm = tools::file_path_sans_ext(fl_name)
+	paths1 = list.files(f_hics,full.name=T)
+	n = length(paths1)
+    if(n>0) {
+        paste0(n,' Files/folders input.\n') %>% cat
+        paths = NULL
+        for(i in 1:n) {
+            paths2  = list.files(paths1[i],full.name=T)
+            if(length(paths2)==0) {
+                paths = c(paths,paths1[i])
+                paste0('  ',i,' ',paths1[i],'\n') %>% cat
+            } else {
+                paths = c(paths,paths2)
+                paste0('  ',i,' ',length(paths2),' files in the ',
+                    paths1[i] %>% basename,'\n') %>% cat
+            }
+        }
+    } else paths = f_hics
+	paste0('Total ',length(paths),' file(s) is/are input.\n') %>% cat
+
+    # Multiple process
+    n = length(paths)
+    o = lapply(c(1:n),function(i) {
+        paste0('\n  ',i,'\t',fl_name[i],'\t') %>% cat
+        # Read Hi-C data file
+        hic_full = data.table::fread(paths[i])
+        dim(hic_full) %>% print
+        hic = hic_full[,1:6]
+        colnames(hic) = c('chr1','x1','x2','chr2','y1','y2')
+
+        # Convert to BED format
+        m = nrow(hic)
+        loops_li = lapply(c(1:m),function(j) {
+            hic_row = hic[j,] %>% unlist
+            chrs = paste0('chr',c(hic_row[1],hic_row[4]))
+            loop = paste0('loop',j,'.',c('x','y'))
+            out  = data.frame(
+                chr   = chrs,
+                start = c(hic_row[2],hic_row[5]),
+                end   = c(hic_row[3],hic_row[6]),
+                name  = loop
+            )
+            return(out)
+        })
+        loops_df = data.table::rbindlist(loops_li)
+        #loops_df = loops_df[order(loops_df$chr,loops_df$start),] #<- Doesn't work..
+        
+        # Save as BED file
+        f_name = paste0(out,'/',file_nm[i],'.bed')
+        write.table(loops_df,f_name,sep='\t',row.names=F,col.names=F,quote=F)
+        paste0('  Write file: ',f_name,'\n') %>% cat
+    })
+}
+
+ucsc_compile = function(
+    f_ucsc = NULL,  # Input UCSC downloaded BED file paths
+    out    = 'data' # Out folder path
+) {
+    # Load function-specific library
+
+    # Preparing...
+    paste0('\n** Run function: db_filter.r/ucsc_compile... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
+
+    # Read UCSC BED files
+    paste0('  Read CDS file, dim\t\t= ') %>% cat
+    cds  = read.delim(f_ucsc[1],head=F,stringsAsFactors=F); dim(cds) %>% print
+    paste0('  Read Gene file, dim\t\t= ') %>% cat
+    gene = read.delim(f_ucsc[2],head=F,stringsAsFactors=F); dim(gene) %>% print
+    paste0('  Read Promoter file, dim\t= ') %>% cat
+    prom = read.delim(f_ucsc[3],head=F,stringsAsFactors=F); dim(prom) %>% print
+
+    # Generate tags
+    paste0('\n  Generate tags... ') %>% cat
+    cds_tag = apply(cds,1,function(row) {
+        row_split = strsplit(row[4],"\\_")[[1]]
+        row_tag   = paste0(row_split[1:4],collapse='_')
+        return(row_tag)
+    }) %>% unlist
+    '1.. ' %>% cat
+
+    gene_tag = paste0(gene[,4],'_wholeGene')
+    '2.. ' %>% cat
+
+    prom_tag = apply(prom,1,function(row) {
+        row_split = strsplit(row[4],"\\_")[[1]]
+        row_tag   = paste0(row_split[1],'_proximalPromoter')
+        return(row_tag)
+    }) %>% unlist
+    '3.. done\n' %>% cat
+
+    # Compile the three UCSC data
+    paste0('  Compile the three UCSC data... ') %>% cat
+    ucsc_bed_li = list(
+        cds_bed  = data.frame(cds[,1:3], name=cds_tag),
+        gene_bed = data.frame(gene[,1:3],name=gene_tag),
+        prom_bed = data.frame(prom[,1:3],name=prom_tag)
+    )
+    ucsc_bed = data.table::rbindlist(ucsc_bed_li)#,fill=TRUE
+    colnames(ucsc_bed) = c('chr','start','end','name')
+    dim(ucsc_bed) %>% print
+
+    #na_count = apply(ucsc_bed,1,function(row) {
+    #    return((is.na(row)))
+    #}) %>% unlist
+    #which_na = which(na_count)
+    #ucsc_na  = ucsc_bed[which_na,]
+    #print(ucsc_na)
+    #stop()
+
+    # Write BED file
+    f_name = paste0(out,'/ucsc_annot.bed')
+    write.table(ucsc_bed,f_name,sep='\t',row.names=F,col.names=F,quote=F)
+    paste0('Write a BED file: ',f_name,'\n') %>% cat
+}
+
 lncrna_overlap = function(
     snp_path = NULL,  # Input GWAS SNP file path
     lnc_path = NULL,  # lncRNASNP2 data downloaded folder path
     out      = 'data' # Out folder path
 ) {
     # Preparing...
-    paste0('\n** Run function: db_filter.r/lncrna_overlap...\n') %>% cat
+    paste0('\n** Run function: db_filter.r/lncrna_overlap... \n') %>% cat
     snp = read.delim(snp_path,header=F)
     colnames(snp) = c('chr','start','end','rsid')
     dbsnp  = gsub('(.*)_.*','\\1',snp[,4])
@@ -160,8 +295,11 @@ regulome_filt = function(
 }
 
 distance_filt = function(
-    f_path = NULL,   # Bedtools closest result paths
-    out    = 'data', # Out folder path
+    f_path   = NULL,   # Bedtools closest result paths
+    out      = 'data', # Out folder path
+    infotype = NULL,   # (1) ucsc: Input BED file is UCSC annotation file.
+                       # (2) tags: Input BED file has unique tags as names.
+                       # (3) NULL: Input BED file has general names. 
     debug
 ) {
     # Preparing..
@@ -188,20 +326,59 @@ distance_filt = function(
     #write.table(rd_df2,f_name1,row.names=F,quote=F,sep='\t')
     #paste0('  Write file: ',f_name1,'\n') %>% cat
 
-    # Save as a BED file
-    snp_bed = rd_df2[,1:4] %>% unique
-    snp_n   = unique(snp_bed$rsid) %>% length
-    f_name2 = paste0(out,'/snp_',f_name,'_',snp_n,'.bed')
-    write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-    paste0('  Write file: ',f_name2,'\n') %>% cat
+    # Whether dealing with UCSC annotations:
+    if(!is.null(infotype)) {
+        # List tags
+        #x <- "a1~!@#$%^&*(){}_+:\"<>?,./;'[]-=" #or whatever
+        tag_alter = stringr::str_replace_all(rd_df2$tag, "[[:punct:]]", ".") # Remove special characters
+        if(infotype=='ucsc') {
+            paste0('\n  UCSC annotations: ') %>% cat
+            tags = lapply(tag_alter,function(tag) strsplit(tag,'\\_')[[1]][2]) %>%
+                unlist %>% as.factor
+        } else if(infotype=='tags') {
+            paste0('\n Annotations: ') %>% cat
+            tags = tag_alter %>% as.factor
+        } else {
+            paste0('\n[ERROR] There is no infotype option: "',infotype,'". 
+  You should choose one of these: "ucsc", "tags" or NULL.\n') %>% cat
+            quit()
+        }
+
+        tag_level = levels(tags)
+        n = length(tag_level)
+        paste0(n,' tags\n') %>% cat
+        o = lapply(c(1:n),function(i) {
+            # Extract by each tag
+            paste0('    ',i,' ',tag_level[i],':\t') %>% cat
+            which_row  = which(tags==tag_level[i])
+            rd_df2_tag = rd_df2[which_row,]
+            length(which_row) %>% cat
+
+            # Save as a BED file
+            snp_bed = rd_df2_tag[,1:4] %>% unique
+            snp_n   = unique(snp_bed$rsid) %>% length
+            f_name2 = paste0(out,'/snp_',infotype,'_',tag_level[i],'_',snp_n,'.bed')
+            write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+            paste0('..\tSave at: ',f_name2,'\n') %>% cat
+        })
+    } else {
+        # Save as a BED file
+        snp_bed = rd_df2[,1:4] %>% unique
+        snp_n   = unique(snp_bed$rsid) %>% length
+        f_name2 = paste0(out,'/snp_',f_name,'_',snp_n,'.bed')
+        write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+        paste0('  Write file: ',f_name2,'\n') %>% cat
+    }
 }
 
 distance_filt_multi = function(
-    f_paths = NULL,
-    out     = 'data',
-    meta    = NULL,
+    f_paths  = NULL,   # Input file/folder paths
+    out      = 'data', # Out folder path
+    meta     = NULL,   # Organizing output files by the designated groups
+    infotype = NULL,   # Option for "distance_filt" function. (1) ucsc, (2) tags
     debug
 ) {
+    # Preparing...
     paste0('\n** Run function: db_filter.r/distance_filt_multi...\n') %>% cat
     # If the base path is folder, get the file list
     if(length(f_paths)==1) {
@@ -212,12 +389,7 @@ distance_filt_multi = function(
 
     # For metadata,
     if(!is.null(meta)) {
-        # Extract cid from base file names
-        #cid = sapply(basename(paths),function(path) {
-            #strsplit(path,"\\_")[[1]][2]
-        #})
         base_f = basename(paths)
-
         meta_dat = read.delim(meta,stringsAsFactors=F)
         sub_dir = paste0(out,'/',meta_dat$groups)
         paste0('  Read metadata file dim\t= ') %>% cat; dim(meta_dat) %>% print
@@ -226,15 +398,12 @@ distance_filt_multi = function(
     # Run function by each file path
     ifelse(!dir.exists(out), dir.create(out),'')
     n = length(paths)
-    o=lapply(c(1:n),function(i) {
-        # Prepare..
+    o = lapply(c(1:n),function(i) {
         # find metadata by EID
         if(!is.null(meta)) {
-            #E_cid = paste0('E',cid[i])
-            #j = which(meta_dat$EID==E_cid)
             j = which(meta_dat$f_name==base_f[i])
             if(length(j)==0) {
-                paste0('[BREAK] ',base_f[i],' is not existing in meta file.')
+                paste0('[BREAK] ',base_f[i],' is not existing in meta file.\n') %>% cat
                 return(NULL)
             }
             # mkdir by groups column in meta_dat file
@@ -245,12 +414,12 @@ distance_filt_multi = function(
         # Run function
         source('src/pdtime.r'); t0=Sys.time()
         f_path = paths[i]
-        distance_filt(f_path,out,debug)
+        distance_filt(f_path,out,infotype,debug)
 
         # Print process
         if(i%%10==0) paste0('  ',i,'/',n,' being processed.\n') %>% cat
-        if(n<10) paste0('  ',i,'/',n,' ',f_path,'\n') %>% cat
-        paste0(pdtime(t0,2),'\n\n') %>% cat
+        if(n>1&n<10) paste0('  ',i,'/',n,' done: ',f_path,'\n') %>% cat
+        if(n>1)      paste0(pdtime(t0,2),'\n\n') %>% cat
     })
 }
 
@@ -267,6 +436,7 @@ gtex_overlap = function(
     colnames(snp) = c('chr','start','end','ann')
     rsids = gsub('(.*)_.*','\\1',snp[,4])
     paste0('Input GWAS SNPs N\t= ',length(rsids),'\n') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
 
     # Load filtered GTEx RDS file
     f_ext = tools::file_ext(f_gtex)
@@ -305,20 +475,44 @@ gtex_overlap = function(
 
     # Generate as BED file
     snp_rsid = data.frame(snp,rsid=rsids)
-    snp_bed  = subset(snp_rsid,rsid %in% eqtls$rsid)[,1:4] %>% unique
-    paste0('\n  GTEx eQTL BED, dim\t= ') %>% cat
-    dim(snp_bed) %>% print
-    paste0('  eQTL SNP N\t\t= ') %>% cat
-    unique(snp_bed$ann) %>% length %>% print
+    tissue_names = unique(eqtls$tissue)
+    tissue_n = length(tissue_names)
+    paste0('\nGenerating BED files for ',tissue_n,' tissues.. ') %>% cat
+    o = lapply(c(1:tissue_n),function(i) {
+        # Filter by tissue
+        tissue_name  = tissue_names[i]
+        eqtls_tissue = subset(eqtls,tissue==tissue_name)
+        snp_bed = subset(snp_rsid,rsid %in% eqtls_tissue$rsid)[,1:4] %>% unique
+        if(debug) {
+            paste0('\n',tissue_name,'\n  eQTL BED, dim\t= ') %>% cat
+            dim(snp_bed) %>% print
+            paste0('  eQTL SNP N\t\t= ') %>% cat
+            unique(snp_bed$ann) %>% length %>% print
+        }
+
+        # Save as a BED file
+        f_name2 = paste0(out,'/snp_gtex_',tissue_name,
+            '_',unique(snp_bed$ann)%>%length,'.bed')
+        write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+        if(debug) paste0('\nWrite file: ',f_name2,'\n') %>% cat
+    })
+    'done\n\n' %>% cat
+
+    ## Below codes are old.. ##
+    #snp_bed  = subset(snp_rsid,rsid %in% eqtls$rsid)[,1:4] %>% unique
+    #paste0('\n  GTEx eQTL BED, dim\t= ') %>% cat
+    #dim(snp_bed) %>% print
+    #paste0('  eQTL SNP N\t\t= ') %>% cat
+    #unique(snp_bed$ann) %>% length %>% print
 
     # Filter by tissue (optional)
-    if(!is.null(tissue_nm)) {
-        f_name2 = paste0(out,'/snp_gtex_',tissue_nm,'_',unique(snp_bed$ann)%>%length,'.bed')
-    } else f_name2 = paste0(out,'/snp_gtex_',unique(snp_bed$ann)%>%length,'.bed')
+    #if(!is.null(tissue_nm)) {
+    #    f_name2 = paste0(out,'/snp_gtex_',tissue_nm,'_',unique(snp_bed$ann)%>%length,'.bed')
+    #} else f_name2 = paste0(out,'/snp_gtex_',unique(snp_bed$ann)%>%length,'.bed')
 
     # Save as a BED file
-    write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-    paste0('\nWrite file: ',f_name2,'\n') %>% cat
+    #write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    #paste0('\nWrite file: ',f_name2,'\n') %>% cat
 }
 
 gtex_filt = function(
@@ -435,35 +629,39 @@ roadmap_filt = function(
 db_filter = function(
     args = NULL
 ) {
-    if(length(args$help)>0) {   help     = args$help
-    } else                      help     = FALSE
-    if(help) {                  cat(help_message); quit() }
+    if(length(args$help)>0) {     help     = args$help
+    } else                        help     = FALSE
+    if(help) { cat(help_message); quit() }
 
     # Global arguments
-    if(length(args$base)>0)     b_path   = args$base
-    if(length(args$out)>0)      out      = args$out
-    if(length(args$debug)>0) {  debug    = args$debug
-    } else                      debug    = FALSE
+    if(length(args$base)>0)       b_path   = args$base
+    if(length(args$out)>0)        out      = args$out
+    if(length(args$debug)>0) {    debug    = args$debug
+    } else                        debug    = FALSE
 
     # Reguired arguments
-    if(length(args$meta)>0) {   meta     = args$meta
-    } else                      meta     = NULL
-    if(length(args$ctype)>0) {  ctype    = args$ctype
-    } else                      ctype    = NULL
-    if(length(args$enh)>0) {    enh      = args$enh
-    } else                      enh      = TRUE
-    if(length(args$sep)>0) {    sep      = args$sep
-    } else                      sep      = FALSE
-    if(length(args$pval)>0)     pval     = args$pval
-    if(length(args$gtex)>0)     gtex     = args$gtex
-    if(length(args$tissue)>0) { tissue   = args$tissue
-    } else                      tissue   = NULL
-    if(length(args$regulm)>0)   reg_path = args$regulm
-    if(length(args$lncrna)>0)   lnc_path = args$lncrna
+    if(length(args$meta)>0) {     meta     = args$meta
+    } else                        meta     = NULL
+    if(length(args$ctype)>0) {    ctype    = args$ctype
+    } else                        ctype    = NULL
+    if(length(args$enh)>0) {      enh      = args$enh
+    } else                        enh      = TRUE
+    if(length(args$sep)>0) {      sep      = args$sep
+    } else                        sep      = FALSE
+    if(length(args$pval)>0)       pval     = args$pval
+    if(length(args$gtex)>0)       gtex     = args$gtex
+    if(length(args$tissue)>0) {   tissue   = args$tissue
+    } else                        tissue   = NULL
+    if(length(args$regulm)>0)     reg_path = args$regulm
+    if(length(args$lncrna)>0)     lnc_path = args$lncrna
+    if(length(args$infotype)>0) { infotype = args$infotype
+    } else                        infotype = NULL
 
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
-    if(args$dbfilt == 'roadmap') {
+    if(args$dbfilt == 'ucsc') {
+        ucsc_compile(b_path,out)
+    } else if(args$dbfilt == 'roadmap') {
         roadmap_filt(b_path,out,ctype,enh,sep,meta,debug)
     } else if(args$dbfilt == 'gtex') {
         gtex_filt(b_path,out,pval,debug)
@@ -471,11 +669,13 @@ db_filter = function(
         gtex_overlap(b_path,gtex,out,tissue,debug)
     } else if(args$dbfilt == 'dist') {
         paste0('Input file/folder N\t= ') %>% cat; length(b_path) %>% print
-        distance_filt_multi(b_path,out,meta,debug)
+        distance_filt_multi(b_path,out,meta,infotype,debug)
     } else if(args$dbfilt == 'regulome') {
         regulome_filt(b_path,reg_path,out)
     } else if(args$dbfilt == 'lnc_ovl') {
         lncrna_overlap(b_path,lnc_path,out)
+    } else if(args$dbfilt == 'hic_bed') {
+        hic_bed(b_path,out)
     } else {
         paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
