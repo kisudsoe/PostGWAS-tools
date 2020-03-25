@@ -9,15 +9,15 @@ And LDlink results are returned with **hg19** coordinates.
 
 ## Brief result description
 
-![](Fig1.png)
+![](r2d1_data/Fig1.png)
 
 
 
-![](Fig2.png)
+![](r2d1_data/Fig2.png)
 
 
 
-![](Fig3.png)
+![](r2d1_data/Fig3.png)
 
 
 
@@ -36,6 +36,8 @@ And LDlink results are returned with **hg19** coordinates.
   * LOLAweb: http://lolaweb.databio.org/
 * Hi-C-coupled multimarker analysis tool: H-MAGMA
   * Sey et al., 2020, Nature Neuroscience, [10.1038/s41593-020-0603-0](https://doi.org/10.1038/s41593-020-0603-0)
+
+
 
 # 1. From the seed SNPs (EFO0001359) to candidate risk SNPs
 
@@ -156,14 +158,16 @@ Usage: `Rscript postgwas-exe.r --ldlink bed --base <input file> <input folder> -
 ```CMD
 Rscript postgwas-exe.r
     --ldlink bed
-    --base r2d1_data_gwas/gwas_biomart_fill.tsv
-    --out r2d1_data_gwas
+    --base r2d1_data/gwas_biomart_fill.tsv
+    --out r2d1_data
 ```
 
 > ** Run function ldlink_bed... [1] 2003    8
 > Write file:     r2d1_data_gwas/gwas_hg19_biomart_2003.bed
 > Write file:     r2d1_data_gwas/gwas_hg38_biomart_2002.bed
 > Job done: 2020-02-25 23:56:09 for 1.9 sec
+
+
 
 # 2. Downloading annotation data
 
@@ -347,39 +351,98 @@ Rscript postgwas-exe.r
 >
 > Job done: 2020-02-28 00:38:13 for 6 sec
 
-## Coding exons from UCSC table browser
+## Genome information from UCSC table browser
 
 Go to UCSC browser hompage https://genome.ucsc.edu
 
-1. For downloading hg38 coding exons,
-   * Go to **Table Browser** page
+### Coding exons - hg38
+
+For downloading hg38 coding exons,
+
+1. Go to **Table Browser** page
    * assembly: **hg38**
    * group: Genes and Genes Predictions
    * track: **GENCODE v32**
    * table: knownGene
    * output format: BED - browser extensible data
-
 2. Then click the "**get output**" button. In the new page,
    * visibility= hide
    * Create one BED record per: **Coding Exons**
-
 3. Then download the file by click the "**get BED**" button.
-   * Set the file name as `ucsc_tbBrowser_Gencode_v32_CDS_hg38.bed`.
+   * Set the file name as `db_gwas/ucsc_tbBrowser_Gencode_v32_CDS_hg38.bed`.
 
-4. For downloading hg19 coding exons:
-   * Go to **Table Browser** page
-   * assembly: **hg19**
+### Coding exons - hg19
+
+For downloading hg19 coding exons:
+
+1. Go to **Table Browser** page
+   * assembly: **Feb. 2009 (GRCh37/hg19)**
    * group: Genes and Genes Predictions
    * track: **Ensembl Genes**
    * table: ensGene
    * output format: BED - browser extensible data
-5. Then clisk the "**get output**" button. In the new page,
-   * visibility= hid
+2. Then click the "**get output**" button. In the new page,
+   * visibility= hide
    * Create one BED record per: **Coding Exons**
-6. Then download the file by click the "**get BED**" button.
-   * Set the file name as `ucsc_tbBrowser_ensGene_CDS_hg19.bed`.
+3. Then download the file by click the "**get BED**" button.
+   * Set the file name as `db_gwas/ucsc_tbBrowser_ensGene_CDS_hg19.bed`.
+
+### Promoter regions - hg19
+
+For downloading hg19 2K proximal promoter regions:
+
+1. Go to **Table Browser** page
+   * assembly: **Feb. 2009 (GRCh37/hg19)**
+   * group: Genes and Genes Predictions
+   * track: **Ensembl Genes**
+   * table: ensGene
+   * output format: BED - browser extensible data
+2. Then click the "**get output**" button. In the new page,
+   * visibility= hide
+   * Create one BED record per: **Upstream by 2000 bases**
+3. Then download the file by click the "**get BED**" button.
+   * Set the file name as `db_gwas/ucsc_tbBrowser_ensGene_Up2K_hg19.bed`
+
+### Gene body - hg19
+
+For downloading hg19 gene body regions:
+
+1. Go to **Table Browser** page
+   * assembly: **Feb. 2009 (GRCh37/hg19)**
+   * group: Genes and Gene Predictions
+   * track: **Ensembl Genes**
+   * table: ensGene
+   * output format: BED - browser extensible data
+2. Then click the "**get output**" button. In the new page,
+   * visibility= hide
+   * Create one BED record per: **Whole Gene**
+3. Then download the file by click the "**get BED**" button.
+   * Set the file name as `db_gwas/ucsc_tbBrowser_ensGene_wholeGene_hg19.bed`
+
+
 
 # 3. Filtering the annotations
+
+## UCSC annotations - Compiling promoter/gene/cds regions
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt ucsc 
+  --base db_gwas/ucsc_tbBrowser_ensGene_CDS_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_wholeGene_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_Up2K_hg19.bed
+  --out db_gwas
+```
+
+> ** Run function: db_filter.r/lncrna_overlap... ready
+>   Read CDS file, dim            = [1] 753667      6
+>   Read Gene file, dim           = [1] 204940     12
+>   Read Promoter file, dim       = [1] 204940      6
+>
+>   Generate tags... 1.. 2.. 3.. done
+>   Compile the three UCSC data... [1] 1163547       4
+> Write a BED file: db_gwas/ucsc_annot.bed
+> Job done: 2020-03-19 21:23:11 for 1.2 min
+
+
 
 ## Roadmap filter
 
@@ -521,6 +584,29 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/gtex_signif_5e-08.rds
 > Job done: 2020-02-28 00:15:35 for 2.9 min
 
+## Converting Stitzel lab's Hi-C data
+
+To analyze physical interaction map between SNPs to Genes, Stitzel lab's Hi-C data was converted to BED format.
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt hic_bed
+  --base db_1b_Stitzellab/GSE118588_RAW/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.txt db_1b_Stitzellab/GSE118588_RAW/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.txt
+  --out db_1b_Stitzellab
+```
+
+> ** Run function: db_filter.r/hic_bed... ready
+> Total 2 file(s) is/are input.
+>
+>   1     GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.txt      [1] 9100   20
+>   Write file: db_1b_Stitzellab/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.bed
+>
+>   2     GSM3333898_Human_Islet_HiC_HiCCUPS_loops.txt    [1] 2580   20
+>   Write file: db_1b_Stitzellab/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed
+> Job done: 2020-03-21 02:27:33 for 12 sec
+
+
+
 # 4. Distances from the annotations
 
 ## For General annotations
@@ -552,6 +638,12 @@ bedtools sort -i db/ucsc_tbBrowser_ensGene_CDS_hg19.bed | bedtools closest -d -a
 ```
 
 Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
+
+```bash
+bedtools sort -i db/ucsc_annot.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin	> data/ucsc_annot.tsv
+```
+
+
 
 ## For roadmap each cell type
 
@@ -662,6 +754,44 @@ bedtools closest -d
 	> data/SCbeta_YZ_pseudo_pool_ATAC.tsv
 ```
 
+### For Stitzel lab's EndoC-βH1 cell
+
+#### ATAC-seq data
+
+```bash
+bedtools sort -i	./1b_stitzellab/GSM3333912_EndoC_BH1_ATACseq_broadPeak.fdr0.05.noBlacklist.bed |	bedtools closest -d	-a	gwas_hg19_biomart_2003.bed -b stdin >	./1b_stitzellab_dist/EndoC_BH1_ATAC_broadPeak.tsv
+```
+
+#### ChromHmm annotation
+
+```bash
+bedtools sort -i 1b_stitzellab/GSE118588_EndoC_BH1_ChromHMM_annotations.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > 1b_stitzellab_dist/EndoC_BH1_ChromHMM.tsv
+```
+
+#### Hi-C data
+
+I ran this code at local PC.
+
+**For GWAS SNPs**
+
+```bash
+bedtools sort -i db_1b_Stitzellab/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed | bedtools closest -d -a r2d1_data/gwas_hg19_biomart_2003.bed -b stdin > r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv
+
+bedtools sort -i db_1b_Stitzellab/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.bed | bedtools closest -d -a r2d1_data/gwas_hg19_biomart_2003.bed -b stdin > r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv
+```
+
+**For UCSC annotations** 
+
+```bash
+bedtools sort -i db_gwas/ucsc_annot.bed > db_gwas/ucsc_annot_sort.bed
+
+bedtools sort -i db_1b_Stitzellab/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed | bedtools closest -d -a db_gwas/ucsc_annot_sort.bed -b stdin > r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv
+
+bedtools sort -i db_1b_Stitzellab/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.bed | bedtools closest -d -a db_gwas/ucsc_annot_sort.bed -b stdin > r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv
+```
+
+
+
 ## For Pritchard lab's immune cell ATAC-seq atlas
 
 ### Preparing ATAC-seq data
@@ -745,202 +875,267 @@ bedtools	sort	-i	./3_tanlab/Treg_enh_t1d.bed	|	bedtools	closest	-d	-a	gwas_hg19_
 
 # 5. Overlapping the annotations
 
-## General annotations overlapping
+## UCSC genome annotations
 
-To identify the Roadmap and Encode annotations and the CDS regions overlapped T1D SNPs, result files of the general annotations from the `bedtools closest` function were used:
-
-* `r2d1_data_gwas/distance/roadmap_enh.tsv`
-* `r2d1_data_gwas/distance/roadmap_total.tsv`
-* `r2d1_data_gwas/distance/encode_tfbs.tsv`
-* `r2d1_data_gwas/distance/ensGene_cds_hg19.tsv`
+Separating by the tags and identifying tag overlapped T1D SNPs:
 
 Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt dist ^
-	--base r2d1_data_gwas/distance/roadmap_enh.tsv r2d1_data_gwas/distance/roadmap_total.tsv r2d1_data_gwas/distance/encode_tfbs.tsv r2d1_data_gwas/distance/ensGene_cds_hg19.tsv ^
-	--out r2d1_data_gwas
-```
-
-> ** Run function: db_filter.r/distance_filt...
-> File roadmap_enh... nrow= 20292.. done
->   Annotations occupied by SNPs  = [1] 3884
->   SNPs in annotations           = [1] 688
->   Write file: r2d1_data_gwas/snp_roadmap_enh_688.bed
-> Job process: 0.6 sec
->
-> File roadmap_total... nrow= 254205.. done
->   Annotations occupied by SNPs  = [1] 25819
->   SNPs in annotations           = [1] 2003
->   Write file: r2d1_data_gwas/snp_roadmap_total_2003.bed
-> Job process: 4.9 sec
->
-> File encode_tfbs... nrow= 4237.. done
->   Annotations occupied by SNPs  = [1] 2113
->   SNPs in annotations           = [1] 429
->   Write file: r2d1_data_gwas/snp_encode_tfbs_429.bed
-> Job process: 0.1 sec
->
-> File ensGene_cds_hg19... nrow= 5791.. done
->   Annotations occupied by SNPs  = [1] 58
->   SNPs in annotations           = [1] 61
->   Write file: r2d1_data_gwas/snp_ensGene_cds_hg19_61.bed
-> Job process: 0.1 sec
->
-> Job done: 2020-02-28 18:31:08 for 5.8 sec
-
-## For Roadmap each cell type
-
-```CMD
 Rscript postgwas-exe.r
-	--dbfilt dist
-	--base r2_ins_data/0_roadmap_dist
-	--out r2_ins_data/0_roadmap_dist
-	--meta db_gwas/roadmap_metadata.tsv
+  --dbfilt dist
+  --base r2d1_data/distance/ucsc_annot.tsv
+  --out r2d1_data/summary
+  --infotype ucsc
 ```
 
-
-
-```CMD
-Rscript postgwas-exe.r
-	--dbfilt dist
-	--base r2d1_data/roadmap_dist/0_distance
-	--out r2d1_data/roadmap_dist
-	--meta db_gwas/roadmap_metadata.tsv
-```
-
-> Input file/folder N     = [1] 1
->
 > ** Run function: db_filter.r/distance_filt_multi...
-> Input file N    = [1] 127
->   Read metadata file dim        = [1] 127  13
-> File roadmap_001_enh... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 57
->   SNPs in annotations           = [1] 77
->   Write file: r2d1_data/roadmap_dist/ESC/snp_roadmap_001_enh_77.bed
-> Job process: 0.3 sec
+> Input file N    = [1] 1
+> File ucsc_annot... nrow= 8450.. done
+>   Annotations occupied by SNPs  = [1] 1132
+>   SNPs in annotations           = [1] 1407
 >
+>   UCSC annotations: 3 tags
+>     cds..       165..   Save at: r2d1_data/summary/snp_ucsc_cds_61.bed
+>     proximalPromoter..  680..   Save at: r2d1_data/summary/snp_ucsc_proximalPromoter_259.bed
+>     wholeGene.. 6899..  Save at: r2d1_data/summary/snp_ucsc_wholeGene_1318.bed
+> Job done: 2020-03-20 15:56:38 for 0.4 sec
+
+## Roadmap each cell type
+
+To identify Roadmap cell type-specific enhancer signal overlapped with the T1D SNPs:
+
+Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/0_roadmap_dist
+  --out r2d1_data/0_roadmap_over
+  --meta db_gwas/roadmap_meta.tsv
+```
+
 > ...
 >
 > File roadmap_129_enh... nrow= 2003.. done
 >   Annotations occupied by SNPs  = [1] 64
 >   SNPs in annotations           = [1] 82
->   Write file: r2d1_data/roadmap_dist/BONE/snp_roadmap_129_enh_82.bed
-> Job process: 0.1 sec
+>   Write file: r2d1_data/0_roadmap_over/BONE/snp_roadmap_129_enh_82.bed
+> Job process: 1 sec
 >
-> Job done: 2020-03-10 19:36:52 for 9.8 sec
+> Job done: 2020-03-17 19:38:37 for 41.6 sec
 
-## ATAC-seq data overlapping
+## Melton lab's data
 
-To identify ATAC-seq signal overlapped T1D SNPs, result files of the ATAC-seq data from the `bedtools closest` function were used:
-
-* `r2d1_data_gwas/distance/Beta_ATAC.tsv`
-* `r2d1_data_gwas/distance/SCbeta_ATAC.tsv`
-* `r2d1_data_gwas/distance/SCbeta_12h_ATAC.tsv`
-* `r2d1_data_gwas/distance/SCbeta_72h_ATAC.tsv`
-* `r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep1.tsv`
-* `r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep2.tsv`
-* `r2d1_data_gwas/distance/SCbeta_YZ_pseudo_pool_ATAC.tsv`
+To identify Melton lab's stem cell-derived/primary β-cell ATAC-seq signal and ChIP-seq (H3K4me1 and H3K21ac) enhancer data overlapped with the T1D SNPs:
 
 Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt dist ^
-	--base r2d1_data_gwas/distance/Beta_ATAC.tsv r2d1_data_gwas/distance/SCbeta_ATAC.tsv r2d1_data_gwas/distance/SCbeta_12h_ATAC.tsv r2d1_data_gwas/distance/SCbeta_72h_ATAC.tsv r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep1.tsv r2d1_data_gwas/distance/SCbeta_in_vivo_ATAC_rep2.tsv r2d1_data_gwas/distance/SCbeta_YZ_pseudo_pool_ATAC.tsv ^
-	--out r2d1_data_gwas
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/1_meltonlab_dist
+  --out r2d1_data/1_meltonlab_over
+  --meta db_gwas/meltonlab_meta.tsv
 ```
 
-> ** Run function: db_filter.r/distance_filt...
-> File Beta_ATAC... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 8
->   SNPs in annotations           = [1] 12
->   Write file: r2d1_data_gwas/snp_Beta_ATAC_12.bed
-> Job process: 0.4 sec
->
-> File SCbeta_ATAC... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 39
->   SNPs in annotations           = [1] 56
->   Write file: r2d1_data_gwas/snp_SCbeta_ATAC_56.bed
-> Job process: 0.1 sec
->
-> File SCbeta_12h_ATAC... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 30
->   SNPs in annotations           = [1] 40
->   Write file: r2d1_data_gwas/snp_SCbeta_12h_ATAC_40.bed
-> Job process: 0.1 sec
->
-> File SCbeta_72h_ATAC... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 28
->   SNPs in annotations           = [1] 39
->   Write file: r2d1_data_gwas/snp_SCbeta_72h_ATAC_39.bed
-> Job process: 0.1 sec
->
-> File SCbeta_in_vivo_ATAC_rep1... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 19
->   SNPs in annotations           = [1] 24
->   Write file: r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep1_24.bed
-> Job process: 0.1 sec
->
-> File SCbeta_in_vivo_ATAC_rep2... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 19
->   SNPs in annotations           = [1] 24
->   Write file: r2d1_data_gwas/snp_SCbeta_in_vivo_ATAC_rep2_24.bed
-> Job process: 0.1 sec
->
-> File SCbeta_YZ_pseudo_pool_ATAC... nrow= 3405.. done
->   Annotations occupied by SNPs  = [1] 38
->   SNPs in annotations           = [1] 58
->   Write file: r2d1_data_gwas/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed
-> Job process: 0.1 sec
->
-> Job done: 2020-02-28 18:31:44 for 0.8 sec
-
-## For Melton lab's data
-
-Stem cell-derived/primary β-cell ATAC-seq and ChIP-seq (H3K4me1 and H3K21ac) enhancer data.
-
-```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt dist ^
-	--base r2d1_data_gwas/meltonlab_dist ^
-	--out r2d1_data_gwas/meltonlab_dist
-```
-
-> ** Run function: db_filter.r/distance_filt...
-> File Alpha_ATAC_rep1... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 8
->   SNPs in annotations           = [1] 12
->   Write file: r2d1_data_gwas/snp_Alpha_ATAC_rep1_12.bed
-> Job process: 0.3 sec
->
 > ...
->
->   20/21 being processed.
-> File SCbeta_SE_enh... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 1
->   SNPs in annotations           = [1] 11
->   Write file: r2d1_data_gwas/snp_SCbeta_SE_enh_11.bed
-> Job process: 0 sec
 >
 > File SCbeta_TE_enh... nrow= 2003.. done
 >   Annotations occupied by SNPs  = [1] 6
 >   SNPs in annotations           = [1] 10
->   Write file: r2d1_data_gwas/snp_SCbeta_TE_enh_10.bed
-> Job process: 0 sec
+>   Write file: r2d1_data/1_meltonlab_over/beta_enh/snp_SCbeta_TE_enh_10.bed
+> Job process: 0.2 sec
 >
-> Job done: 2020-03-04 12:36:43 for 1.4 sec
+> Job done: 2020-03-17 19:48:43 for 8.3 sec
 
-## For Pritchard lab's data
+## Suh lab's data
+
+Yizhou's SC-derived beta-cell ATAC-seq signals overlapped with the T1D SNPs:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/1a_suhlab_dist
+  --out r2d1_data/1a_suhlab_over
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 3
+> File Scbeta_YZ_pr1_pooled.pf_peaks... nrow= 3253.. done
+>   Annotations occupied by SNPs  = [1] 44
+>   SNPs in annotations           = [1] 65
+>   Write file: r2d1_data/1a_suhlab_over/snp_Scbeta_YZ_pr1_pooled.pf_peaks_65.bed
+>   1/3 r2d1_data/1a_suhlab_dist/Scbeta_YZ_pr1_pooled.pf_peaks.tsv
+> Job process: 0.8 sec
+>
+> File Scbeta_YZ_pr2_pooled.pf_peaks... nrow= 3589.. done
+>   Annotations occupied by SNPs  = [1] 45
+>   SNPs in annotations           = [1] 66
+>   Write file: r2d1_data/1a_suhlab_over/snp_Scbeta_YZ_pr2_pooled.pf_peaks_66.bed
+>   2/3 r2d1_data/1a_suhlab_dist/Scbeta_YZ_pr2_pooled.pf_peaks.tsv
+> Job process: 1.2 sec
+>
+> File SCbeta_YZ_pseudo_pool_ATAC... nrow= 3405.. done
+>   Annotations occupied by SNPs  = [1] 38
+>   SNPs in annotations           = [1] 58
+>   Write file: r2d1_data/1a_suhlab_over/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed
+>   3/3 r2d1_data/1a_suhlab_dist/SCbeta_YZ_pseudo_pool_ATAC.tsv
+> Job process: 1 sec
+>
+> Job done: 2020-03-17 19:54:47 for 3.1 sec
+
+## Stitzel lab's data
+
+### ATAC-seq data
+
+Immortalized human primary β cell line EndoC-βH1 cells ATAC-seq signals overlapped with the T1D SNPs:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ATAC_broadPeak.tsv
+  --out r2d1_data/1b_stitzellab_over
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 1
+> File EndoC_BH1_ATAC_broadPeak... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 38
+>   SNPs in annotations           = [1] 64
+>   Write file: r2d1_data/1b_stitzellab_over/snp_EndoC_BH1_ATAC_broadPeak_64.bed
+> Job done: 2020-03-20 16:45:05 for 0.2 sec
+
+### ChromHMM annotation
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ChromHMM.tsv
+  --out r2d1_data/1b_stitzellab_over
+  --infotype tags
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 1
+> File EndoC_BH1_ChromHMM... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 450
+>   SNPs in annotations           = [1] 1950
+>
+>  Annotations: 13 tags
+>     1 Active.enhancer.1:        54..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Active.enhancer.1_54.bed
+>     2 Active.enhancer.2:        15..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Active.enhancer.2_15.bed
+>     3 Active.TSS:       25..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Active.TSS_25.bed
+>     4 Bivalent.poised.TSS:      2..     Save at: r2d1_data/1b_stitzellab_over/snp_tags_Bivalent.poised.TSS_2.bed
+>     5 Flanking.TSS:     6..     Save at: r2d1_data/1b_stitzellab_over/snp_tags_Flanking.TSS_6.bed
+>     6 Genic.enhancer:   12..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Genic.enhancer_12.bed
+>     7 Quiescent.low.signal:     521..   Save at: r2d1_data/1b_stitzellab_over/snp_tags_Quiescent.low.signal_521.bed
+>     8 Repressed.polycomb:       24..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Repressed.polycomb_24.bed
+>     9 Strong.transcription:     100..   Save at: r2d1_data/1b_stitzellab_over/snp_tags_Strong.transcription_100.bed
+>     10 Weak.enhancer:   57..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Weak.enhancer_57.bed
+>     11 Weak.repressed.polycomb: 731..   Save at: r2d1_data/1b_stitzellab_over/snp_tags_Weak.repressed.polycomb_731.bed
+>     12 Weak.transcription:      370..   Save at: r2d1_data/1b_stitzellab_over/snp_tags_Weak.transcription_370.bed
+>     13 Weak.TSS:        33..    Save at: r2d1_data/1b_stitzellab_over/snp_tags_Weak.TSS_33.bed
+> Job done: 2020-03-20 16:53:13 for 0.4 sec
+
+### Hi-C data
+
+1) Primary Islet Hi-C data
+
+Usage: `Rscript postgwas-exe.r --gene hic_dist --base <base files> --out <out folder> --bed <default:FALSE>`
+
+* --base <base files>: [1] hic_gwas_dist file, [2] hic_gene_dist file
+
+Save as TSV file:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene hic_pair
+  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv
+  --out r2d1_data/summary_gene
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv, length= 2260, overlap= 64
+>   r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv, length= 1217288,      overlap= 43158
+>
+>   Process gwas_loop.. .. done
+>   Process gene_loop.. .. done
+>   Process merge.. 64.. [1] 412   5
+>   Write file: r2d1_data/summary_gene/Primary_Islet_HiC_gwas_72.tsv
+> Job done: 2020-03-22 13:17:59 for 3.9 sec
+
+Save as BED file:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene hic_pair
+  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv
+  --out r2d1_data/summary
+  --bed TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv, length= 2260, overlap= 64
+>   r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv, length= 1217288,      overlap= 43158
+>
+>   Process gwas_loop.. .. done
+>   Process gene_loop.. .. done
+>   Process merge.. 64.. [1] 35  4
+>   Write file: r2d1_data/summary/snp_hic_Primary_Islet_HiC_gwas_35.bed
+> Job done: 2020-03-23 16:09:13 for 3.8 sec
+
+2) EndoC_BH1_Hi-C data
+
+Save as TSV file:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene hic_pair
+  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv
+  --out r2d1_data/summary_gene
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv, length= 2196,     overlap= 166
+>   r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv, length= 1372782,  overlap= 151476
+>
+>   Process gwas_loop.. .. done
+>   Process gene_loop.. .. done
+>   Process merge.. 166.. [1] 2214    5
+>   Write file: r2d1_data/summary_gene/EndoC_BH1_HiC_gwas_267.tsv
+> Job done: 2020-03-22 13:18:21 for 5.7 sec
+
+Save as BED file:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene hic_pair
+  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv
+  --out r2d1_data/summary
+  --bed TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv, length= 2196,     overlap= 166
+>   r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv, length= 1372782,  overlap= 151476
+>
+>   Process gwas_loop.. .. done
+>   Process gene_loop.. .. done
+>   Process merge.. 166.. [1] 96  4
+>   Write file: r2d1_data/summary/snp_hic_EndoC_BH1_HiC_gwas_96.bed
+> Job done: 2020-03-23 16:10:19 for 5.7 sec
+
+## Pritchard lab's data
 
 25 blood immune cell types ATAC-seq data:
 
 ```CMD
 Rscript postgwas-exe.r
-	--dbfilt dist
-	--base r2d1_data_gwas/pritchardlab_dist
-	--out r2d1_data_gwas/pritchardlab_dist
+  --dbfilt dist
+  --base r2d1_data/2_pritchardlab_dist
+  --out r2d1_data/2_pritchardlab_over
+  --meta db_gwas/pritchardlab_meta.tsv
 ```
 
 > ...
@@ -948,980 +1143,594 @@ Rscript postgwas-exe.r
 > File 1011.Naive_Teffs.S... nrow= 2004.. done
 >   Annotations occupied by SNPs  = [1] 257
 >   SNPs in annotations           = [1] 413
->   Write file: r2d1_data_gwas/pritchardlab_dist/snp_1011.Naive_Teffs.S_413.bed
-> Job process: 0.1 sec
+>   Write file: r2d1_data/2_pritchardlab_over/T-CD4-cells_stim/snp_1011.Naive_Teffs.S_413.bed
+> Job process: 0.3 sec
 >
-> Job done: 2020-03-08 23:54:36 for 12.6 sec
+> Job done: 2020-03-17 20:47:09 for 53 sec
 
-## Regulome overlapping
+## Tan lab's data
+
+T<sub>H</sub>1 and T<sub>REG</sub> cells enhancer regions overlapped with the T1D SNPs:
+
+```CMD
+Rscript postgwas-exe.r
+  --dbfilt dist
+  --base r2d1_data/3_tanlab_dist
+  --out r2d1_data/3_tanlab_over
+  --meta db_gwas/tanlab_meta.tsv
+```
+
+> ...
+>
+> File Treg_enh_t1d... nrow= 2003.. done
+>   Annotations occupied by SNPs  = [1] 39
+>   SNPs in annotations           = [1] 83
+>   Write file: r2d1_data/3_tanlab_over/Treg_enh/snp_Treg_enh_t1d_83.bed
+>   6/6 r2d1_data/3_tanlab_dist/Treg_enh_t1d.tsv
+> Job process: 0.2 sec
+>
+> Job done: 2020-03-17 20:49:56 for 5.4 sec
+
+## Regulome annotations
 
 Although Regulome data is old fashioned, it is still used for annotations. The T1D SNPs overlapped with Regulome high score (≥2b) annotation were identified through this code:
 
 Usage: `Rscript postgwas-exe.r --dbfilt regulome --base <base files> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt regulome ^
-	--base r2d1_data_gwas/gwas_hg19_biomart_2003.bed ^
-	--lncrna db_gwas/regulome ^
-	--out r2d1_data_gwas
+Rscript postgwas-exe.r
+	--dbfilt regulome
+	--base r2d1_data/gwas_hg19_biomart_2003.bed
+	--regulm db_gwas/regulome
+	--out r2d1_data
 ```
 
 > ** Run function: db_filter.r/regulome_filt...
-> GWAS SNPs N   = [1] 2003
+> Input GWAS SNPs N       = [1] 2003
 > 2 Regulome data load...
->   Read: db_gwas/regulome/dbSNP132.Category1.txt.gz.rds; dim = [1] 39432     5
->   Read: db_gwas/regulome/dbSNP132.Category2.txt.gz.rds; dim = [1] 407796      5
+>     Read: db_gwas/regulome/dbSNP132.Category1.txt.gz.rds; dim = [1] 39432     5
+>     Read: db_gwas/regulome/dbSNP132.Category2.txt.gz.rds; dim = [1] 407796      5
 >
->   Regulome score >=2b, SNPs             = [1] 430528
->   Functional motifs (1a~2b - 1f_only)   = [1] 34705
+>     Regulome score >=2b, SNPs             = [1] 430528
+>     Functional motifs (1a~2b - 1f only)   = [1] 34705
 >
->   Regulome >=2b, GWAS SNPs              = [1] 104
->   GWAS SNPs occupied in
->     functional motifs (1a~2b - 1f_only) = [1] 54
+>     Regulome >=2b, GWAS SNPs              = [1] 104
+>     GWAS SNPs occupied in
+>        functional motifs (1a~2b - 1f only) = [1] 54
 >
-> Write file: r2d1_data_gwas/regulome_104.tsv
-> Write file: r2d1_data_gwas/snp_regulome2b_104.bed
+> Write file: r2d1_data/regulome_104.tsv
+> Write file: r2d1_data/snp_regulome2b_104.bed
 >
-> Job done: 2020-03-01 00:54:10 for 7.9 sec
+> Job done: 2020-03-17 20:53:21 for 7.9 sec
 
-## GTEx overlapping
+I moved the BED file `snp_regulome2b_104.bed` into the `summary` folder.
+
+## GTEx eQTLs data
 
 GTEx version 8 includes 17,382 samples, 54 tissues and 948 donors. 
 
 ```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt gtex_ovl ^
-	--base r2d1_data_gwas/gwas_hg19_biomart_2003.bed ^
-	--gtex db_gwas/gtex_signif_5e-08.rds ^
-	--out r2d1_data_gwas
-```
-
-> ** Run function: db_filter.r/gtex_overlap...
-> Input GWAS SNPs N = 2003
->   gtex_signif_5e-08.rds, dim    = [1] 30613850        9
->   Overlapped eQTL-gene pairs    = [1] 68822
->   eQTLs N               = [1] 1349
->   Associated eGenes     = [1] 248
->
-> Write file: r2d1_data_gwas/gtex_signif_1349.tsv
->
->   GTEx eQTL BED, dim    = [1] 1349    4
->   eQTL SNP N            = [1] 1349
->
-> Write file: r2d1_data_gwas/snp_gtex_1349.bed
-> Job done: 2020-03-01 14:32:12 for 2.2 min
-
-### Pancreas
-
-```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt gtex_ovl ^
-	--base r2d1_data_gwas/gwas_hg19_biomart_2003.bed ^
-	--gtex db_gwas/gtex_signif_5e-08.rds ^
-	--out r2d1_data_gwas ^
-	--tissue Pancreas
-```
-
-> ** Run function: db_filter.r/gtex_overlap...
-> Input GWAS SNPs N = 2003
->   gtex_signif_5e-08.rds, dim    = [1] 30613850        9
->   Overlapped eQTL-gene pairs    = [1] 68822
->
-> [Option] Pancreas, dim = [1] 1482    9
->   eQTLs N               = [1] 493
->   Associated eGenes     = [1] 42
->
-> Write file: r2d1_data_gwas/gtex_signif_Pancreas_493.tsv
->
->   GTEx eQTL BED, dim    = [1] 493   4
->   eQTL SNP N            = [1] 493
->
-> Write file: r2d1_data_gwas/snp_gtex_Pancreas_493.bed
-> Job done: 2020-03-01 14:34:51 for 2.2 min
-
-### Whole blood
-
-```CMD
-Rscript postgwas-exe.r ^
-	--dbfilt gtex_ovl ^
-	--base r2d1_data_gwas/gwas_hg19_biomart_2003.bed ^
-	--gtex db_gwas/gtex_signif_5e-08.rds ^
-	--out r2d1_data_gwas ^
-	--tissue Whole_Blood
+Rscript postgwas-exe.r
+	--dbfilt gtex_ovl
+	--base r2d1_data/gwas_hg19_biomart_2003.bed
+	--gtex db_gwas/gtex_signif_5e-08.rds
+	--out r2d1_data/gtex_eqtl
 ```
 
 > ** Run function: db_filter.r/gtex_overlap...
 > Input GWAS SNPs N       = 2003
->   gtex_signif_5e-08.rds, dim    = [1] 30613850        9
->   Overlapped eQTL-gene pairs    = [1] 68822
+>     gtex_signif_5e-08.rds, dim    = [1] 30613850        9
+>     Overlapped eQTL-gene pairs    = [1] 68822
+>     eQTLs N               = [1] 1349
+>     Associated eGenes     = [1] 248
 >
-> [Option] Whole_Blood, dim = [1] 2675    9
->   eQTLs N               = [1] 670
->   Associated eGenes     = [1] 72
+> Write file: r2d1_data/gtex_eqtl/gtex_signif_1349.tsv
 >
-> Write file: r2d1_data_gwas/gtex_signif_Whole_Blood_670.tsv
->
->   GTEx eQTL BED, dim    = [1] 670   4
->   eQTL SNP N            = [1] 670
->
-> Write file: r2d1_data_gwas/snp_gtex_Whole_Blood_670.bed
-> Job done: 2020-03-08 23:58:09 for 3.1 min
+>   Generating BED files for 49 tissues.. done
+>   
+>Job done: 2020-03-17 22:03:54 for 2.2 min
 
-## lncRNASNP overlapping
+I moved the BED file `gtex_eqtl/gtex_signif_1349.tsv` to the `r2d1_data` folder.
+
+## lncRNASNP2 data
 
 Finding input GWAS SNPs occupied at lncRNA open reading frame regions:
 
 ```CMD
 Rscript postgwas-exe.r ^
 	--dbfilt lnc_ovl ^
-	--base r2d1_data_gwas/gwas_hg19_biomart_2003.bed ^
+	--base r2d1_data/gwas_hg19_biomart_2003.bed ^
 	--lncrna db_gwas/lncrna
-	--out r2d1_data_gwas
+	--out r2d1_data
 ```
 
 > ** Run function: db_filter.r/lncrna_overlap...
 > Input GWAS SNPs N = 2003
 > 3 lncRNASNP2 data load...
->   Read: db_gwas/lncrna/lncRNASNP2_snplist.txt.rds;              dim = [1] 10205295        3
->   Read: db_gwas/lncrna/lncrnas.txt.rds;                         dim = [1] 141271      4
->   Read: db_gwas/lncrna/lncrna-diseases_experiment.txt.rds;      dim = [1] 753   3
+>     Read: db_gwas/lncrna/lncRNASNP2_snplist.txt.rds;              dim = [1] 10205295        3
+>     Read: db_gwas/lncrna/lncrnas.txt.rds;                         dim = [1] 141271      4
+>     Read: db_gwas/lncrna/lncrna-diseases_experiment.txt.rds;      dim = [1] 753   3
 >
 > Summary =
->   lncRNA SNPs
+>     lncRNA SNPs
 > 1     52   88
 >
->   Write file: r2d1_data_gwas/snp_lncrnasnp_88.bed
->   Write file: r2d1_data_gwas/lncrnasnp_88.tsv
-> Job done: 2020-03-01 15:56:41 for 28.9 sec
+>     Write file: r2d1_data/snp_lncrnasnp_88.bed
+>     Write file: r2d1_data/lncrnasnp_88.tsv
+> Job done: 2020-03-17 22:09:35 for 28.3 sec
+
+I moved the BED file `snp_lncrnasnp_88.bed` into the `summary` folder.
+
+
 
 # 6. BED summary
+
+## General annotations
+
+To identify the Roadmap and Encode annotations and the CDS regions overlapped T1D SNPs, result files of the general annotations from the `bedtools closest` function were used:
+
+* `r2d1_data_gwas/distance/encode_tfbs.tsv`
+* `r2d1_data_gwas/distance/ensGene_cds_hg19.tsv`
+
+Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
+
+```CMD
+Rscript postgwas-exe.r
+	--dbfilt dist
+	--base r2d1_data/distance/encode_tfbs.tsv r2d1_data/distance/ensGene_cds_hg19.tsv
+	--out r2d1_data/summary
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 2
+> File encode_tfbs... nrow= 4237.. done
+>   Annotations occupied by SNPs  = [1] 2113
+>   SNPs in annotations           = [1] 429
+>   Write file: r2d1_data/summary/snp_encode_tfbs_429.bed
+>   1/2 r2d1_data/distance/encode_tfbs.tsv
+> Job process: 0.2 sec
+>
+> File ensGene_cds_hg19... nrow= 5791.. done
+>   Annotations occupied by SNPs  = [1] 58
+>   SNPs in annotations           = [1] 61
+>   Write file: r2d1_data/summary/snp_ensGene_cds_hg19_61.bed
+>   2/2 r2d1_data/distance/ensGene_cds_hg19.tsv
+> Job process: 0.6 sec
+>
+> Job done: 2020-03-17 19:35:00 for 0.9 sec
+
+## GTEx eQTLs
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/gtex_eqtl
+  --out r2d1_data/summary
+  --sub_dir FALSE
+  --uni_save TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 49 Files/folders input.
+>   1 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_717.bed
+>   2 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_584.bed
+>   3 r2d1_data/gtex_eqtl/snp_gtex_Adrenal_Gland_471.bed
+>   4 r2d1_data/gtex_eqtl/snp_gtex_Artery_Aorta_514.bed
+>   5 r2d1_data/gtex_eqtl/snp_gtex_Artery_Coronary_311.bed
+>   6 r2d1_data/gtex_eqtl/snp_gtex_Artery_Tibial_599.bed
+>   7 r2d1_data/gtex_eqtl/snp_gtex_Brain_Amygdala_273.bed
+>   8 r2d1_data/gtex_eqtl/snp_gtex_Brain_Anterior_cingulate_cortex_BA24_252.bed
+>   9 r2d1_data/gtex_eqtl/snp_gtex_Brain_Caudate_basal_ganglia_309.bed
+>   10 r2d1_data/gtex_eqtl/snp_gtex_Brain_Cerebellar_Hemisphere_456.bed
+>   11 r2d1_data/gtex_eqtl/snp_gtex_Brain_Cerebellum_639.bed
+>   12 r2d1_data/gtex_eqtl/snp_gtex_Brain_Cortex_317.bed
+>   13 r2d1_data/gtex_eqtl/snp_gtex_Brain_Frontal_Cortex_BA9_269.bed
+>   14 r2d1_data/gtex_eqtl/snp_gtex_Brain_Hippocampus_261.bed
+>   15 r2d1_data/gtex_eqtl/snp_gtex_Brain_Hypothalamus_293.bed
+>   16 r2d1_data/gtex_eqtl/snp_gtex_Brain_Nucleus_accumbens_basal_ganglia_334.bed
+>   17 r2d1_data/gtex_eqtl/snp_gtex_Brain_Putamen_basal_ganglia_282.bed
+>   18 r2d1_data/gtex_eqtl/snp_gtex_Brain_Spinal_cord_cervical_c-1_193.bed
+>   19 r2d1_data/gtex_eqtl/snp_gtex_Brain_Substantia_nigra_147.bed
+>   20 r2d1_data/gtex_eqtl/snp_gtex_Breast_Mammary_Tissue_574.bed
+>   21 r2d1_data/gtex_eqtl/snp_gtex_Cells_Cultured_fibroblasts_567.bed
+>   22 r2d1_data/gtex_eqtl/snp_gtex_Cells_EBV-transformed_lymphocytes_301.bed
+>   23 r2d1_data/gtex_eqtl/snp_gtex_Colon_Sigmoid_557.bed
+>   24 r2d1_data/gtex_eqtl/snp_gtex_Colon_Transverse_586.bed
+>   25 r2d1_data/gtex_eqtl/snp_gtex_Esophagus_Gastroesophageal_Junction_562.bed
+>   26 r2d1_data/gtex_eqtl/snp_gtex_Esophagus_Mucosa_668.bed
+>   27 r2d1_data/gtex_eqtl/snp_gtex_Esophagus_Muscularis_623.bed
+>   28 r2d1_data/gtex_eqtl/snp_gtex_Heart_Atrial_Appendage_594.bed
+>   29 r2d1_data/gtex_eqtl/snp_gtex_Heart_Left_Ventricle_460.bed
+>   30 r2d1_data/gtex_eqtl/snp_gtex_Kidney_Cortex_72.bed
+>   31 r2d1_data/gtex_eqtl/snp_gtex_Liver_375.bed
+>   32 r2d1_data/gtex_eqtl/snp_gtex_Lung_522.bed
+>   33 r2d1_data/gtex_eqtl/snp_gtex_Minor_Salivary_Gland_168.bed
+>   34 r2d1_data/gtex_eqtl/snp_gtex_Muscle_Skeletal_557.bed
+>   35 r2d1_data/gtex_eqtl/snp_gtex_Nerve_Tibial_891.bed
+>   36 r2d1_data/gtex_eqtl/snp_gtex_Ovary_244.bed
+>   37 r2d1_data/gtex_eqtl/snp_gtex_Pancreas_493.bed
+>   38 r2d1_data/gtex_eqtl/snp_gtex_Pituitary_481.bed
+>   39 r2d1_data/gtex_eqtl/snp_gtex_Prostate_333.bed
+>   40 r2d1_data/gtex_eqtl/snp_gtex_Skin_Not_Sun_Exposed_Suprapubic_645.bed
+>   41 r2d1_data/gtex_eqtl/snp_gtex_Skin_Sun_Exposed_Lower_leg_673.bed
+>   42 r2d1_data/gtex_eqtl/snp_gtex_Small_Intestine_Terminal_Ileum_321.bed
+>   43 r2d1_data/gtex_eqtl/snp_gtex_Spleen_480.bed
+>   44 r2d1_data/gtex_eqtl/snp_gtex_Stomach_374.bed
+>   45 r2d1_data/gtex_eqtl/snp_gtex_Testis_661.bed
+>   46 r2d1_data/gtex_eqtl/snp_gtex_Thyroid_699.bed
+>   47 r2d1_data/gtex_eqtl/snp_gtex_Uterus_199.bed
+>   48 r2d1_data/gtex_eqtl/snp_gtex_Vagina_233.bed
+>   49 r2d1_data/gtex_eqtl/snp_gtex_Whole_Blood_670.bed
+> Total 49 file(s) is/are input.
+>
+> ** Run function: db_venn.r/venn_bed...
+>   Read 49 files
+>
+> [Message] Can't plot Venn diagram for more than 5 sets.
+>
+> [Message] Can't plot Euler plot.
+>
+> ** Back to function: db_venn.r/summ...
+>   Returned union list dim       = [1] 1349   53
+>   Write a BED file: r2d1_data/summary/snp_union_gtex_eqtl_1349.bed
+>   [PASS] Nearest gene summary.
+>
+> Job done: 2020-03-17 22:36:36 for 2.3 sec
 
 ## Roadmap union list
 
 Roadmap cell types following the ANATOMY groups in metadata:
 
-### ADRENAL
-
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ADRENAL
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/0_roadmap_over
+  --out r2d1_data/summary
+  --sub_dir FALSE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/ADRENAL
+> 30 Files/folders input.
+>   1 1 files in the ADRENAL
+>   2 27 files in the BLOOD
+>   3 1 files in the BONE
+>   4 13 files in the BRAIN
+>   5 3 files in the BREAST
+>   6 1 files in the CERVIX
+>   7 8 files in the ESC
+>   8 9 files in the ESC_DERIVED
+>   9 3 files in the FAT
+>   10 3 files in the GI_COLON
+>   11 2 files in the GI_DUODENUM
+>   12 1 files in the GI_ESOPHAGUS
+>   13 3 files in the GI_INTESTINE
+>   14 3 files in the GI_RECTUM
+>   15 4 files in the GI_STOMACH
+>   16 4 files in the HEART
+>   17 5 files in the IPSC
+>   18 1 files in the KIDNEY
+>   19 2 files in the LIVER
+>   20 5 files in the LUNG
+>   21 7 files in the MUSCLE
+>   22 1 files in the MUSCLE_LEG
+>   23 1 files in the OVARY
+>   24 2 files in the PANCREAS
+>   25 2 files in the PLACENTA
+>   26 8 files in the SKIN
+>   27 1 files in the SPLEEN
+>   28 2 files in the STROMAL_CONNECTIVE
+>   29 2 files in the THYMUS
+>   30 2 files in the VASCULAR
+> Total 127 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_080_enh_120
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 120   5
->   Write a BED file: r2d1_data/summary/snp_union_ADRENAL_120.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 22:51:47 for 2.6 sec
-
-### BLOOD
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BLOOD
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 27 Files in the folder: r2d1_data/roadmap_dist/BLOOD
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_029_enh_163
->   Read 2: snp_roadmap_030_enh_214
->   Read 3: snp_roadmap_031_enh_245
->   Read 4: snp_roadmap_032_enh_246
->   Read 5: snp_roadmap_033_enh_275
->   Read 6: snp_roadmap_034_enh_236
->   Read 7: snp_roadmap_035_enh_184
->   Read 8: snp_roadmap_036_enh_173
->   Read 9: snp_roadmap_037_enh_254
->   Read 10: snp_roadmap_038_enh_233
->   Read 11: snp_roadmap_039_enh_229
->   Read 12: snp_roadmap_040_enh_249
->   Read 13: snp_roadmap_041_enh_215
->   Read 14: snp_roadmap_042_enh_232
->   Read 15: snp_roadmap_043_enh_241
->   Read 16: snp_roadmap_044_enh_250
->   Read 17: snp_roadmap_045_enh_239
->   Read 18: snp_roadmap_046_enh_227
->   Read 19: snp_roadmap_047_enh_243
->   Read 20: snp_roadmap_048_enh_242
->   Read 21: snp_roadmap_050_enh_219
->   Read 22: snp_roadmap_051_enh_153
->   Read 23: snp_roadmap_062_enh_247
->   Read 24: snp_roadmap_115_enh_238
->   Read 25: snp_roadmap_116_enh_268
->   Read 26: snp_roadmap_123_enh_180
->   Read 27: snp_roadmap_124_enh_172
+>   Read 127 files
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 492  31
->   Write a BED file: r2d1_data/summary/snp_union_BLOOD_492.bed
+>   Returned union list dim       = [1] 688 131
+>   Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_688.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-10 22:54:24 for 2.8 sec
+> Job done: 2020-03-17 22:12:40 for 3.5 sec
+> Warning message:
+> package 'eulerr' was built under R version 3.6.2
 
-### BONE
+### union list by groups
 
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BONE
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/0_roadmap_over
+  --out r2d1_data/summary
+  --sub_dir TRUE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/BONE
+> 33 Files/folders input.
+>   1 sub_dir 1: 1 file(s) in the ADRENAL folder
+>   2 sub_dir 2: 4 file(s) in the BLOOD_Encode2012 folder
+>   3 sub_dir 3: 9 file(s) in the BLOOD_HSC_B-cell folder
+>   4 sub_dir 4: 14 file(s) in the BLOOD_T-cell folder
+>   5 sub_dir 5: 1 file(s) in the BONE folder
+>   6 sub_dir 6: 13 file(s) in the BRAIN folder
+>   7 sub_dir 7: 3 file(s) in the BREAST folder
+>   8 sub_dir 8: 1 file(s) in the CERVIX folder
+>   9 sub_dir 9: 8 file(s) in the ESC folder
+>   10 sub_dir 10: 9 file(s) in the ESC_DERIVED folder
+>   11 sub_dir 11: 3 file(s) in the FAT folder
+>   12 sub_dir 12: 3 file(s) in the GI_COLON folder
+>   13 sub_dir 13: 2 file(s) in the GI_DUODENUM folder
+>   14 sub_dir 14: 1 file(s) in the GI_ESOPHAGUS folder
+>   15 sub_dir 15: 3 file(s) in the GI_INTESTINE folder
+>   16 sub_dir 16: 3 file(s) in the GI_RECTUM folder
+>   17 sub_dir 17: 4 file(s) in the GI_STOMACH folder
+>   18 sub_dir 18: 4 file(s) in the HEART folder
+>   19 sub_dir 19: 5 file(s) in the IPSC folder
+>   20 sub_dir 20: 1 file(s) in the KIDNEY folder
+>   21 sub_dir 21: 2 file(s) in the LIVER folder
+>   22 sub_dir 22: 5 file(s) in the LUNG folder
+>   23 sub_dir 23: 7 file(s) in the MUSCLE folder
+>   24 sub_dir 24: 1 file(s) in the MUSCLE_LEG folder
+>   25 sub_dir 25: 1 file(s) in the OVARY folder
+>   26 sub_dir 26: 1 file(s) in the PANCREAS folder
+>   27 sub_dir 27: 1 file(s) in the PANCREAS_Islets folder
+>   28 sub_dir 28: 2 file(s) in the PLACENTA folder
+>   29 sub_dir 29: 8 file(s) in the SKIN folder
+>   30 sub_dir 30: 1 file(s) in the SPLEEN folder
+>   31 sub_dir 31: 2 file(s) in the STROMAL_CONNECTIVE folder
+>   32 sub_dir 32: 2 file(s) in the THYMUS folder
+>   33 sub_dir 33: 2 file(s) in the VASCULAR folder
+> Total 33 sub-folder(s) is/are input
+> Total 0 file(s) is/are input.
 >
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_129_enh_82
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 82  5
->   Write a BED file: r2d1_data/summary/snp_union_BONE_82.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:12:29 for 3 sec
+> Option sub_dir = TRUE, summary table are not going to be generated.
+>   1 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ADRENAL_120.bed
+>   2 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_Encode2012_373.bed
+>   3 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_HSC_B-cell_372.bed
+>   4 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_T-cell_394.bed
+>   5 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BONE_82.bed
+>   6 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BRAIN_211.bed
+>   7 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BREAST_140.bed
+>   8 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_CERVIX_95.bed
+>   9 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_113.bed
+>   10 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_DERIVED_220.bed
+>   11 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_FAT_204.bed
+>   12 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_COLON_207.bed
+>   13 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_DUODENUM_183.bed
+>   14 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_ESOPHAGUS_101.bed
+>   15 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_INTESTINE_178.bed
+>   16 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_RECTUM_192.bed
+>   17 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_STOMACH_209.bed
+>   18 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_HEART_152.bed
+>   19 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_IPSC_108.bed
+>   20 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_KIDNEY_109.bed
+>   21 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LIVER_182.bed
+>   22 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LUNG_212.bed
+>   23 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_218.bed
+>   24 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_LEG_89.bed
+>   25 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_OVARY_87.bed
+>   26 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_106.bed
+>   27 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_Islets_79.bed
+>   28 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PLACENTA_174.bed
+>   29 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SKIN_163.bed
+>   30 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SPLEEN_154.bed
+>   31 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_STROMAL_CONNECTIVE_100.bed
+>   32 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_THYMUS_285.bed
+>   33 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_VASCULAR_112.bed
+> Job done: 2020-03-18 00:31:44 for 3 sec
 
-### BRAIN
+## Melton lab union list
 
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BRAIN
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/1_meltonlab_over
+  --out r2d1_data/summary
+  --sub_dir FALSE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 13 Files in the folder: r2d1_data/roadmap_dist/BRAIN
+> 4 Files/folders input.
+>   1 6 files in the beta_ATAC
+>   2 6 files in the beta_enh
+>   3 4 files in the other_ATAC
+>   4 9 files in the other_enh
+> Total 25 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_053_enh_69
->   Read 2: snp_roadmap_054_enh_74
->   Read 3: snp_roadmap_067_enh_74
->   Read 4: snp_roadmap_068_enh_87
->   Read 5: snp_roadmap_069_enh_74
->   Read 6: snp_roadmap_070_enh_66
->   Read 7: snp_roadmap_071_enh_89
->   Read 8: snp_roadmap_072_enh_80
->   Read 9: snp_roadmap_073_enh_94
->   Read 10: snp_roadmap_074_enh_86
->   Read 11: snp_roadmap_081_enh_91
->   Read 12: snp_roadmap_082_enh_54
->   Read 13: snp_roadmap_125_enh_83
+>   Read 25 files
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 211  17
->   Write a BED file: r2d1_data/summary/snp_union_BRAIN_211.bed
+>   Returned union list dim       = [1] 235  29
+>   Write a BED file: r2d1_data/summary/snp_union_1_meltonlab_over_235.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-10 23:15:03 for 3 sec
+> Job done: 2020-03-17 22:21:40 for 2.1 sec
 
-### BREAST
+### union list by groups
 
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/BREAST
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/1_meltonlab_over
+  --out r2d1_data/summary
+  --sub_dir TRUE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 3 Files in the folder: r2d1_data/roadmap_dist/BREAST
+> 4 Files/folders input.
+>   1 sub_dir 1: 6 file(s) in the beta_ATAC folder
+>   2 sub_dir 2: 6 file(s) in the beta_enh folder
+>   3 sub_dir 3: 4 file(s) in the other_ATAC folder
+>   4 sub_dir 4: 9 file(s) in the other_enh folder
+> Total 4 sub-folder(s) is/are input
+> Total 0 file(s) is/are input.
+>
+> Option sub_dir = TRUE, summary table are not going to be generated.
+>   1 Write a BED file: r2d1_data/summary/snp_union_1_meltonlab_over_beta_ATAC_79.bed
+>   2 Write a BED file: r2d1_data/summary/snp_union_1_meltonlab_over_beta_enh_76.bed
+>   3 Write a BED file: r2d1_data/summary/snp_union_1_meltonlab_over_other_ATAC_68.bed
+>   4 Write a BED file: r2d1_data/summary/snp_union_1_meltonlab_over_other_enh_164.bed
+
+## Suh lab union list
+
+```CMD
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/1a_suhlab_over
+  --out r2d1_data/summary
+  --sub_dir FALSE
+  --uni_save TRUE
+```
+
+> ** Run function: db_venn.r/summ...
+> 3 Files/folders input.
+>   1 r2d1_data/1a_suhlab_over/snp_Scbeta_YZ_pr1_pooled.pf_peaks_65.bed
+>   2 r2d1_data/1a_suhlab_over/snp_Scbeta_YZ_pr2_pooled.pf_peaks_66.bed
+>   3 r2d1_data/1a_suhlab_over/snp_SCbeta_YZ_pseudo_pool_ATAC_58.bed
+> Total 3 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_027_enh_100
->   Read 2: snp_roadmap_028_enh_101
->   Read 3: snp_roadmap_119_enh_76
+>   Read 1: snp_Scbeta_YZ_pr1_pooled.pf_peaks_65
+>   Read 2: snp_Scbeta_YZ_pr2_pooled.pf_peaks_66
+>   Read 3: snp_SCbeta_YZ_pseudo_pool_ATAC_58
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 140   7
->   Write a BED file: r2d1_data/summary/snp_union_BREAST_140.bed
+>   Returned union list dim       = [1] 88  7
+>   Write a BED file: r2d1_data/summary/snp_union_1a_suhlab_over_88.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-10 23:15:20 for 2.8 sec
+> Job done: 2020-03-17 22:26:14 for 2 sec
 
-### CERVIX
+## Stitzel lab union list
+
+### Hi-C data union
 
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/CERVIX
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/1b_stitzellab_hic/1b_stitzellab_hic_over
+  --out r2d1_data/summary
+  --sub_dir FALSE
+  --uni_save TRUE
 ```
 
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/CERVIX
+> ** Run function: db_venn.r/summ... ready
+> 2 Files/folders input.
+>   1 r2d1_data/1b_stitzellab_hic/1b_stitzellab_hic_over/snp_hic_EndoC_BH1_HiC_gwas_96.bed
+>   2 r2d1_data/1b_stitzellab_hic/1b_stitzellab_hic_over/snp_hic_Primary_Islet_HiC_gwas_35.bed
+> Total 2 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_117_enh_95
+>   Read 1: snp_hic_EndoC_BH1_HiC_gwas_96
+>   Read 2: snp_hic_Primary_Islet_HiC_gwas_35
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 95  5
->   Write a BED file: r2d1_data/summary/snp_union_CERVIX_95.bed
+>   Returned union list dim       = [1] 113   6
+>   Write a BED file: r2d1_data/summary/snp_union_1b_stitzellab_hic_over_113.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-10 23:15:39 for 2.9 sec
+> Job done: 2020-03-23 19:43:53 for 2.6 sec
 
-### ESC
+### union list by groups
+
+I generated two folders, `ATAC` for one ATAC-seq data file `snp_EndoC_BH1_ATAC_broadPeak_64.bed` and `ChromHMM_enh` for four annotations from histone marker ChIP-seq data.
+
+* `snp_tags_Active.enhancer.1_54.bed`
+* `snp_tags_Active.enhancer.2_15.bed`
+* `snp_tags_Genic.enhancer_12.bed`
+* `snp_tags_Weak.enhancer_57.bed`
 
 ```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ESC
-  --out r2d1_data/summary --uni TRUE
+Rscript postgwas-exe.r
+  --dbvenn summ
+  --base r2d1_data/1b_stitzellab_over
+  --out r2d1_data/summary
+  --sub_dir TRUE
+  --uni_save TRUE
 ```
 
-> ** Run function: db_venn.r/summ...
-> 8 Files in the folder: r2d1_data/roadmap_dist/ESC
+> ** Run function: db_venn.r/summ... ready
+> 12 Files/folders input.
+>   1 sub_dir 1: 1 file(s) in the ATAC folder
+>   2 sub_dir 2: 4 file(s) in the ChromHMM_enh folder
+>   3 r2d1_data/1b_stitzellab_over/snp_EndoC_BH1_ChromHMM_1950.bed
+>   4 r2d1_data/1b_stitzellab_over/snp_tags_Active.TSS_25.bed
+>   5 r2d1_data/1b_stitzellab_over/snp_tags_Bivalent.poised.TSS_2.bed
+>   6 r2d1_data/1b_stitzellab_over/snp_tags_Flanking.TSS_6.bed
+>   7 r2d1_data/1b_stitzellab_over/snp_tags_Quiescent.low.signal_521.bed
+>   8 r2d1_data/1b_stitzellab_over/snp_tags_Repressed.polycomb_24.bed
+>   9 r2d1_data/1b_stitzellab_over/snp_tags_Strong.transcription_100.bed
+>   10 r2d1_data/1b_stitzellab_over/snp_tags_Weak.repressed.polycomb_731.bed
+>   11 r2d1_data/1b_stitzellab_over/snp_tags_Weak.transcription_370.bed
+>   12 r2d1_data/1b_stitzellab_over/snp_tags_Weak.TSS_33.bed
+> Total 2 sub-folder(s) is/are input
+> Total 10 file(s) is/are input.
 >
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_001_enh_77
->   Read 2: snp_roadmap_002_enh_78
->   Read 3: snp_roadmap_003_enh_50
->   Read 4: snp_roadmap_008_enh_77
->   Read 5: snp_roadmap_014_enh_62
->   Read 6: snp_roadmap_015_enh_57
->   Read 7: snp_roadmap_016_enh_51
->   Read 8: snp_roadmap_024_enh_65
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 113  12
->   Write a BED file: r2d1_data/summary/snp_union_ESC_113.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:15:57 for 3 sec
+> Option sub_dir = TRUE, summary table are not going to be generated.
+>   1 Write a BED file: r2d1_data/summary/snp_union_1b_stitzellab_over_ATAC_64.bed
+>   2 Write a BED file: r2d1_data/summary/snp_union_1b_stitzellab_over_ChromHMM_enh_138.bed
+> Job done: 2020-03-20 17:00:33 for 2.1 sec
 
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/ESC_DERIVED
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 9 Files in the folder: r2d1_data/roadmap_dist/ESC_DERIVED
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_004_enh_73
->   Read 2: snp_roadmap_005_enh_120
->   Read 3: snp_roadmap_006_enh_85
->   Read 4: snp_roadmap_007_enh_94
->   Read 5: snp_roadmap_009_enh_73
->   Read 6: snp_roadmap_010_enh_69
->   Read 7: snp_roadmap_011_enh_77
->   Read 8: snp_roadmap_012_enh_77
->   Read 9: snp_roadmap_013_enh_73
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 220  13
->   Write a BED file: r2d1_data/summary/snp_union_ESC_DERIVED_220.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:16:13 for 2.8 sec
-
-### FAT
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/FAT
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 3 Files in the folder: r2d1_data/roadmap_dist/FAT
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_023_enh_133
->   Read 2: snp_roadmap_025_enh_113
->   Read 3: snp_roadmap_063_enh_139
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 204   7
->   Write a BED file: r2d1_data/summary/snp_union_FAT_204.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:16:31 for 2.8 sec
-
-### GI
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_COLON
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 3 Files in the folder: r2d1_data/roadmap_dist/GI_COLON
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_075_enh_117
->   Read 2: snp_roadmap_076_enh_114
->   Read 3: snp_roadmap_106_enh_160
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 207   7
->   Write a BED file: r2d1_data/summary/snp_union_GI_COLON_207.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:16:46 for 2.6 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_DUODENUM
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/GI_DUODENUM
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_077_enh_137
->   Read 2: snp_roadmap_078_enh_143
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 183   6
->   Write a BED file: r2d1_data/summary/snp_union_GI_DUODENUM_183.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:17:00 for 3 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_ESOPHAGUS
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/GI_ESOPHAGUS
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_079_enh_101
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 101   5
->   Write a BED file: r2d1_data/summary/snp_union_GI_ESOPHAGUS_101.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:17:14 for 2.9 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_INTESTINE
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 3 Files in the folder: r2d1_data/roadmap_dist/GI_INTESTINE
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_084_enh_106
->   Read 2: snp_roadmap_085_enh_113
->   Read 3: snp_roadmap_109_enh_146
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 178   7
->   Write a BED file: r2d1_data/summary/snp_union_GI_INTESTINE_178.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:17:29 for 2.8 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_RECTUM
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 3 Files in the folder: r2d1_data/roadmap_dist/GI_RECTUM
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_101_enh_150
->   Read 2: snp_roadmap_102_enh_134
->   Read 3: snp_roadmap_103_enh_107
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 192   7
->   Write a BED file: r2d1_data/summary/snp_union_GI_RECTUM_192.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:17:42 for 3 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/GI_STOMACH
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 4 Files in the folder: r2d1_data/roadmap_dist/GI_STOMACH
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_092_enh_86
->   Read 2: snp_roadmap_094_enh_91
->   Read 3: snp_roadmap_110_enh_143
->   Read 4: snp_roadmap_111_enh_111
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 209   8
->   Write a BED file: r2d1_data/summary/snp_union_GI_STOMACH_209.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:17:56 for 2.8 sec
-
-### HEART
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/HEART
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 4 Files in the folder: r2d1_data/roadmap_dist/HEART
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_083_enh_100
->   Read 2: snp_roadmap_095_enh_87
->   Read 3: snp_roadmap_104_enh_70
->   Read 4: snp_roadmap_105_enh_106
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 152   8
->   Write a BED file: r2d1_data/summary/snp_union_HEART_152.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:18:10 for 2.8 sec
-
-### IPSC
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/IPSC
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 5 Files in the folder: r2d1_data/roadmap_dist/IPSC
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_018_enh_76
->   Read 2: snp_roadmap_019_enh_54
->   Read 3: snp_roadmap_020_enh_53
->   Read 4: snp_roadmap_021_enh_52
->   Read 5: snp_roadmap_022_enh_73
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 108   9
->   Write a BED file: r2d1_data/summary/snp_union_IPSC_108.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:18:24 for 2.7 sec
-
-### KIDNEY
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/KIDNEY
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/KIDNEY
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_086_enh_109
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 109   5
->   Write a BED file: r2d1_data/summary/snp_union_KIDNEY_109.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:18:38 for 2.6 sec
-
-### LIVER
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/LIVER
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/LIVER
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_066_enh_132
->   Read 2: snp_roadmap_118_enh_114
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 182   6
->   Write a BED file: r2d1_data/summary/snp_union_LIVER_182.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:18:49 for 2.6 sec
-
-### LUNG
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/LUNG
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 5 Files in the folder: r2d1_data/roadmap_dist/LUNG
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_017_enh_85
->   Read 2: snp_roadmap_088_enh_107
->   Read 3: snp_roadmap_096_enh_136
->   Read 4: snp_roadmap_114_enh_84
->   Read 5: snp_roadmap_128_enh_90
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 212   9
->   Write a BED file: r2d1_data/summary/snp_union_LUNG_212.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:19:01 for 2.6 sec
-
-### MUSCLE
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/MUSCLE
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 7 Files in the folder: r2d1_data/roadmap_dist/MUSCLE
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_052_enh_82
->   Read 2: snp_roadmap_089_enh_91
->   Read 3: snp_roadmap_100_enh_93
->   Read 4: snp_roadmap_107_enh_119
->   Read 5: snp_roadmap_108_enh_134
->   Read 6: snp_roadmap_120_enh_89
->   Read 7: snp_roadmap_121_enh_93
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 218  11
->   Write a BED file: r2d1_data/summary/snp_union_MUSCLE_218.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:19:14 for 2.7 sec
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/MUSCLE_LEG
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/MUSCLE_LEG
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_090_enh_89
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 89  5
->   Write a BED file: r2d1_data/summary/snp_union_MUSCLE_LEG_89.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:19:27 for 2.7 sec
-
-### OVARY
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/OVARY
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/OVARY
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_097_enh_87
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 87  5
->   Write a BED file: r2d1_data/summary/snp_union_OVARY_87.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:19:40 for 2.9 sec
-
-### PANCREAS
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/PANCREAS
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/PANCREAS
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_087_enh_79
->   Read 2: snp_roadmap_098_enh_106
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 134   6
->   Write a BED file: r2d1_data/summary/snp_union_PANCREAS_134.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:19:57 for 2.6 sec
-
-### PLACENTA
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/PLACENTA
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/PLACENTA
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_091_enh_155
->   Read 2: snp_roadmap_099_enh_108
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 174   6
->   Write a BED file: r2d1_data/summary/snp_union_PLACENTA_174.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:20:08 for 2.7 sec
-
-### SKIN
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/SKIN
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 8 Files in the folder: r2d1_data/roadmap_dist/SKIN
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_055_enh_81
->   Read 2: snp_roadmap_056_enh_79
->   Read 3: snp_roadmap_057_enh_85
->   Read 4: snp_roadmap_058_enh_76
->   Read 5: snp_roadmap_059_enh_70
->   Read 6: snp_roadmap_061_enh_80
->   Read 7: snp_roadmap_126_enh_88
->   Read 8: snp_roadmap_127_enh_74
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 163  12
->   Write a BED file: r2d1_data/summary/snp_union_SKIN_163.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:20:24 for 2.7 sec
-
-### SPLEEN
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/SPLEEN
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 1 Files in the folder: r2d1_data/roadmap_dist/SPLEEN
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_113_enh_154
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 154   5
->   Write a BED file: r2d1_data/summary/snp_union_SPLEEN_154.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:20:40 for 2.6 sec
-
-### STROMAL_CONNECTIVE
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/STROMAL_CONNECTIVE
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/STROMAL_CONNECTIVE
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_026_enh_82
->   Read 2: snp_roadmap_049_enh_87
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 100   6
->   Write a BED file: r2d1_data/summary/snp_union_STROMAL_CONNECTIVE_100.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:20:56 for 2.6 sec
-
-### THYMUS
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/THYMUS
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/THYMUS
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_093_enh_236
->   Read 2: snp_roadmap_112_enh_226
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 285   6
->   Write a BED file: r2d1_data/summary/snp_union_THYMUS_285.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:21:08 for 2.6 sec
-
-### VASCULAR
-
-```CMD
-Rscript postgwas-exe.r --dbvenn summ --base r2d1_data/roadmap_dist/VASCULAR
-  --out r2d1_data/summary --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 2 Files in the folder: r2d1_data/roadmap_dist/VASCULAR
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_roadmap_065_enh_67
->   Read 2: snp_roadmap_122_enh_79
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 112   6
->   Write a BED file: r2d1_data/summary/snp_union_VASCULAR_112.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-10 23:21:21 for 2.6 sec
-
-## Pritchardlab union list
+## Pritchard lab union list
 
 25 Human blood cell types:
 
-* 3 B-cells in rest/stimulated conditions:
-  * Bulk B
-  * Naive B
-  * Memory B
-* 3 NK-cells in rest/stimulated conditions:
-  * Immature NK
-  * Mature NK
-  * Memory NK
-* 10 CD4+ T-cells
-  * Effector CD4+ T
-  * Follicular T helper
-  * Memory T effector
-  * Memory T regulatory
-  * Naive T regulatory
-  * Naive T effector
-  * Regulatory T
-  * Th1 precursors
-  * Th2 precursors
-  * Th17 precursors
-* 4 CD8+ T-cells
-  * CD8+ T
-  * Central memory CD8+ T
-  * Effector memory CD8+ T
-  * Naive CD8 T
-* 5 Other
-  * Gamma delta T
-  * Monocytes
-  * Myeloid
-  * pDC
-  * Plasmablasts
+* 3 B-cells in rest/stimulated conditions: Bulk B, Naive B, Memory B
+* 3 NK-cells in rest/stimulated conditions: Immature NK, Mature NK, Memory NK
+* 10 CD4+ T-cells: Effector CD4+ T, Follicular T helper, Memory T effector, Memory T regulatory, Naive T regulatory, Naive T effector, Regulatory T, Th1 precursors, Th2 precursors, Th17 precursors
+* 4 CD8+ T-cells: CD8+ T, Central memory CD8+ T, Effector memory CD8+ T, Naive CD8 T
+* Gamma delta T
+* Monocytes
+* Myeloid
+* pDC
+* Plasmablasts
 
 ### Total summary
 
 ```CMD
 Rscript postgwas-exe.r
   --dbvenn summ
-  --base r2d1_data/pritchardlab_dist
-  --dir_only TRUE
+  --base r2d1_data/2_pritchardlab_over
   --out r2d1_data/summary
-  --uni TRUE
+  --sub_dir FALSE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 22 Files/folders input.
->   Add 12 files in the r2d1_data/pritchardlab_dist/B-cells_rest
->   Add 10 files in the r2d1_data/pritchardlab_dist/B-cells_stim
->   Add 4 files in the r2d1_data/pritchardlab_dist/Gamma_delta_T_rest
->   Add 3 files in the r2d1_data/pritchardlab_dist/Monocytes_rest
->   Add 6 files in the r2d1_data/pritchardlab_dist/Monocytes_stim
->   Add 3 files in the r2d1_data/pritchardlab_dist/Myeloid_DCs_rest
->   Add 15 files in the r2d1_data/pritchardlab_dist/NK-cells_rest
->   Add 6 files in the r2d1_data/pritchardlab_dist/NK-cells_stim
->   Add 3 files in the r2d1_data/pritchardlab_dist/pDCs_rest
->   Add 3 files in the r2d1_data/pritchardlab_dist/Plasmablasts_rest
->   Add 38 files in the r2d1_data/pritchardlab_dist/T-CD4-cells_rest
->   Add 41 files in the r2d1_data/pritchardlab_dist/T-CD4-cells_stim
->   Add 16 files in the r2d1_data/pritchardlab_dist/T-CD8-cells_rest
->   Add 15 files in the r2d1_data/pritchardlab_dist/T-CD8-cells_stim
+> 15 Files/folders input.
+>   1 12 files in the B-cells_rest
+>   2 10 files in the B-cells_stim
+>   3 4 files in the Gamma_delta_T_rest
+>   4 3 files in the Gamma_delta_T_stim
+>   5 3 files in the Monocytes_rest
+>   6 6 files in the Monocytes_stim
+>   7 3 files in the Myeloid_DCs_rest
+>   8 15 files in the NK-cells_rest
+>   9 6 files in the NK-cells_stim
+>   10 3 files in the pDCs_rest
+>   11 3 files in the Plasmablasts_rest
+>   12 38 files in the T-CD4-cells_rest
+>   13 38 files in the T-CD4-cells_stim
+>   14 16 files in the T-CD8-cells_rest
+>   15 15 files in the T-CD8-cells_stim
+> Total 175 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
 >   Read 175 files
@@ -1932,618 +1741,124 @@ Rscript postgwas-exe.r
 >
 > ** Back to function: db_venn.r/summ...
 >   Returned union list dim       = [1] 432 179
->   Write a BED file: r2d1_data/summary/snp_union_pritchardlab_dist_432.bed
+>   Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_432.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-11 00:30:13 for 3.5 sec
+> Job done: 2020-03-17 22:29:15 for 3.2 sec
 
-### B-cells
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/B-cells_rest ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 12 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_rest
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Bulk_B.U_407
->   Read 2: snp_1001.Mem_B.U_407
->   Read 3: snp_1001.Naive_B.U_399
->   Read 4: snp_1002.Bulk_B.U_411
->   Read 5: snp_1002.Mem_B.U_406
->   Read 6: snp_1002.Naive_B.U_411
->   Read 7: snp_1003.Bulk_B.U_410
->   Read 8: snp_1003.Mem_B.U_407
->   Read 9: snp_1003.Naive_B.U_408
->   Read 10: snp_1004.Bulk_B.U_421
->   Read 11: snp_1004.Mem_B.U_426
->   Read 12: snp_1004.Naive_B.U_428
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 431  16
->   Write a BED file: r2d1_data_gwas/snp_union_B-cells_rest_431.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:37:38 for 3.1 sec
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/B-cells_stim ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 10 Files in the folder: r2d1_data_gwas/pritchardlab_dist/B-cells_stim
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Bulk_B.S_409
->   Read 2: snp_1001.Mem_B.S_408
->   Read 3: snp_1001.Naive_B.S_407
->   Read 4: snp_1002.Bulk_B.S_412
->   Read 5: snp_1002.Mem_B.S_411
->   Read 6: snp_1002.Naive_B.S_408
->   Read 7: snp_1003.Bulk_B.S_416
->   Read 8: snp_1003.Mem_B.S_414
->   Read 9: snp_1003.Naive_B.S_413
->   Read 10: snp_1010.Mem_B.S_429
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  14
->   Write a BED file: r2d1_data_gwas/snp_union_B-cells_stim_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:38:01 for 3.1 sec
-
-### NK-cells
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/NK-cells_rest ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_rest
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Immature_NK.U_372
->   Read 2: snp_1001.Mature_NK.U_407
->   Read 3: snp_1001.Memory_NK.U_362
->   Read 4: snp_1002.Immature_NK.U_382
->   Read 5: snp_1002.Memory_NK.U_412
->   Read 6: snp_1003.Immature_NK.U_307
->   Read 7: snp_1003.Mature_NK.U_403
->   Read 8: snp_1003.Memory_NK.U_358
->   Read 9: snp_1004.Immature_NK.U_414
->   Read 10: snp_1004.Mature_NK.U_429
->   Read 11: snp_1004.Memory_NK.U_403
->   Read 12: snp_1008.Immature_NK.U_415
->   Read 13: snp_1008.Mature_NK.U_412
->   Read 14: snp_1008.Memory_NK.U_418
->   Read 15: snp_1010.Memory_NK.U_429
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  19
->   Write a BED file: r2d1_data_gwas/snp_union_NK-cells_rest_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:40:37 for 3.1 sec
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/NK-cells_stim ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 6 Files in the folder: r2d1_data_gwas/pritchardlab_dist/NK-cells_stim
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Mature_NK.S_408
->   Read 2: snp_1002.Mature_NK.S_409
->   Read 3: snp_1003.Mature_NK.S_415
->   Read 4: snp_1004.Mature_NK.S_429
->   Read 5: snp_1008.Mature_NK.S_414
->   Read 6: snp_1010.Mature_NK.S_430
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  10
->   Write a BED file: r2d1_data_gwas/snp_union_NK-cells_stim_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:40:54 for 3 sec
-
-### CD4+ T-cells
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 38 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_rest
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Effector_CD4pos_T.U_407
->   Read 2: snp_1001.Follicular_T_Helper.U_408
->   Read 3: snp_1001.Memory_Teffs.U_387
->   Read 4: snp_1001.Memory_Tregs.U_385
->   Read 5: snp_1001.Naive_Teffs.U_395
->   Read 6: snp_1001.Regulatory_T.U_377
->   Read 7: snp_1001.Th1_precursors.U_397
->   Read 8: snp_1001.Th17_precursors.U_407
->   Read 9: snp_1001.Th2_precursors.U_405
->   Read 10: snp_1002.Effector_CD4pos_T.U_408
->   Read 11: snp_1002.Follicular_T_Helper.U_413
->   Read 12: snp_1002.Memory_Teffs.U_411
->   Read 13: snp_1002.Memory_Tregs.U_412
->   Read 14: snp_1002.Naive_Teffs.U_412
->   Read 15: snp_1002.Regulatory_T.U_413
->   Read 16: snp_1002.Th1_precursors.U_403
->   Read 17: snp_1002.Th17_precursors.U_401
->   Read 18: snp_1002.Th2_precursors.U_413
->   Read 19: snp_1003.Effector_CD4pos_T.U_398
->   Read 20: snp_1003.Follicular_T_Helper.U_369
->   Read 21: snp_1003.Memory_Teffs.U_402
->   Read 22: snp_1003.Memory_Tregs.U_416
->   Read 23: snp_1003.Naive_Teffs.U_406
->   Read 24: snp_1003.Regulatory_T.U_411
->   Read 25: snp_1003.Th1_precursors.U_359
->   Read 26: snp_1003.Th2_precursors.U_415
->   Read 27: snp_1004.Effector_CD4pos_T.U_427
->   Read 28: snp_1004.Follicular_T_Helper.U_420
->   Read 29: snp_1004.Memory_Teffs.U_417
->   Read 30: snp_1004.Memory_Tregs.U_429
->   Read 31: snp_1004.Naive_Teffs.U_425
->   Read 32: snp_1004.Naive_Tregs.U_419
->   Read 33: snp_1004.Regulatory_T.U_412
->   Read 34: snp_1004.Th1_precursors.U_424
->   Read 35: snp_1004.Th17_precursors.U_415
->   Read 36: snp_1004.Th2_precursors.U_408
->   Read 37: snp_1008.Naive_Tregs.U_426
->   Read 38: snp_1010.Follicular_T_Helper.U_430
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  42
->   Write a BED file: r2d1_data_gwas/snp_union_T-CD4-cells_rest_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:41:10 for 3.2 sec
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 41 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD4-cells_stim
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Effector_CD4pos_T.S_410
->   Read 2: snp_1001.Follicular_T_Helper.S_407
->   Read 3: snp_1001.Memory_Teffs.S_406
->   Read 4: snp_1001.Memory_Tregs.S_409
->   Read 5: snp_1001.Naive_Teffs.S_406
->   Read 6: snp_1001.Regulatory_T.S_399
->   Read 7: snp_1001.Th1_precursors.S_402
->   Read 8: snp_1001.Th17_precursors.S_410
->   Read 9: snp_1001.Th2_precursors.S_405
->   Read 10: snp_1002.Effector_CD4pos_T.S_405
->   Read 11: snp_1002.Follicular_T_Helper.S_407
->   Read 12: snp_1002.Gamma_delta_T.S_412
->   Read 13: snp_1002.Memory_Teffs.S_393
->   Read 14: snp_1002.Memory_Tregs.S_409
->   Read 15: snp_1002.Naive_Teffs.S_407
->   Read 16: snp_1002.Regulatory_T.S_409
->   Read 17: snp_1002.Th1_precursors.S_407
->   Read 18: snp_1002.Th17_precursors.S_405
->   Read 19: snp_1002.Th2_precursors.S_407
->   Read 20: snp_1003.Effector_CD4pos_T.S_378
->   Read 21: snp_1003.Follicular_T_Helper.S_400
->   Read 22: snp_1003.Gamma_delta_T.S_403
->   Read 23: snp_1003.Memory_Teffs.S_406
->   Read 24: snp_1003.Memory_Tregs.S_416
->   Read 25: snp_1003.Naive_Teffs.S_400
->   Read 26: snp_1003.Regulatory_T.S_407
->   Read 27: snp_1003.Th1_precursors.S_412
->   Read 28: snp_1003.Th17_precursors.S_393
->   Read 29: snp_1003.Th2_precursors.S_378
->   Read 30: snp_1004.Follicular_T_Helper.S_422
->   Read 31: snp_1004.Gamma_delta_T.S_427
->   Read 32: snp_1004.Memory_Teffs.S_422
->   Read 33: snp_1004.Memory_Tregs.S_422
->   Read 34: snp_1004.Naive_Teffs.S_425
->   Read 35: snp_1004.Naive_Tregs.S_416
->   Read 36: snp_1004.Regulatory_T.S_422
->   Read 37: snp_1004.Th1_precursors.S_423
->   Read 38: snp_1004.Th17_precursors.S_426
->   Read 39: snp_1004.Th2_precursors.S_417
->   Read 40: snp_1010.Naive_Tregs.S_430
->   Read 41: snp_1011.Naive_Teffs.S_413
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  45
->   Write a BED file: r2d1_data_gwas/snp_union_T-CD4-cells_stim_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:41:40 for 3.2 sec
-
-### CD8+ T-cells
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 16 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_rest
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.CD8pos_T.U_411
->   Read 2: snp_1001.Central_memory_CD8pos_T.U_406
->   Read 3: snp_1001.Effector_memory_CD8pos_T.U_411
->   Read 4: snp_1001.Naive_CD8_T.U_406
->   Read 5: snp_1002.CD8pos_T.U_413
->   Read 6: snp_1002.Central_memory_CD8pos_T.U_413
->   Read 7: snp_1002.Effector_memory_CD8pos_T.U_407
->   Read 8: snp_1002.Naive_CD8_T.U_411
->   Read 9: snp_1003.CD8pos_T.U_413
->   Read 10: snp_1003.Central_memory_CD8pos_T.U_386
->   Read 11: snp_1003.Effector_memory_CD8pos_T.U_390
->   Read 12: snp_1003.Naive_CD8_T.U_409
->   Read 13: snp_1004.CD8pos_T.U_425
->   Read 14: snp_1004.Central_memory_CD8pos_T.U_423
->   Read 15: snp_1004.Effector_memory_CD8pos_T.U_412
->   Read 16: snp_1004.Naive_CD8_T.U_422
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  20
->   Write a BED file: r2d1_data_gwas/snp_union_T-CD8-cells_rest_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:42:06 for 2.8 sec
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 15 Files in the folder: r2d1_data_gwas/pritchardlab_dist/T-CD8-cells_stim
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.CD8pos_T.S_406
->   Read 2: snp_1001.Central_memory_CD8pos_T.S_407
->   Read 3: snp_1001.Effector_memory_CD8pos_T.S_410
->   Read 4: snp_1001.Naive_CD8_T.S_406
->   Read 5: snp_1002.CD8pos_T.S_410
->   Read 6: snp_1002.Central_memory_CD8pos_T.S_401
->   Read 7: snp_1002.Effector_memory_CD8pos_T.S_408
->   Read 8: snp_1002.Naive_CD8_T.S_412
->   Read 9: snp_1003.CD8pos_T.S_407
->   Read 10: snp_1003.Central_memory_CD8pos_T.S_409
->   Read 11: snp_1003.Effector_memory_CD8pos_T.S_381
->   Read 12: snp_1003.Naive_CD8_T.S_402
->   Read 13: snp_1004.Central_memory_CD8pos_T.S_410
->   Read 14: snp_1004.Effector_memory_CD8pos_T.S_420
->   Read 15: snp_1004.Naive_CD8_T.S_429
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  19
->   Write a BED file: r2d1_data_gwas/snp_union_T-CD8-cells_stim_432.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-09 00:42:29 for 3.2 sec
-
-### Other cells
-
-**Gamma delta T-cells**
+### union list by groups
 
 ```CMD
 Rscript postgwas-exe.r
   --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/Gamma_delta_T_rest
+  --base r2d1_data/2_pritchardlab_over
   --out r2d1_data/summary
-  --uni TRUE
+  --sub_dir TRUE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 4 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1001.Gamma_delta_T.U_389.bed
->   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1002.Gamma_delta_T.U_410.bed
->   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1003.Gamma_delta_T.U_408.bed
->   Add a file, r2d1_data/pritchardlab_dist/Gamma_delta_T_rest/snp_1004.Gamma_delta_T.U_419.bed
+> 15 Files/folders input.
+>   1 sub_dir 1: 12 file(s) in the B-cells_rest folder
+>   2 sub_dir 2: 10 file(s) in the B-cells_stim folder
+>   3 sub_dir 3: 4 file(s) in the Gamma_delta_T_rest folder
+>   4 sub_dir 4: 3 file(s) in the Gamma_delta_T_stim folder
+>   5 sub_dir 5: 3 file(s) in the Monocytes_rest folder
+>   6 sub_dir 6: 6 file(s) in the Monocytes_stim folder
+>   7 sub_dir 7: 3 file(s) in the Myeloid_DCs_rest folder
+>   8 sub_dir 8: 15 file(s) in the NK-cells_rest folder
+>   9 sub_dir 9: 6 file(s) in the NK-cells_stim folder
+>   10 sub_dir 10: 3 file(s) in the pDCs_rest folder
+>   11 sub_dir 11: 3 file(s) in the Plasmablasts_rest folder
+>   12 sub_dir 12: 38 file(s) in the T-CD4-cells_rest folder
+>   13 sub_dir 13: 38 file(s) in the T-CD4-cells_stim folder
+>   14 sub_dir 14: 16 file(s) in the T-CD8-cells_rest folder
+>   15 sub_dir 15: 15 file(s) in the T-CD8-cells_stim folder
+> Total 15 sub-folder(s) is/are input
+> Total 0 file(s) is/are input.
 >
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Gamma_delta_T.U_389
->   Read 2: snp_1002.Gamma_delta_T.U_410
->   Read 3: snp_1003.Gamma_delta_T.U_408
->   Read 4: snp_1004.Gamma_delta_T.U_419
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 427   8
->   Write a BED file: r2d1_data/summary/snp_union_Gamma_delta_T_rest_427.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-11 00:46:25 for 2.7 sec
+> Option sub_dir = TRUE, summary table are not going to be generated.
+>   1 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_B-cells_rest_431.bed
+>   2 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_B-cells_stim_432.bed
+>   3 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Gamma_delta_T_rest_427.bed
+>   4 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Gamma_delta_T_stim_431.bed
+>   5 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Monocytes_rest_431.bed
+>   6 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Monocytes_stim_432.bed
+>   7 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Myeloid_DCs_rest_414.bed
+>   8 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_NK-cells_rest_432.bed
+>   9 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_NK-cells_stim_432.bed
+>   10 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_pDCs_rest_415.bed
+>   11 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_Plasmablasts_rest_431.bed
+>   12 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_T-CD4-cells_rest_432.bed
+>   13 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_T-CD4-cells_stim_432.bed
+>   14 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_T-CD8-cells_rest_432.bed
+>   15 Write a BED file: r2d1_data/summary/snp_union_2_pritchardlab_over_T-CD8-cells_stim_432.bed
+> Job done: 2020-03-17 22:30:29 for 2.7 sec
 
-**Monocytes**
+## Tan lab union list
 
 ```CMD
 Rscript postgwas-exe.r
   --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/Monocytes_rest
+  --base r2d1_data/3_tanlab_over
   --out r2d1_data/summary
-  --uni TRUE
+  --sub_dir FALSE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 3 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1001.Monocytes.U_413.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1003.Monocytes.U_413.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_rest/snp_1004.Monocytes.U_421.bed
+> 2 Files/folders input.
+>   1 3 files in the Th1_enh
+>   2 3 files in the Treg_enh
+> Total 6 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Monocytes.U_413
->   Read 2: snp_1003.Monocytes.U_413
->   Read 3: snp_1004.Monocytes.U_421
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 431   7
->   Write a BED file: r2d1_data/summary/snp_union_Monocytes_rest_431.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-11 00:46:53 for 2.9 sec
-
-```CMD
-Rscript postgwas-exe.r
-  --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/Monocytes_stim
-  --out r2d1_data/summary
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 6 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1001.Monocytes.S_412.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1002.Monocytes.S_412.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1003.Monocytes.S_406.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1004.Monocytes.S_428.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1008.Monocytes.S_417.bed
->   Add a file, r2d1_data/pritchardlab_dist/Monocytes_stim/snp_1010.Monocytes.S_429.bed
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Monocytes.S_412
->   Read 2: snp_1002.Monocytes.S_412
->   Read 3: snp_1003.Monocytes.S_406
->   Read 4: snp_1004.Monocytes.S_428
->   Read 5: snp_1008.Monocytes.S_417
->   Read 6: snp_1010.Monocytes.S_429
+>   Read 1: snp_Th1_enh_77
+>   Read 2: snp_Th1_enh_control_66
+>   Read 3: snp_Th1_enh_t1d_71
+>   Read 4: snp_Treg_enh_98
+>   Read 5: snp_Treg_enh_control_94
+>   Read 6: snp_Treg_enh_t1d_83
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 432  10
->   Write a BED file: r2d1_data/summary/snp_union_Monocytes_stim_432.bed
+>   Returned union list dim       = [1] 106  10
+>   Write a BED file: r2d1_data/summary/snp_union_3_tanlab_over_106.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-11 00:47:07 for 2.8 sec
+> Job done: 2020-03-17 22:32:02 for 2 sec
 
-**DCs**
+### union list by groups
 
 ```CMD
 Rscript postgwas-exe.r
   --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/Myeloid_DCs_rest
+  --base r2d1_data/3_tanlab_over
   --out r2d1_data/summary
-  --uni TRUE
+  --sub_dir TRUE
+  --uni_save TRUE
 ```
 
 > ** Run function: db_venn.r/summ...
-> 3 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1001.Myeloid_DCs.U_390.bed
->   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1002.Myeloid_DCs.U_412.bed
->   Add a file, r2d1_data/pritchardlab_dist/Myeloid_DCs_rest/snp_1008.Myeloid_DCs.U_407.bed
+> 2 Files/folders input.
+>   1 sub_dir 1: 3 file(s) in the Th1_enh folder
+>   2 sub_dir 2: 3 file(s) in the Treg_enh folder
+> Total 2 sub-folder(s) is/are input
+> Total 0 file(s) is/are input.
 >
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Myeloid_DCs.U_390
->   Read 2: snp_1002.Myeloid_DCs.U_412
->   Read 3: snp_1008.Myeloid_DCs.U_407
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 414   7
->   Write a BED file: r2d1_data/summary/snp_union_Myeloid_DCs_rest_414.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-11 00:47:32 for 3 sec
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+> Option sub_dir = TRUE, summary table are not going to be generated.
+>   1 Write a BED file: r2d1_data/summary/snp_union_3_tanlab_over_Th1_enh_77.bed
+>   2 Write a BED file: r2d1_data/summary/snp_union_3_tanlab_over_Treg_enh_98.bed
+> Job done: 2020-03-17 22:32:46 for 2 sec
 
-```CMD
-Rscript postgwas-exe.r
-  --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/pDCs_rest
-  --out r2d1_data/summary
-  --uni TRUE
-```
 
-> ** Run function: db_venn.r/summ...
-> 3 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1001.pDCs.U_360.bed
->   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1002.pDCs.U_396.bed
->   Add a file, r2d1_data/pritchardlab_dist/pDCs_rest/snp_1008.pDCs.U_413.bed
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.pDCs.U_360
->   Read 2: snp_1002.pDCs.U_396
->   Read 3: snp_1008.pDCs.U_413
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 415   7
->   Write a BED file: r2d1_data/summary/snp_union_pDCs_rest_415.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-11 00:48:00 for 3.1 sec
 
-**Plasmablasts**
+# 7. Generating summary tables
 
-```CMD
-Rscript postgwas-exe.r
-  --dbvenn summ
-  --base r2d1_data/pritchardlab_dist/Plasmablasts_rest
-  --out r2d1_data/summary
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
-> 3 Files/folders input.
->   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1001.Plasmablasts.U_411.bed
->   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1002.Plasmablasts.U_407.bed
->   Add a file, r2d1_data/pritchardlab_dist/Plasmablasts_rest/snp_1010.Plasmablasts.U_429.bed
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_1001.Plasmablasts.U_411
->   Read 2: snp_1002.Plasmablasts.U_407
->   Read 3: snp_1010.Plasmablasts.U_429
->
-> [Message] Can't plot Euler plot.
->
-> ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 431   7
->   Write a BED file: r2d1_data/summary/snp_union_Plasmablasts_rest_431.bed
->   [PASS] Nearest gene summary.
->
-> Job done: 2020-03-11 00:48:13 for 2.7 sec
-
-## Meltonlab & YZ summary
-
-### Stem cell (SC)-derived/primary β-cell ATAC-seq union list
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/meltonlab_dist/bed_beta_ATAC ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_Beta_ATAC_12
->   Read 2: snp_Beta_ATAC_rep1_5
->   Read 3: snp_SCbeta_12h_ATAC_40
->   Read 4: snp_SCbeta_72h_ATAC_39
->   Read 5: snp_SCbeta_ATAC_56
->   Read 6: snp_SCbeta_ATAC_rep1_56
->   Read 7: snp_SCbeta_in_vivo_ATAC_rep1_24
->   Read 8: snp_SCbeta_in_vivo_ATAC_rep2_24
->   Read 9: snp_SCbeta_YZ_pseudo_pool_ATAC_58
->
-> [Message] Can't plot Venn diagram for more than 5 sets.
->
-> [Message] Can't plot Euler plot.
->
-> ** Return function: db_venn.r/summ...
->   Returned union list dim       = [1] 96 13
->   Write a BED file: r2d1_data_gwas/snp_union_bed_beta_ATAC_96.bed
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
-
-### SC-derived/primary β-cell enhancer union list
-
-```CMD
-Rscript postgwas-exe.r ^
-  --dbvenn summ ^
-  --base r2d1_data_gwas/meltonlab_dist/bed_beta_enh ^
-  --out r2d1_data_gwas ^
-  --uni TRUE
-```
-
-> ** Run function: db_venn.r/summ...
->
-> ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_Beta_SE_enh_22
->   Read 2: snp_Beta_TE_enh_35
->   Read 3: snp_SCbeta_SE_enh_11
->   Read 4: snp_SCbeta_TE_enh_10
->
-> [Message] Can't plot Euler plot.
->
-> ** Return function: db_venn.r/summ...
->   Returned union list dim       = [1] 73  8
->   Write a BED file: r2d1_data_gwas/snp_union_bed_beta_enh_73.bed
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
-
-## Generating summary tables
-
-### Base file list in `summary` folder
+## Base file list in `summary` folder
 
 * **CDS region**: snp_01
 * **Roadmap results**: snp_02-01~30 by the anatomy groups
@@ -2566,8 +1881,9 @@ Rscript postgwas-exe.r ^
 ```CMD
 Rscript postgwas-exe.r
 	--dbvenn summ
-	--base r2d1_data/summary
+	--base r2d1_data/summary r2d1_data/gtex_eqtl
 	--out r2d1_data
+	--sub_dir FALSE
 	--uni_save FALSE
 	--ann_gwas r2d1_data/gwas_biomart_fill.tsv
 	--ann_encd r2d1_data/distance/encode_tfbs.tsv
@@ -2577,67 +1893,50 @@ Rscript postgwas-exe.r
 	--ann_lnc r2d1_data/lncrnasnp_88.tsv
 ```
 
-> ** Run function: db_venn.r/summ...
-> 23 Files in the folder: r2d1_data_gwas/summary
+> ** Run function: db_venn.r/summ... ready
+> 121 Files/folders input.
+>   1 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_717.bed
+>   2 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_584.bed
+>   ...
+>   120 r2d1_data/summary/snp_union_3_tanlab_over_Treg_enh_98.bed
+>   121 r2d1_data/summary/snp_union_gtex_eqtl_1349.bed
+> Total 121 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 1: snp_01_ensGene_cds_hg19_61
->   Read 2: snp_02_roadmap_enh_688
->   Read 3: snp_03_roadmap_bed_pancreas_134
->   Read 4: snp_04_roadmap_bed_blood_t_cells_394
->   Read 5: snp_05_roadmap_bed_hsc_b_cells_372
->   Read 6: snp_06_roadmap_087_enh_79
->   Read 7: snp_07_encode_tfbs_429
->   Read 8: snp_08_regulome2b_104
->   Read 9: snp_09-1_Suh_YZ_SCbeta_ATAC_58
->   Read 10: snp_09_melton_bed_beta_ATAC_96
->   Read 11: snp_10_melton_bed_beta_enh_73
->   Read 12: snp_11_pritchard_T-CD4-cells_rest_432
->   Read 13: snp_12_pritchard_T-CD4-cells_stim_432
->   Read 14: snp_13_pritchard_T-CD8-cells_rest_432
->   Read 15: snp_14_pritchard_T-CD8-cells_stim_432
->   Read 16: snp_15_pritchard_NK-cells_rest_432
->   Read 17: snp_16_pritchard_NK-cells_stim_432
->   Read 18: snp_17_pritchard_B-cells_rest_431
->   Read 19: snp_18_pritchard_B-cells_stim_432
->   Read 20: snp_19_gtex_1349
->   Read 21: snp_20_gtex_Pancreas_493
->   Read 22: snp_21_gtex_Whole_Blood_670
->   Read 23: snp_22_lncrnasnp_88
+>   Read 121 files
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 1742   27
+>   Returned union list dim       = [1] 1877  125
 >
 >   [PASS] uni_save       = FALSE
 >
 >   GWAS dim      = [1] 2003   11
->   Merge dim     = [1] 2003   31
->   Write a CSV file: r2d1_data_gwas/summary_gwas.csv
+>   Merge dim     = [1] 2003  129
+>   Write a CSV file: r2d1_data/summary_gwas.csv
 >
 >   ENCODE dim    = [1] 4237   13
->   Merge dim     = [1] 2662   26
->   Write a CSV file: r2d1_data_gwas/summary_encode.csv
+>   Merge dim     = [1] 2662  124
+>   Write a CSV file: r2d1_data/summary_encode.csv
 >
 >   Nearest gene dim      = [1] 2315    9
->   Search biomaRt... 220.. Cache found
-> 213.. [1] 2315    5
+>   Search biomaRt... 220.. 213.. [1] 2315    5
 >   CDS dim               = [1] 5791   11
->   Merge dim             = [1] 2424   31
->   Write a CSV file: r2d1_data_gwas/summary_nearest.csv
+>   Merge dim             = [1] 2424  129
+>   Write a CSV file: r2d1_data/summary_nearest.csv
 >
 >   GTEx dim      = [1] 68822     9
->   Merge dim     = [1] 68822    30
->   Write a CSV file: r2d1_data_gwas/summary_gtex.csv
+>   Merge dim     = [1] 68822   128
+>   Write a CSV file: r2d1_data/summary_gtex.csv
 >
 >   lncRNA dim    = [1] 132   7
->   Merge dim     = [1] 132  30
->   Write a CSV file: r2d1_data_gwas/summary_lncRNA.csv
+>   Merge dim     = [1] 132 128
+>   Write a CSV file: r2d1_data/summary_lncRNA.csv
 >
-> Job done: 2020-03-09 00:55:14 for 10.9 sec
+> Job done: 2020-03-23 19:46:45 for 20.1 sec
 
 ### Meltonlab GWAS summary
 
@@ -3107,7 +2406,42 @@ Rscript postgwas-exe.r
 >
 > Job done: 2020-03-09 01:27:47 for 3.1 sec
 
-# 7. Venn summary
+## Gene summary
+
+### GTEx data
+
+Usage: `Rscript postgwas-exe.r --dbgene gtex_pair --base <base file> --out <out folder>`
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene gtex_pair
+  --base r2d1_data/gtex_signif_1349.tsv
+  --out r2d1_data/summary_gene
+```
+
+> ** Run function: db_gene.r/gtex_pair... ready
+>   GTEx dim      = [1] 68822     9
+>   Extracting Ensgid.. done
+>   Spreading GTEx data.. [1] 68822    51
+>   Write file: r2d1_data/summary_gene/gtex_eqtl_248.tsv
+> Job done: 2020-03-22 18:26:46 for 2.2 sec
+
+### Union Hi-C & GTEx data
+
+Usage: `Rscript postgwas-exe.r --gene summary --base <base folder/files> --out <out folder>`
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene summary
+  --base r2d1_data/summary_gene
+  --out r2d1_data
+```
+
+> 
+
+
+
+# #. Venn summary
 
 ## Roadmap Enhancer & ENOCDE Tfbs
 
