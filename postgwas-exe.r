@@ -2,22 +2,27 @@
 
 # Help Messages ----------
 help_message = c('
-Version: 2020-03-06
+Version: 2020-03-20
 
 Usage: Rscript postgwas-exe.r <Function calls>
-    <--base file(s)> <--out folder> <options> <--debug>
+    --base <base file(s)> --out <out folder> <options> --debug <default:FALSE>
     
 Function calls:
-    --gwas    This is a function call for GWAS Catalog data.
-    --ldlink  This is a function call for LDlink data.
-    --dbdown  This is a function call for downloading databases.
-    --filter  This is a function call for filtering data.
-    --dbvenn  This is a function call for venn analysis.
+    --gwas    A function for GWAS Catalog data.
+    --ldlink  A function for LDlink data.
+    --dbdown  A function for downloading databases.
+    --dbfilt  A function for filtering data.
+    --dbvenn  A function for venn analysis.
+    --dbgene  A function for gene analysis.
 
 Global arguments:
-    --base    Base input file is mendatory.
-    --out     Out folder path is mendatory.
-    --debug   TRUE/FALSE: Rich description for debugging. Default is FALSE.
+    --base    <Base input file path>
+              This is mendatory.
+    --out     <Out folder path>
+              This is mendatory.
+    --debug   <default: FALSE>
+              TRUE/FALSE: Rich description for debugging.
+              This is optional.
 
 Running functions with "--help" argument prints [Function] usage information.
 ')
@@ -55,6 +60,10 @@ if(call=='help') { cat(help_message); quit()
 } else if(call=='dbvenn') {
     source('src/db_venn.r')
     db_venn(args)
+} else if(call=='dbgene') {
+    source('src/db_gene.r')
+    db_gene(args)
 } else {
-    paste0('There is no such function: "',commandLine[1],'". Try again.')
+    error_m = paste0('\n** [ERROR] There is no such function: "',commandLine[1],'". Try again.\n')
+    cat(error_m)
 }
