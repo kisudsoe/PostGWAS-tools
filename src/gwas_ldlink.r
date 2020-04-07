@@ -116,8 +116,8 @@ ldlink_filter = function(
     paste0('Read download files... ') %>% cat
     snpdf     = read.delim(snp_path,stringsAsFactors=F) %>% unique
     snpids    = snpdf$rsid %>% unique
-    col_names = c('RS_Number','Coord','Alleles','MAF','Distance',
-        'Dprime','R2','Correlated_Alleles','RegulomeDB','Function') # 'No',
+    col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
+        'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
     ldlink    = paste0(ld_path,'/',snpids,'.txt')
     snptb     = data.frame(snpids=snpids, ldlink=ldlink)
     
@@ -154,6 +154,9 @@ ldlink_filter = function(
     } else if(r2d==5) {
         cat('Filtering by "r2 > 0.8":\n')
 	    ldlink_1 = subset(ldlink_df,R2>0.8) # r2 > 0.8
+    } else if(r2d==6) {
+        cat('No filtering:\n')
+        ldlink_1 = ldlink_df
     } else cat('Which filtering option is not supported yet.\n')
     ldlink_2 = data.frame(
         gwasSNPs = ldlink_1$SNPid,
@@ -164,6 +167,17 @@ ldlink_filter = function(
     ldlink_ = ldlink_2[!ldlink_2$`ldSNPs` %in% c("."),] # Exclude no rsid elements
     ex = nrow(ldlink_2[ldlink_2$`ldSNPs` %in% c("."),])
     paste0('  Excluded no rsid elements\t= ') %>% cat; print(ex)
+    if(r2d==6) {
+        ldlink_3 = ldlink_1
+        ldlink_3$No = NULL
+        colnames(ldlink_3)[1:3] = c('gwasSNPs','ldSNPs','ld_coord')
+
+        # Save as CSV file
+        f_name = paste0(out,'/gwas_ldlink_r0.2.csv')
+        paste0('\n  Merged table\t\t= ') %>% cat; dim(ldlink_) %>% print
+        write.csv(ldlink_3,f_name,row.names=F,quote=F)
+        paste0('  Write file: ',f_name,'\n') %>% cat
+    }
     
     # Basic summary of LDlink results
     paste0('Basic summary of LDlink results:\n') %>% cat
@@ -366,8 +380,9 @@ ldlink_down = function(
 
     # Download from LDlink
     paste0('\n** Run function ldlink_down... ') %>% cat
-    snps = read.delim(snp_path,)
+    snps = read.delim(snp_path,stringsAsFactors=F)
     rsid = snps$rsid %>% unique
+    rsid = rsid[1]
     paste0(rsid%>%length,'.. ') %>% cat
 
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
