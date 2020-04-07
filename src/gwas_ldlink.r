@@ -154,7 +154,7 @@ ldlink_filter = function(
     } else if(r2d==5) {
         cat('Filtering by "r2 > 0.8":\n')
 	    ldlink_1 = subset(ldlink_df,R2>0.8) # r2 > 0.8
-    } else cat('Which filtering option is not supported.\n')
+    } else cat('Which filtering option is not supported yet.\n')
     ldlink_2 = data.frame(
         gwasSNPs = ldlink_1$SNPid,
         ldSNPs   = ldlink_1$RS_Number,
@@ -295,7 +295,7 @@ ldlink_filter = function(
     #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
     dim(snps_bio_) %>% print
 
-    # Merge the biomart result with the GWAS SNP list 
+    # Merge the biomart result with the GWAS SNP list
     merge_multi = function(x,y) { merge(x,y,by='rsid',all.x=T) }
     #snps_merge = merge(snps_,snps_bio_,by='rsid',all.x=TRUE)
     colnames(ldlink_)[2] = 'rsid'
