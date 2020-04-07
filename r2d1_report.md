@@ -918,12 +918,12 @@ Rscript postgwas-exe.r
 > ...
 >
 > File roadmap_129_enh... nrow= 2003.. done
->   Annotations occupied by SNPs  = [1] 64
->   SNPs in annotations           = [1] 82
->   Write file: r2d1_data/0_roadmap_over/BONE/snp_roadmap_129_enh_82.bed
-> Job process: 1 sec
+>     Annotations occupied by SNPs  = [1] 64
+>     SNPs in annotations           = [1] 82
+>     Write file: r2d1_data/0_roadmap_over/BONE_encode/snp_roadmap_129_enh_82.bed
+> Job process: 0.2 sec
 >
-> Job done: 2020-03-17 19:38:37 for 41.6 sec
+> Job done: 2020-03-31 15:08:30 for 9.1 sec
 
 ## Melton lab's data
 
@@ -1390,38 +1390,64 @@ Rscript postgwas-exe.r
   --uni_save TRUE
 ```
 
-> ** Run function: db_venn.r/summ...
-> 30 Files/folders input.
+> ** Run function: db_venn.r/summ... ready
+> 56 Files/folders input.
 >   1 1 files in the ADRENAL
->   2 27 files in the BLOOD
->   3 1 files in the BONE
->   4 13 files in the BRAIN
->   5 3 files in the BREAST
->   6 1 files in the CERVIX
->   7 8 files in the ESC
->   8 9 files in the ESC_DERIVED
->   9 3 files in the FAT
->   10 3 files in the GI_COLON
->   11 2 files in the GI_DUODENUM
->   12 1 files in the GI_ESOPHAGUS
->   13 3 files in the GI_INTESTINE
->   14 3 files in the GI_RECTUM
->   15 4 files in the GI_STOMACH
->   16 4 files in the HEART
->   17 5 files in the IPSC
->   18 1 files in the KIDNEY
->   19 2 files in the LIVER
->   20 5 files in the LUNG
->   21 7 files in the MUSCLE
->   22 1 files in the MUSCLE_LEG
->   23 1 files in the OVARY
->   24 2 files in the PANCREAS
->   25 2 files in the PLACENTA
->   26 8 files in the SKIN
->   27 1 files in the SPLEEN
->   28 2 files in the STROMAL_CONNECTIVE
->   29 2 files in the THYMUS
->   30 2 files in the VASCULAR
+>   2 2 files in the Blood_B-cell_CD19p
+>   3 4 files in the Blood_HSC_CD34p
+>   4 2 files in the Blood_Leukemia_encode
+>   5 1 files in the Blood_Lymphoblastoid_encode
+>   6 1 files in the Blood_Monocytes_CD14
+>   7 1 files in the Blood_Monocytes_CD14_encode
+>   8 1 files in the Blood_Mononuclear_cell
+>   9 1 files in the Blood_NK_cell_CD56
+>   10 1 files in the Blood_Nutrophils_CD15
+>   11 2 files in the Blood_T-cell_CD3
+>   12 2 files in the Blood_T-cell_CD8
+>   13 2 files in the Blood_Th_CD4
+>   14 1 files in the Blood_Th_CD4p_CD25m
+>   15 1 files in the Blood_Th_memory_CD4p_CD25m
+>   16 1 files in the Blood_Th_naive_CD4p_CD25m
+>   17 1 files in the Blood_Th_PMA-I_stim_CD4p_CD25m_IL17m
+>   18 1 files in the Blood_Th17_PMA-I_stim_CD4p_CD25m_IL17p
+>   19 1 files in the Blood_Tmem_CD4p_CD25int_CD127p
+>   20 1 files in the Blood_Treg_CD4p_CD25p
+>   21 1 files in the BONE_encode
+>   22 12 files in the BRAIN
+>   23 1 files in the BRAIN_encode
+>   24 2 files in the BREAST
+>   25 1 files in the BREAST_encode
+>   26 1 files in the CERVIX_encode
+>   27 8 files in the ESC
+>   28 9 files in the ESC_DERIVED
+>   29 3 files in the FAT
+>   30 3 files in the GI_COLON
+>   31 2 files in the GI_DUODENUM
+>   32 1 files in the GI_ESOPHAGUS
+>   33 3 files in the GI_INTESTINE
+>   34 3 files in the GI_RECTUM
+>   35 4 files in the GI_STOMACH
+>   36 4 files in the HEART
+>   37 5 files in the IPSC
+>   38 1 files in the KIDNEY
+>   39 1 files in the LIVER
+>   40 1 files in the LIVER_encode
+>   41 3 files in the LUNG
+>   42 2 files in the LUNG_encode
+>   43 5 files in the MUSCLE
+>   44 2 files in the MUSCLE_encode
+>   45 1 files in the MUSCLE_LEG
+>   46 1 files in the OVARY
+>   47 1 files in the PANCREAS
+>   48 1 files in the PANCREAS_Islets
+>   49 2 files in the PLACENTA
+>   50 6 files in the SKIN
+>   51 2 files in the SKIN_encode
+>   52 1 files in the SPLEEN
+>   53 2 files in the STROMAL_CONNECTIVE
+>   54 2 files in the THYMUS
+>   55 1 files in the VASCULAR
+>   56 1 files in the VASCULAR_encode
 > Total 127 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
@@ -1436,9 +1462,7 @@ Rscript postgwas-exe.r
 >   Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_688.bed
 >   [PASS] Nearest gene summary.
 >
-> Job done: 2020-03-17 22:12:40 for 3.5 sec
-> Warning message:
-> package 'eulerr' was built under R version 3.6.2
+> Job done: 2020-03-31 15:14:06 for 3.3 sec
 
 ### union list by groups
 
@@ -1451,79 +1475,126 @@ Rscript postgwas-exe.r
   --uni_save TRUE
 ```
 
-> ** Run function: db_venn.r/summ...
-> 33 Files/folders input.
+> ** Run function: db_venn.r/summ... ready
+> 56 Files/folders input.
 >   1 sub_dir 1: 1 file(s) in the ADRENAL folder
->   2 sub_dir 2: 4 file(s) in the BLOOD_Encode2012 folder
->   3 sub_dir 3: 9 file(s) in the BLOOD_HSC_B-cell folder
->   4 sub_dir 4: 14 file(s) in the BLOOD_T-cell folder
->   5 sub_dir 5: 1 file(s) in the BONE folder
->   6 sub_dir 6: 13 file(s) in the BRAIN folder
->   7 sub_dir 7: 3 file(s) in the BREAST folder
->   8 sub_dir 8: 1 file(s) in the CERVIX folder
->   9 sub_dir 9: 8 file(s) in the ESC folder
->   10 sub_dir 10: 9 file(s) in the ESC_DERIVED folder
->   11 sub_dir 11: 3 file(s) in the FAT folder
->   12 sub_dir 12: 3 file(s) in the GI_COLON folder
->   13 sub_dir 13: 2 file(s) in the GI_DUODENUM folder
->   14 sub_dir 14: 1 file(s) in the GI_ESOPHAGUS folder
->   15 sub_dir 15: 3 file(s) in the GI_INTESTINE folder
->   16 sub_dir 16: 3 file(s) in the GI_RECTUM folder
->   17 sub_dir 17: 4 file(s) in the GI_STOMACH folder
->   18 sub_dir 18: 4 file(s) in the HEART folder
->   19 sub_dir 19: 5 file(s) in the IPSC folder
->   20 sub_dir 20: 1 file(s) in the KIDNEY folder
->   21 sub_dir 21: 2 file(s) in the LIVER folder
->   22 sub_dir 22: 5 file(s) in the LUNG folder
->   23 sub_dir 23: 7 file(s) in the MUSCLE folder
->   24 sub_dir 24: 1 file(s) in the MUSCLE_LEG folder
->   25 sub_dir 25: 1 file(s) in the OVARY folder
->   26 sub_dir 26: 1 file(s) in the PANCREAS folder
->   27 sub_dir 27: 1 file(s) in the PANCREAS_Islets folder
->   28 sub_dir 28: 2 file(s) in the PLACENTA folder
->   29 sub_dir 29: 8 file(s) in the SKIN folder
->   30 sub_dir 30: 1 file(s) in the SPLEEN folder
->   31 sub_dir 31: 2 file(s) in the STROMAL_CONNECTIVE folder
->   32 sub_dir 32: 2 file(s) in the THYMUS folder
->   33 sub_dir 33: 2 file(s) in the VASCULAR folder
-> Total 33 sub-folder(s) is/are input
+>   2 sub_dir 2: 2 file(s) in the Blood_B-cell_CD19p folder
+>   3 sub_dir 3: 4 file(s) in the Blood_HSC_CD34p folder
+>   4 sub_dir 4: 2 file(s) in the Blood_Leukemia_encode folder
+>   5 sub_dir 5: 1 file(s) in the Blood_Lymphoblastoid_encode folder
+>   6 sub_dir 6: 1 file(s) in the Blood_Monocytes_CD14 folder
+>   7 sub_dir 7: 1 file(s) in the Blood_Monocytes_CD14_encode folder
+>   8 sub_dir 8: 1 file(s) in the Blood_Mononuclear_cell folder
+>   9 sub_dir 9: 1 file(s) in the Blood_NK_cell_CD56 folder
+>   10 sub_dir 10: 1 file(s) in the Blood_Nutrophils_CD15 folder
+>   11 sub_dir 11: 2 file(s) in the Blood_T-cell_CD3 folder
+>   12 sub_dir 12: 2 file(s) in the Blood_T-cell_CD8 folder
+>   13 sub_dir 13: 2 file(s) in the Blood_Th_CD4 folder
+>   14 sub_dir 14: 1 file(s) in the Blood_Th_CD4p_CD25m folder
+>   15 sub_dir 15: 1 file(s) in the Blood_Th_memory_CD4p_CD25m folder
+>   16 sub_dir 16: 1 file(s) in the Blood_Th_naive_CD4p_CD25m folder
+>   17 sub_dir 17: 1 file(s) in the Blood_Th_PMA-I_stim_CD4p_CD25m_IL17m folder
+>   18 sub_dir 18: 1 file(s) in the Blood_Th17_PMA-I_stim_CD4p_CD25m_IL17p folder
+>   19 sub_dir 19: 1 file(s) in the Blood_Tmem_CD4p_CD25int_CD127p folder
+>   20 sub_dir 20: 1 file(s) in the Blood_Treg_CD4p_CD25p folder
+>   21 sub_dir 21: 1 file(s) in the BONE_encode folder
+>   22 sub_dir 22: 12 file(s) in the BRAIN folder
+>   23 sub_dir 23: 1 file(s) in the BRAIN_encode folder
+>   24 sub_dir 24: 2 file(s) in the BREAST folder
+>   25 sub_dir 25: 1 file(s) in the BREAST_encode folder
+>   26 sub_dir 26: 1 file(s) in the CERVIX_encode folder
+>   27 sub_dir 27: 8 file(s) in the ESC folder
+>   28 sub_dir 28: 9 file(s) in the ESC_DERIVED folder
+>   29 sub_dir 29: 3 file(s) in the FAT folder
+>   30 sub_dir 30: 3 file(s) in the GI_COLON folder
+>   31 sub_dir 31: 2 file(s) in the GI_DUODENUM folder
+>   32 sub_dir 32: 1 file(s) in the GI_ESOPHAGUS folder
+>   33 sub_dir 33: 3 file(s) in the GI_INTESTINE folder
+>   34 sub_dir 34: 3 file(s) in the GI_RECTUM folder
+>   35 sub_dir 35: 4 file(s) in the GI_STOMACH folder
+>   36 sub_dir 36: 4 file(s) in the HEART folder
+>   37 sub_dir 37: 5 file(s) in the IPSC folder
+>   38 sub_dir 38: 1 file(s) in the KIDNEY folder
+>   39 sub_dir 39: 1 file(s) in the LIVER folder
+>   40 sub_dir 40: 1 file(s) in the LIVER_encode folder
+>   41 sub_dir 41: 3 file(s) in the LUNG folder
+>   42 sub_dir 42: 2 file(s) in the LUNG_encode folder
+>   43 sub_dir 43: 5 file(s) in the MUSCLE folder
+>   44 sub_dir 44: 2 file(s) in the MUSCLE_encode folder
+>   45 sub_dir 45: 1 file(s) in the MUSCLE_LEG folder
+>   46 sub_dir 46: 1 file(s) in the OVARY folder
+>   47 sub_dir 47: 1 file(s) in the PANCREAS folder
+>   48 sub_dir 48: 1 file(s) in the PANCREAS_Islets folder
+>   49 sub_dir 49: 2 file(s) in the PLACENTA folder
+>   50 sub_dir 50: 6 file(s) in the SKIN folder
+>   51 sub_dir 51: 2 file(s) in the SKIN_encode folder
+>   52 sub_dir 52: 1 file(s) in the SPLEEN folder
+>   53 sub_dir 53: 2 file(s) in the STROMAL_CONNECTIVE folder
+>   54 sub_dir 54: 2 file(s) in the THYMUS folder
+>   55 sub_dir 55: 1 file(s) in the VASCULAR folder
+>   56 sub_dir 56: 1 file(s) in the VASCULAR_encode folder
+> Total 56 sub-folder(s) is/are input
 > Total 0 file(s) is/are input.
 >
 > Option sub_dir = TRUE, summary table are not going to be generated.
 >   1 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ADRENAL_120.bed
->   2 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_Encode2012_373.bed
->   3 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_HSC_B-cell_372.bed
->   4 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BLOOD_T-cell_394.bed
->   5 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BONE_82.bed
->   6 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BRAIN_211.bed
->   7 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BREAST_140.bed
->   8 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_CERVIX_95.bed
->   9 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_113.bed
->   10 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_DERIVED_220.bed
->   11 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_FAT_204.bed
->   12 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_COLON_207.bed
->   13 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_DUODENUM_183.bed
->   14 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_ESOPHAGUS_101.bed
->   15 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_INTESTINE_178.bed
->   16 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_RECTUM_192.bed
->   17 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_STOMACH_209.bed
->   18 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_HEART_152.bed
->   19 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_IPSC_108.bed
->   20 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_KIDNEY_109.bed
->   21 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LIVER_182.bed
->   22 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LUNG_212.bed
->   23 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_218.bed
->   24 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_LEG_89.bed
->   25 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_OVARY_87.bed
->   26 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_106.bed
->   27 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_Islets_79.bed
->   28 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PLACENTA_174.bed
->   29 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SKIN_163.bed
->   30 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SPLEEN_154.bed
->   31 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_STROMAL_CONNECTIVE_100.bed
->   32 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_THYMUS_285.bed
->   33 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_VASCULAR_112.bed
-> Job done: 2020-03-18 00:31:44 for 3 sec
+>   2 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_B-cell_CD19p_304.bed
+>   3 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_HSC_CD34p_260.bed
+>   4 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Leukemia_encode_280.bed
+>   5 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Lymphoblastoid_encode_268.bed
+>   6 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Monocytes_CD14_163.bed
+>   7 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Monocytes_CD14_encode_172.bed
+>   8 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Mononuclear_cell_247.bed
+>   9 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_NK_cell_CD56_227.bed
+>   10 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Nutrophils_CD15_214.bed
+>   11 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_T-cell_CD3_306.bed
+>   12 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_T-cell_CD8_272.bed
+>   13 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th_CD4_268.bed
+>   14 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th_CD4p_CD25m_241.bed
+>   15 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th_memory_CD4p_CD25m_249.bed
+>   16 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th_naive_CD4p_CD25m_229.bed
+>   17 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th_PMA-I_stim_CD4p_CD25m_IL17m_215.bed
+>   18 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Th17_PMA-I_stim_CD4p_CD25m_IL17p_232.bed
+>   19 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Tmem_CD4p_CD25int_CD127p_239.bed
+>
+>   20 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_Blood_Treg_CD4p_CD25p_250.bed
+>   21 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BONE_encode_82.bed
+>   22 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BRAIN_184.bed
+>   23 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BRAIN_encode_83.bed
+>   24 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BREAST_134.bed
+>   25 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_BREAST_encode_76.bed
+>   26 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_CERVIX_encode_95.bed
+>   27 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_113.bed
+>   28 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_ESC_DERIVED_220.bed
+>   29 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_FAT_204.bed
+>   30 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_COLON_207.bed
+>   31 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_DUODENUM_183.bed
+>   32 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_ESOPHAGUS_101.bed
+>   33 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_INTESTINE_178.bed
+>   34 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_RECTUM_192.bed
+>   35 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_GI_STOMACH_209.bed
+>   36 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_HEART_152.bed
+>   37 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_IPSC_108.bed
+>   38 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_KIDNEY_109.bed
+>   39 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LIVER_132.bed
+>   40 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LIVER_encode_114.bed
+>   41 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LUNG_188.bed
+>   42 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_LUNG_encode_124.bed
+>   43 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_203.bed
+>   44 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_encode_106.bed
+>   45 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_MUSCLE_LEG_89.bed
+>   46 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_OVARY_87.bed
+>   47 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_106.bed
+>   48 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PANCREAS_Islets_79.bed
+>   49 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_PLACENTA_174.bed
+>   50 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SKIN_142.bed
+>   51 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SKIN_encode_110.bed
+>   52 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_SPLEEN_154.bed
+>   53 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_STROMAL_CONNECTIVE_100.bed
+>   54 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_THYMUS_285.bed
+>   55 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_VASCULAR_67.bed
+>   56 Write a BED file: r2d1_data/summary/snp_union_0_roadmap_over_VASCULAR_encode_79.bed
+> Job done: 2020-03-31 15:17:31 for 4.2 sec
 
 ## Melton lab union list
 
@@ -1894,49 +1965,49 @@ Rscript postgwas-exe.r
 ```
 
 > ** Run function: db_venn.r/summ... ready
-> 121 Files/folders input.
->   1 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_717.bed
->   2 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_584.bed
->   ...
->   120 r2d1_data/summary/snp_union_3_tanlab_over_Treg_enh_98.bed
->   121 r2d1_data/summary/snp_union_gtex_eqtl_1349.bed
-> Total 121 file(s) is/are input.
+> 144 Files/folders input.
+>     1 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_717.bed
+>     2 r2d1_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_584.bed
+>     ...
+>     143 r2d1_data/summary/snp_union_3_tanlab_over_Treg_enh_98.bed
+>     144 r2d1_data/summary/snp_union_gtex_eqtl_1349.bed
+> Total 144 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->   Read 121 files
+>     Read 144 files
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->   Returned union list dim       = [1] 1877  125
+>     Returned union list dim       = [1] 1877  148
 >
->   [PASS] uni_save       = FALSE
+>     [PASS] uni_save       = FALSE
 >
->   GWAS dim      = [1] 2003   11
->   Merge dim     = [1] 2003  129
->   Write a CSV file: r2d1_data/summary_gwas.csv
+>     GWAS dim      = [1] 2003   11
+>     Merge dim     = [1] 2003  152
+>     Write a CSV file: r2d1_data/summary_gwas.csv
 >
->   ENCODE dim    = [1] 4237   13
->   Merge dim     = [1] 2662  124
->   Write a CSV file: r2d1_data/summary_encode.csv
+>     ENCODE dim    = [1] 4237   13
+>     Merge dim     = [1] 2662  147
+>     Write a CSV file: r2d1_data/summary_encode.csv
 >
->   Nearest gene dim      = [1] 2315    9
->   Search biomaRt... 220.. 213.. [1] 2315    5
->   CDS dim               = [1] 5791   11
->   Merge dim             = [1] 2424  129
->   Write a CSV file: r2d1_data/summary_nearest.csv
+>     Nearest gene dim      = [1] 2315    9
+>     Search biomaRt... 220.. 213.. [1] 2315    5
+>     CDS dim               = [1] 5791   11
+>     Merge dim             = [1] 2424  152
+>     Write a CSV file: r2d1_data/summary_nearest.csv
 >
->   GTEx dim      = [1] 68822     9
->   Merge dim     = [1] 68822   128
->   Write a CSV file: r2d1_data/summary_gtex.csv
+>     GTEx dim      = [1] 68822     9
+>     Merge dim     = [1] 68822   151
+>     Write a CSV file: r2d1_data/summary_gtex.csv
 >
->   lncRNA dim    = [1] 132   7
->   Merge dim     = [1] 132 128
->   Write a CSV file: r2d1_data/summary_lncRNA.csv
+>     lncRNA dim    = [1] 132   7
+>     Merge dim     = [1] 132 151
+>     Write a CSV file: r2d1_data/summary_lncRNA.csv
 >
-> Job done: 2020-03-23 19:46:45 for 20.1 sec
+> Job done: 2020-03-31 15:19:22 for 27.3 sec
 
 ### Meltonlab GWAS summary
 
@@ -2426,7 +2497,9 @@ Rscript postgwas-exe.r
 >   Write file: r2d1_data/summary_gene/gtex_eqtl_248.tsv
 > Job done: 2020-03-22 18:26:46 for 2.2 sec
 
-### Union Hi-C & GTEx data
+### Summary Hi-C, GTEx, Nearest genes
+
+To proceed this step, for the Hi-C files, you need to annotate **enstids** with **ensgids**.
 
 Usage: `Rscript postgwas-exe.r --gene summary --base <base folder/files> --out <out folder>`
 
@@ -2434,10 +2507,26 @@ Usage: `Rscript postgwas-exe.r --gene summary --base <base folder/files> --out <
 Rscript postgwas-exe.r
   --dbgene summary
   --base r2d1_data/summary_gene
+  --nearest r2d1_data/summary_nearest.csv
   --out r2d1_data
 ```
 
-> 
+> ** Run function: db_filter.r/summary... ready
+> 3 Files/folders input.
+>   1 r2d1_data/summary_gene/gtex_eqtl_248.tsv
+>   2 r2d1_data/summary_gene/hic_EndoC_BH1_HiC_gwas_267.tsv
+>   3 r2d1_data/summary_gene/hic_Primary_Islet_HiC_gwas_72.tsv
+> Total 3 files are input.
+> Nearest file: r2d1_data/summary_nearest.csv
+>   Extracting Ensgids... 433.. biomaRt... [1] 423   3
+>
+>   Parsing gene name... 423.. [1] 423   3
+>   ENSGid-Rsid list... 9627.. [1] 9627    3
+>   Merging biomaRt annotations.. [1] 9627    5
+>   Merging eqtl, hic, nearest... [1] 9627    9
+>   Merging GTEx eQTL SNP slopes... [1] 9627   60
+>   Write file: r2d1_data/summary_gene_pairs.csv
+> Job done: 2020-03-26 19:36:21 for 15.6 sec
 
 
 
@@ -2559,11 +2648,136 @@ Rscript postgwas-exe.r ^
 
 Change the result file name: `snp_core_47.bed` to `snp_core_high_eqtl_47.bed`
 
+
+
+# 8. ANNOVAR
+
+## Download data
+
+* https://doc-openbio.readthedocs.io/projects/annovar/en/latest/user-guide/download/
+
+Download dbSNP data
+
+```CMD
+./annovar/annotate_variation.pl --downdb -buildver hg19 -webfrom annovar avsnp150 humandb/
+```
+
+```CMD
+./annovar/annotate_variation.pl --downdb -buildver hg38 -webfrom annovar avsnp150 humandb/
+```
+
+Download ensGene data
+
+```CMD
+./annovar/annotate_variation.pl --downdb -buildver hg19 -webfrom annovar ensGene humandb/
+```
+
+```cmd
+./annovar/annotate_variation.pl --downdb -buildver hg38 -webfrom annovar ensGene humandb/
+```
+
+Download refSeq data
+
+```CMD
+./annovar/annotate_variation.pl --downdb -buildver hg19 -webfrom annovar refGene humandb/
+```
+
+
+
+## Prepare input file
+
+* https://doc-openbio.readthedocs.io/projects/annovar/en/latest/user-guide/input/#-dbsnp-identifiers
+
+From the 2,003 SNP list: `Why avsnp150 is not working?`
+
+```CMD
+#./annovar/convert2annovar.pl -format rsid snplist.txt -dbsnpfile humandb/hg19_avsnp150.txt > snplist_hg19.avinput
+./annovar/convert2annovar.pl -format rsid snplist.txt -dbsnpfile humandb/hg19_snp138.txt > snplist_hg19.avinput
+```
+
+## Filter-based annotations
+
+* https://doc-openbio.readthedocs.io/projects/annovar/en/latest/user-guide/filter/#dbsnp-annotations
+
+gene-based annotations- ensGene
+
+```CMD
+./annovar/annotate_variation.pl -geneanno -buildver hg19 -dbtype ensGene snplist_hg19.avinput humandb/
+```
+
+> NOTICE: Output files are written to snplist_hg19.avinput.variant_function, snplist_hg19.avinput.exonic_variant_function
+> NOTICE: Reading gene annotation from humandb/hg19_ensGene.txt ... Done with 196501 transcripts (including 101155 without coding sequence annotation) for 57905 unique genes
+> NOTICE: Processing next batch with 3760 unique variants in 3760 input lines
+> NOTICE: Reading FASTA sequences from humandb/hg19_ensGeneMrna.fa ... Done with 108 sequences
+> WARNING: A total of 6780 sequences will be ignored due to lack of correct ORF annotation
+> NOTICE: Variants with invalid input format are written to snplist_hg19.avinput.invalid_input
+
+gene-based annotations - refGene
+
+```CMD
+./annovar/annotate_variation.pl -geneanno -buildver hg19 -dbtype refGene snplist_hg19.avinput humandb/
+```
+
+> variation.pl -geneanno -buildver hg19 -dbtype refGene snplist_hg19.avinput humandb/
+> NOTICE: Output files are written to snplist_hg19.avinput.variant_function, snplist_hg19.avinput.exonic_variant_function
+> NOTICE: Reading gene annotation from humandb/hg19_refGene.txt ... Done with 72212 transcripts (including 17527 without coding sequence annotation) for 28250 unique genes
+> NOTICE: Processing next batch with 3760 unique variants in 3760 input lines
+> NOTICE: Reading FASTA sequences from humandb/hg19_refGeneMrna.fa ... Done with 75 sequences
+> WARNING: A total of 446 sequences will be ignored due to lack of correct ORF annotation
+> NOTICE: Variants with invalid input format are written to snplist_hg19.avinput.invalid_input
+
+# 9. VEP, Variant Effect Predictor
+
+## Initial docker run
+
+* https://useast.ensembl.org/info/docs/tools/vep/script/vep_tutorial.html
+
+To run the Ensembl VEP tool, vcf format input file have to be prepared.
+
+```CMD
+Rscript postgwas-exe.r  
+```
+
+> 
+
+Then, the result VCF file have to fill `NA` values by manually.
+
+Run the docker VEP in `docker shell` or `CMD`
+
+```docker
+docker image tag ensemblorg/ensembl-vep:latest vep1:latest
+docker run -it vep1
+```
+
+Install and download "cache files"
+
+```docker
+perl INSTALL.pl
+```
+
+Copy the GWAS T1D rsid list file (hg38) in `CMD`
+
+```CMD
+docker cp "C:/Users/kisud/OneDrive/Suh's Lab/2020-03 T1D v2.0/r2d1_data/gwas_biomart_hg38.vcf" 5fe3cbc39a47:/opt/vep/src/ensembl-vep
+```
+
+```CMD
+docker cp "C:/Users/kisud/OneDrive/Suh's Lab/2020-03 T1D v2.0/r2d1_data/gwas_biomart_hg19.vcf" 5fe3cbc39a47:/opt/vep/src/ensembl-vep
+```
+
+Run the VEP in `docker shell`
+
+```docker
+./vep --cache -i gwas_biomart_hg38.vcf -o gwas_vep_hg38.vcf
+```
+
+
+
+## Regular docker run
+
+
+
 # #. LOLA results
-
-
-
-# #. H-MAGMA results
 
  
 
