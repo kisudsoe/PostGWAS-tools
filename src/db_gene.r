@@ -36,6 +36,7 @@ summary = function(
 ) {
     # Load function-specific library
     suppressMessages(library(biomaRt))
+    suppressMessages(library(tools))
 
     # Preparing...
     paste0('\n** Run function: db_filter.r/summary... ') %>% cat
@@ -61,60 +62,45 @@ summary = function(
     }
     n = length(paths)
     paste0('Total ',n,' files are input.\n') %>% cat
+    if(!is.null(nearest)) paste0('Nearest file: ',nearest,'\n') %>% cat
 
     # Read pair files
-    enst_li = list(); snp_enst_li = list(); hic_ann_li = list()
-    ensg_li = list(); snp_ensg_li = list(); gtex_ann_li = list()
-    j = 0; k = 0
+    ensg_li = list(); snp_ensg_li = list(); tb_li = list()
     for(i in 1:n) {
         tb = try(read.delim(paths[i],stringsAsFactors=F))
         if('try-error' %in% class(tb)) {
             paste0('  [ERROR] ',f_paths[i],'\n') %>% cat
             return()
         }
-        tb_ncol = ncol(tb)
-        # grep ENST
-        enst = grep("ENST",tb[1,]$ensgid)
-        ensg = grep("ENSG",tb[1,]$ensgid)
-        if(length(enst)>0) {
-            j = j+1
-            enst_li[[j]] = tb$ensgid
-            snp_enst_li[[j]] = tb[,1:2]
-            hic_ann_li[[j]] = tb[,3:tb_ncol]
-        } else if(length(ensg)>0) {
-            k = k+1
-            ensg_li[[k]] = tb$ensgid
-            snp_ensg_li[[k]] = tb[,1:2]
-            gtex_ann_li[[k]] = tb[,3:tb_ncol]
-        } else paste0('[ERROR] Cannot find ENST/ENSG IDs.')
+        ensg_li[[i]] = tb$ensgid
+        snp_ensg = paste0(tb$ensgid,'-',tb$rsid)
+        tb$ensgid_rsid = snp_ensg
+        snp_ensg_li[[i]] = snp_ensg
+        tb_li[[i]] = tb
     }
 
-    # Extract Enstids
-    paste0('\n  Extracting Enstids... ') %>% cat
-    enstids = enst_li %>% unlist %>% unique
-    paste0(length(enstids),'.. ') %>% cat
-
-    # Search biomaRt for enstids
-    paste0('biomaRt... ') %>% cat
-    ensembl   = useMart('ensembl',dataset='hsapiens_gene_ensembl')
-    gene_attr1 = c('ensembl_transcript_id','ensembl_gene_id','hgnc_symbol')#,'description')
-    gene_enst  = getBM(
-        attributes = gene_attr1,
-        filters = "ensembl_transcript_id",
-        values = enstids,
-        mart = ensembl
-    ) %>% unique
-    colnames(gene_enst)[1:2] = c('enstid','ensgid')
-    dim(gene_enst) %>% print
+    # Read nearest gene file
+    if(!is.null(nearest)) {
+        tb = read.csv(nearest,stringsAsFactors=F)
+        colnames(tb)[2] = 'ensgid'
+        tb_ncol = ncol(tb)
+        n = length(ensg_li)
+        ensg_li[[n+1]] = tb$ensgid
+        snp_ensg = paste0(tb$ensgid,'-',tb$rsid)
+        tb$ensgid_rsid = snp_ensg
+        snp_ensg_li[[n+1]] = snp_ensg
+        tb_li[[n+1]] = tb
+    }
 
     # Extract Ensgids
     paste0('  Extracting Ensgids... ') %>% cat
-    ensgids   = ensg_li %>% unlist %>% unique
+    ensgids = ensg_li %>% unlist %>% unique
     paste0(length(ensgids),'.. ') %>% cat
 
     # Search biomaRt for ensgids
     paste0('biomaRt... ') %>% cat
-    gene_attr2 = c('ensembl_gene_id','hgnc_symbol')#,'description')
+    ensembl   = useMart('ensembl',dataset='hsapiens_gene_ensembl')
+    gene_attr2 = c('ensembl_gene_id','hgnc_symbol','description')
     gene_ensg = getBM(
         attributes = gene_attr2,
         filters = "ensembl_gene_id",
@@ -124,57 +110,85 @@ summary = function(
     colnames(gene_ensg)[1] = c('ensgid')
     dim(gene_ensg) %>% print
 
-    # Merging enst-ensg pair
-    paste0('\n  Merging enstid-ensgid pairs... ') %>% cat
-    enstids_df = data.frame(enstid=enstids)
-    enst_pair  = merge(enstids_df,gene_enst,by='enstid',all.x=T)
-    
-    ensgids_df = data.frame(ensgid=ensgids)
-    ensg_pair_ = merge(ensgids_df,gene_ensg,by='ensgid',all.x=T)
-    enstid_    = rep(NA,nrow(ensg_pair_))
-    ensg_pair  = data.frame(
-        enstid = enstid_,
-        ensg_pair_
-    )
-    gene_ens = rbind(enst_pair,ensg_pair) %>% unique
-    dim(gene_ens) %>% print
-    paste0('  enstid na sum = ',sum(is.na(gene_ens$enstid)),'\n') %>% cat
-    paste0('  ensgid na sum = ',sum(is.na(gene_ens$ensgid)),'\n') %>% cat
-
     # Parsing biomaRt gene name
-    #paste0('\n  Parsing gene name... ') %>% cat
-    #gene_name = lapply(gene_ens$description,function(x)
-    #    strsplit(x,"\\ \\[")[[1]][1]) %>% unlist
-    #gene_ens$description = gene_name
-    #paste0(length(gene_ens$ensgid%>% unique),'.. ') %>% cat
-    #dim(gene_ens) %>% print
+    paste0('\n  Parsing gene name... ') %>% cat
+    gene_name = lapply(gene_ensg$description,function(x)
+        strsplit(x,"\\ \\[")[[1]][1]) %>% unlist
+    gene_ensg$description = gene_name
+    paste0(length(gene_ensg$ensgid%>% unique),'.. ') %>% cat
+    dim(gene_ensg) %>% print
 
-    # Merge snp-enst and snp-ensg table
-    paste0('\n  Merging SNPs to Enst/Ensg IDs... ') %>% cat
-    snp_enst_df  = data.table::rbindlist(snp_enst_li) %>% unique
-    colnames(snp_enst_df) = c('rsid_hic','enstid')
-    snp_enst_mrg = merge(gene_ens,snp_enst_df,by='enstid',all.x=T)
+    # Merge gene annotation to snp_ensg list
+    paste0('  ENSGid-Rsid list... ') %>% cat
+    ensgid_rsid = snp_ensg_li %>% unlist %>% unique
+    paste0(length(ensgid_rsid),'.. ') %>% cat
+    ensgid_split_li = lapply(ensgid_rsid,function(x) {
+        row = strsplit(x,"\\-")[[1]]
+        data.frame(
+            ensgid = row[1],
+            rsid = row[2]
+        )
+    })
+    ensgid_split_df = data.table::rbindlist(ensgid_split_li)
+    ensgid_rsid_df  = data.frame(ensgid_rsid,ensgid_split_df)
+    dim(ensgid_rsid_df) %>% print
 
-    snp_ensg_df  = data.table::rbindlist(snp_ensg_li) %>% unique
-    colnames(snp_ensg_df) = c('rsid_eqtl','ensgid')
-    snp_mrg      = merge(snp_enst_mrg,snp_ensg_df,by='ensgid',all.x=T) %>% unique
-    dim(snp_mrg) %>% print
-    
-    # out 1. Save as CSV file
+    # Merge 1: gene annotations
+    paste0('  Merging biomaRt annotations.. ') %>% cat
+    ensgid_rsid_df1 = merge(ensgid_rsid_df,gene_ensg,by='ensgid',all=T) %>% unique
+    dim(ensgid_rsid_df1) %>% print
+
+    # Merge 2: eqtl, hic, nearest
+    paste0('  Merging eQTL, Hi-C, nearest genes... ') %>% cat
+    col_names1 = basename(paths) %>% file_path_sans_ext
+    if(!is.null(nearest)) {
+        col_names = c(col_names1,'nearest_genes')
+    } else col_names = col_names1
+    n = length(snp_ensg_li)
+    for(i in 1:n) {
+        m = length(snp_ensg_li[[i]])
+        df = data.frame(
+            ensg_rsid = snp_ensg_li[[i]],
+            t_f = rep('TRUE',m)
+        )
+        colnames(df) = c('ensgid_rsid',col_names[i])
+
+        # Merge the df to the ensgid_rsid_df1
+        ensgid_rsid_df1 = merge(ensgid_rsid_df1,df,by='ensgid_rsid',all=T)
+    }
+    ensgid_rsid_df2 = ensgid_rsid_df1 %>% unique
+    dim(ensgid_rsid_df2) %>% print
+
+    # Merge 3: gtex annotations
+    paste0('  Merging GTEx eQTL SNP slopes... ') %>% cat
+    ensgid_rsid_df3 = merge(ensgid_rsid_df2,tb_li[[1]],by='ensgid_rsid',all=T) %>% unique
+    dim(ensgid_rsid_df3) %>% print
+
+    # Save as CSV file
     f_name1 = paste0(out,'/',dir_name,'_pairs.csv')
-    write.csv(snp_mrg,f_name1,row.names=F)
+    write.csv(ensgid_rsid_df3,f_name1,row.names=F)
     paste0('  Write file: ',f_name1,'\n') %>% cat
     return()
-    
-    # Merge hic and gtex annotations
-    paste0('\n  Merging gene-hic/gtex annotations... ')
-    enstids_df = data.frame(enstid=enstids)
-    enst_pair  = merge(enstids_df,gene_ens,by='enstid',all.x=T)
-    ensgids    = union(ensgids_,enst_pair$ensgid) %>% unique
-    ensg_pair  = merge()
 
-    # out 2. Save as TSV file
-    return()
+    ## Legacy codes: biomaRt enstid searching ##
+    # Extract Enstids
+    #paste0('\n  Extracting Enstids... ') %>% cat
+    #enstids = enst_li %>% unlist %>% unique
+    #paste0(length(enstids),'.. ') %>% cat
+
+    # Search biomaRt for enstids
+    #paste0('biomaRt... ') %>% cat
+    #ensembl   = useMart('ensembl',dataset='hsapiens_gene_ensembl')
+    #gene_attr1 = c('ensembl_transcript_id','ensembl_gene_id','hgnc_symbol','description')
+    #gene_enst  = getBM(
+    #    attributes = gene_attr1,
+    #    filters = "ensembl_transcript_id",
+    #    values = enstids,
+    #    mart = ensembl
+    #) %>% unique
+    #colnames(gene_enst)[1:2] = c('enstid','ensgid')
+    #dim(gene_enst) %>% print
+    #head(gene_enst) %>% print
 }
 
 gtex_pair = function(
@@ -197,20 +211,26 @@ gtex_pair = function(
     # Extract Ensgid
     paste0('  Extracting Ensgid.. ') %>% cat
     ensgid = lapply(gtex$gene_id,function(x) strsplit(x,"\\.")[[1]][1]) %>% unlist
-    gtex$ensgid = ensgid
     paste0('done\n') %>% cat
 
     # Spread GTEx pair by tissue
     paste0('  Spreading GTEx data.. ') %>% cat
-    gtex_reshape = gtex %>% spread(tissue,value=slope)
+    ensg_rsid = paste0(ensgid,'-',gtex$rsid)
+    gtex_ = data.frame(
+        #ensg_rsid = ensg_rsid,
+        rsid = gtex$rsid,
+        ensgid = ensgid,
+        tissue = gtex$tissue,
+        slope = gtex$slope
+    )
+    gtex_reshape = spread(gtex_,key=tissue,value=slope,fill='-')
     n = ncol(gtex_reshape)
-    gtex_pair = gtex_reshape[,c(7:n)]
-    dim(gtex_pair) %>% print
+    dim(gtex_reshape) %>% print
 
     # Save as TSV file
-    gene_n = unique(gtex_pair$ensgid) %>% length
+    gene_n = unique(gtex_reshape$ensgid) %>% length
     f_name = paste0(out,'/gtex_eqtl_',gene_n,'.tsv')
-    write.table(gtex_pair,f_name,sep='\t',row.names=F,quote=F)
+    write.table(gtex_reshape,f_name,sep='\t',row.names=F,quote=F)
     paste0('  Write file: ',f_name,'\n') %>% cat
 }
 
@@ -318,22 +338,21 @@ db_gene = function(
     args = NULL
 ) {
     # Get help
-    if(length(args$help)>0) { help = args$help
-    } else                    help = FALSE
-    if(help) {
-        cat(help_message); quit()
-    }
+    if(length(args$help)>0) {    help    = args$help
+    } else                       help    = FALSE
+    if(help) { cat(help_message); quit() }
 
     # Global arguments
-    if(length(args$base)>0)     b_path   = args$base
-    if(length(args$out)>0)      out      = args$out
-    if(length(args$debug)>0) {  debug    = args$debug
-    } else                      debug    = FALSE
+    if(length(args$base)>0)      b_path  = args$base
+    if(length(args$out)>0)       out     = args$out
+    if(length(args$debug)>0) {   debug   = args$debug
+    } else                       debug   = FALSE
 
     # Required arguments
-    if(length(args$bed)>0) {    bed      = args$bed
-    } else                      bed      = FALSE
-
+    if(length(args$bed)>0) {     bed     = args$bed
+    } else                       bed     = FALSE
+    if(length(args$nearest)>0) { nearest = args$nearest
+    } else                       nearest = NULL
 
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
@@ -342,7 +361,7 @@ db_gene = function(
     } else if(args$dbgene =='gtex_pair') {
         gtex_pair(b_path,out,debug)
     } else if(args$dbgene == 'summary') {
-        summary(b_path,out,debug)
+        summary(b_path,out,nearest,debug)
     } else {
         paste0('[Error] There is no such function "',args$dbgene,'" in gene: ',
             paste0(args$dbgene,collapse=', '),'\n') %>% cat
