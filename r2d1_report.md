@@ -2528,7 +2528,26 @@ Rscript postgwas-exe.r
 >   Write file: r2d1_data/summary_gene_pairs.csv
 > Job done: 2020-03-26 19:36:21 for 15.6 sec
 
+## DAVID GO analysis
 
+Using 100 gene list for the nearest genes occupied with the Roadmap enhancers in Pancreas Islet/T-cells/B-cells/Monocytes/Spleen/Thymus. By the FDR > 0.05 criteria, I found 11 GO and KEGG terms were significant and 11 genes were involved in the terms.
+
+```CMD
+Rscript postgwas-exe.r
+  --dbgene david_go
+  --base r2d1_data/go_analysis.tsv
+  --out r2d1_data
+  --fdr 0.05
+```
+
+> ** Run function: db_gene.r/david_go... ready
+>   Read DAVID result file        [1] 71 13
+>   FDR criteria  = 0.05
+>   Filtered GO terms     = [1] 11 13
+>   Extract the gene list... 11.. done
+>   Venn analysis... [1] 11 12
+>   Write file: r2d1_data/go_analysis.csv
+> Job done: 2020-04-09 01:05:28 for 0.1 sec
 
 # #. Venn summary
 
