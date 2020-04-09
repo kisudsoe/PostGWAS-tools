@@ -173,9 +173,9 @@ ldlink_filter = function(
         colnames(ldlink_3)[1:3] = c('gwasSNPs','ldSNPs','ld_coord')
 
         # Save as CSV file
-        f_name = paste0(out,'/gwas_ldlink_r0.2.csv')
+        f_name = paste0(out,'/gwas_ldlink_total.tsv')
         paste0('\n  Merged table\t\t= ') %>% cat; dim(ldlink_) %>% print
-        write.csv(ldlink_3,f_name,row.names=F,quote=F)
+        write.table(ldlink_3,f_name,row.names=F,quote=F,sep='\t')
         paste0('  Write file: ',f_name,'\n') %>% cat
     }
     
