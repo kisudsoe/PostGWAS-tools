@@ -8,7 +8,7 @@ Functions:
     hic_pair   Extract Hi-C linked SNP-Gene pairs.
     gtex_pair  Extract eQTL linked SNP-Gene pairs.
     summary    Summarizing GWAS SNPs-Gene pairs.
-    david_go
+    david_go   Summarizing DAVID GO analysis result.
 
 Global arguments:
     --base     <base files>
@@ -21,14 +21,53 @@ Required arguments:
     --bed      <default:FALSE>
                An optional argument for the "hic_pair" function.
                To save as BED format file.
-    --nearest  An optional argument for the "summary" function.
+    --nearest  <nearest gene summary file path>
+               An optional argument for the "summary" function.
                Add nearest gene summary table to the hic gene summary.
+    --fdr      <default:0.05>
+               An optional argument for the "david_go" function.
 '
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
 
 ## Functions Start ##
+david_go = function(
+    go_path = NULL,   # Input DAVID GO analysis result file path
+    out     = 'data', # Out folder path
+    fdr     = 0.05,   # GO FDR criteria
+    debug
+) {
+    # Preparing...
+    paste0('\n** Run function: db_gene.r/david_go... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
+
+    # Read go result file
+    paste0('  Read DAVID result file\t') %>% cat
+    go = read.delim(go_path)
+    dim(go) %>% print
+    
+    paste0('  FDR criteria\t= ',fdr,'\n') %>% cat
+    paste0('  Filtered GO terms\t= ') %>% cat
+    go_ = subset(go,FDR<fdr)
+    dim(go_) %>% print
+    
+    paste0('  Extract the gene list... ') %>% cat
+    genes_li = lapply(go_$Genes,function(x) { strsplit(x%>%as.character,"\\, ")[[1]] })
+    names(genes_li) = go_$Term
+    genes_n = unlist(genes_li) %>% unique %>% length
+    paste0(genes_n,'.. done\n') %>% cat
+    
+    paste0('  Venn analysis... ') %>% cat
+    source('src/venn_analysis.r')
+    venn_tf = venn_analysis(genes_li,wfig=F,wfile=F)
+    dim(venn_tf) %>% print
+    
+    f_name = paste0(out,'/go_analysis.csv')
+    write.csv(venn_tf,f_name,quote=F,row.names=F)
+    paste0('  Write file: ',f_name,'\n') %>% cat
+}
+
 summary = function(
     f_paths = NULL,   # Input snp-gene pair files
     out     = 'data', # Out folder path
@@ -40,7 +79,7 @@ summary = function(
     suppressMessages(library(tools))
 
     # Preparing...
-    paste0('\n** Run function: db_filter.r/summary... ') %>% cat
+    paste0('\n** Run function: db_gene.r/summary... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
     # If the base path is folder, get the file list
@@ -354,6 +393,8 @@ db_gene = function(
     } else                       bed     = FALSE
     if(length(args$nearest)>0) { nearest = args$nearest
     } else                       nearest = NULL
+    if(length(args$fdr)>0) {     fdr     = args$fdr %>% as.numeric
+    } else                       fdr     = 0.05
 
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
@@ -363,6 +404,8 @@ db_gene = function(
         gtex_pair(b_path,out,debug)
     } else if(args$dbgene == 'summary') {
         summary(b_path,out,nearest,debug)
+    } else if(args$dbgene == 'david_go') {
+        david_go(b_path,out,fdr,debug)
     } else {
         paste0('[Error] There is no such function "',args$dbgene,'" in gene: ',
             paste0(args$dbgene,collapse=', '),'\n') %>% cat
