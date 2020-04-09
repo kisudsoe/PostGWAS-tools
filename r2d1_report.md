@@ -95,7 +95,7 @@ Usage: `Rscript postgwas-exe.r --ldlink down --base <input file> --out <out fold
 Rscript postgwas-exe.r
     --ldlink down
     --base db_gwas/gwas_5e-08_152.tsv
-    --out db_gwas/ldlink
+    --out db_gwas/ldlink2
     --popul CEU TSI FIN GBR IBS
 ```
 
@@ -115,7 +115,7 @@ Usage: `Rscript postgwas-exe.r --ldlink filter --base <input file> <input folder
 Rscript postgwas-exe.r
   --ldlink filter
   --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink
-  --out r2d1_data_gwas
+  --out r2d1_data
   --r2d 1
 ```
 
