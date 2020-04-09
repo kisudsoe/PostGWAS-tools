@@ -8,6 +8,7 @@ Functions:
     hic_pair   Extract Hi-C linked SNP-Gene pairs.
     gtex_pair  Extract eQTL linked SNP-Gene pairs.
     summary    Summarizing GWAS SNPs-Gene pairs.
+    david_go
 
 Global arguments:
     --base     <base files>
