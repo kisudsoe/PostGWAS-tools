@@ -167,8 +167,6 @@ Rscript postgwas-exe.r
 > Write file:     r2d1_data_gwas/gwas_hg38_biomart_2002.bed
 > Job done: 2020-02-25 23:56:09 for 1.9 sec
 
-
-
 # 2. Downloading annotation data
 
 ## Roadmap download
@@ -605,8 +603,6 @@ Rscript postgwas-exe.r
 >   Write file: db_1b_Stitzellab/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed
 > Job done: 2020-03-21 02:27:33 for 12 sec
 
-
-
 # 4. Distances from the annotations
 
 ## For General annotations
@@ -796,11 +792,11 @@ bedtools sort -i db_1b_Stitzellab/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.bed | b
 
 ### Preparing ATAC-seq data
 
-From Pritchard Lab's blood immune cells ATAC-seq data `GSE118189_ATAC_counts.tsv`, I prepared BED files through this code lines in jupyter lab:
+From Pritchard Lab's blood immune cells ATAC-seq data `GSE118189_ATAC_counts.tsv`, I prepared BED files through this code lines in R:
 
 ```R
 source('src/pdtime.r'); t0=Sys.time()
-prit = read.delim('db_Pritchardlab/GSE118189_ATAC_counts.tsv')
+prit = read.delim('db_2_Pritchardlab/GSE118189_ATAC_counts.tsv')
 dim(prit) %>% print
 
 n = ncol(prit)
@@ -2548,6 +2544,8 @@ Rscript postgwas-exe.r
 >   Venn analysis... [1] 11 12
 >   Write file: r2d1_data/go_analysis.csv
 > Job done: 2020-04-09 01:05:28 for 0.1 sec
+
+
 
 # #. Venn summary
 
