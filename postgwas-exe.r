@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Help Messages ----------
-help_message = c('
+help_message = '
 Version: 2020-03-20
 
 Usage: Rscript postgwas-exe.r <Function calls>
@@ -25,7 +25,7 @@ Global arguments:
               This is optional.
 
 Running functions with "--help" argument prints [Function] usage information.
-')
+'
 
 # Command Input ----------
 commandLine = commandArgs(trailingOnly=T)
@@ -44,7 +44,8 @@ names(args) = args_names
 
 # Run Function ----------
 call = args_names[1]
-if(call=='help') { cat(help_message); quit()
+if(call=='help') {
+    cat(help_message); quit()
 } else if(call=='gwas') {
     source('src/gwas_catalog.r')
     gwas_catalog(args)
