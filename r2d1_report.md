@@ -518,6 +518,44 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/roadmap_total.bed
 > Job done: 2020-02-28 12:00:35 for 5.7 min
 
+### Enhancer total
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbfilt	 roadmap ^
+  --base	 db_gwas/roadmap ^
+  --out		 db_gwas
+```
+
+> ** Run function: db_filter.r/roadmap_filt...
+>   Reading files..
+>     10/129 being processed.
+>     20/129 being processed.
+>     30/129 being processed.
+>     40/129 being processed.
+>     50/129 being processed.
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning message:
+> In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E060_25_imputed12marks_dense.bed.rds - file not found.
+>     60/129 being processed.
+> Error in gzfile(file, "rb") : cannot open the connection
+> In addition: Warning message:
+> In gzfile(file, "rb") :
+>   cannot open compressed file 'db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds', probable reason 'No such file or directory'
+>   db_gwas/roadmap/E064_25_imputed12marks_dense.bed.rds - file not found.
+>     70/129 being processed.
+>     80/129 being processed.
+>     90/129 being processed.
+>     100/129 being processed.
+>     110/129 being processed.
+>     120/129 being processed.
+>   Finished reading and filtering 129 files.
+>
+> Write file: db_gwas/roadmap_enh.bed
+> Job done: 2020-04-11 19:17:57 for 6 min
+
 ### Enhancer in each cell type with metadata
 
 To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
@@ -652,6 +690,15 @@ bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_h
 bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
 ```
 
+### Roadmap enhancer merge/closest
+
+```CMD
+bedtools sort -i db_gwas/roadmap_enh.bed | bedtools merge -i stdin -c 1 -o count > db_gwas/roadmap_enh_merge.bed
+bedtools sort -i r2d1_data/gwas_hg19_biomart_2003.bed | bedtools closest -d -a stdin -b db_gwas/roadmap_enh_merge.bed > r2d1_data/distance/roadmap_enh_merge.tsv
+```
+
+
+
 ## Preparing β-cell ATAC-seq data
 
 ### Distance of Meltonlab's β-cell ATAC-seq data
@@ -715,7 +762,7 @@ bedtools closest -d
 
 ### Distance of Meltonlab each cell type data
 
-Full code was wrote in `db_gwas/meltonlab_dist.sh`:
+Full code was wrote in `bash_sh/meltonlab_dist.sh`:
 
 ```bash
 bedtools sort -i ./meltonlab/GSM4171636_PP2_ATAC_rep1.peaks.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/PP2_ATAC_rep1.tsv
@@ -865,6 +912,209 @@ bedtools	sort	-i	./3_tanlab/Th1_enh_t1d.bed	|	bedtools	closest	-d	-a	gwas_hg19_b
 bedtools	sort	-i	./3_tanlab/Treg_enh.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh.tsv
 bedtools	sort	-i	./3_tanlab/Treg_enh_control.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh_control.tsv
 bedtools	sort	-i	./3_tanlab/Treg_enh_t1d.bed	|	bedtools	closest	-d	-a	gwas_hg19_biomart_2003.bed	-b	stdin	>	./3_tanlab_dist/Treg_enh_t1d.tsv
+```
+
+## For Allan lab's CD4 T cell, CD8 T cell, and B cell Hi-C data
+
+Data extracted from GEO dataset: [GSE105776](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE105776)
+
+* CD4+ T cells CD8+ T cells, B cells from 2 patients
+* Genome_build: hg38
+
+### Preparing and converting data
+
+```R
+library(dplyr)
+library(tools)
+library(diffHic)
+
+# Read mtx files and a genomic region index BED file
+f_paths = list.files('db_3a_Allanlab/hic',full.names=T)
+out = 'db_3a_Allanlab/hic_idx'
+
+# Extract file names
+f_names1 = list.files('db_3a_Allanlab/hic') %>% file_path_sans_ext
+f_names = lapply(f_names1,function(x) {
+    strs = strsplit(x,"\\_")[[1]][1:2]
+    paste0(strs,collapse="_")
+}) %>% unlist
+
+# Read Matrix Market Exchange Format (MTX) and Filter by enrichment values
+source('src/pdtime.r'); t0=Sys.time()
+n = length(f_paths)
+for(i in 1:n) {
+    t1=Sys.time()
+    paste0(i,' ',f_paths[i],'...\n') %>% cat
+    
+    # read MTX file
+    dat = readMTX2IntSet(f_paths[i],bed_path)
+    paste0('  MTX read.. ') %>% cat
+    
+    # Peak-calling step
+    ## Defining enrichment values
+    en.dat = enrichedPairs(dat,flank=5) # with 'x' set to 5 bin sizes (i.e., 250 kbp)
+    enrichments = filterPeaks(en.dat, get.enrich=T)
+    
+    ## Filtering by enrichment >0.5, count number >10, diagonal >1 bin size away
+    peak.keep = filterPeaks(dat, enrichments, min.enrich=0.5,
+                            min.count=10, min.diag=1L)
+    dat.keep = dat[peak.keep]
+    paste0('peak-calling.. ') %>% cat
+    
+    # finding overlaps between bin pairs
+    overlaps = overlapsAny(
+        dat.keep@interactions,
+        dat.keep@interactions@regions,
+        maxgap=100000,
+        type='equal'
+    )
+    dat.keep = dat.keep[overlaps]
+    paste0('overlap.. done!\n') %>% cat
+    
+    # extract anchors and save as TSV file
+    df = data.frame(
+        anchor1=dat.keep@interactions@anchor1,
+        anchor2=dat.keep@interactions@anchor2
+    )
+    f_name = paste0(out,'/',f_names[i],'.idx')
+    write.table(df,f_name,sep='\t',row.names=F)
+    paste0('  Write file: ',f_name,'.. ') %>% cat
+    dim(df) %>% print
+    paste0('  ',pdtime(t1,2),'\n\n') %>% cat
+}
+pdtime(t0,1) %>% cat
+```
+
+> 1 db_3a_Allanlab/hic/GSM2827786_CD4T1_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827786_CD4T1.idx.. [1] 47699     2
+>   Job process: 5.7 min
+> 2 db_3a_Allanlab/hic/GSM2827787_CD4T2_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827787_CD4T2.idx.. [1] 61516     2
+>   Job process: 6 min
+> 3 db_3a_Allanlab/hic/GSM2827788_CD8T1_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827788_CD8T1.idx.. [1] 46580     2
+>   Job process: 5.9 min
+> 4 db_3a_Allanlab/hic/GSM2827789_CD8T2_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827789_CD8T2.idx.. [1] 47723     2
+>   Job process: 5.4 min
+> 5 db_3a_Allanlab/hic/GSM2827790_HB1_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827790_HB1.idx.. [1] 68111     2
+>   Job process: 6.5 min
+> 6 db_3a_Allanlab/hic/GSM2827791_HB2_hg_t.mtx...
+>   MTX read.. peak-calling.. overlap.. done!  Write file: db_3a_Allanlab/hic_bed/GSM2827791_HB2.idx.. [1] 66115     2
+>   Job process: 6.8 min
+> Job done: 2020-04-21 02:15:14 for 36.3 min
+
+```R
+# Read mtx files and a genomic region index BED file
+f_paths1 = list.files('db_3a_Allanlab/hic_idx',full.names=T)
+bed_path = 'db_3a_Allanlab/GSE105776_GenomicRegions.bed'
+regions  = read.delim(bed_path,header=F)
+colnames(regions) = c('chr','start','end')
+regions$start = regions$start+1
+dim(regions) %>% print
+
+out1 = 'db_3a_Allanlab/hic_tsv'
+out2 = 'db_3a_Allanlab/hic_bed'
+
+# Extract file names
+f_names1 = list.files('db_3a_Allanlab/hic_idx') %>% file_path_sans_ext
+f_names1 %>% print
+
+# Read Matrix Market Exchange Format (MTX) as S4class and convert to dataframe format.
+source('src/pdtime.r'); t0=Sys.time()
+n = length(f_paths1)
+for(i in 1:n) {
+    t1=Sys.time()
+    paste0(i,' ',f_paths1[i],'... ') %>% cat
+    
+    # read MTX file
+    mtx = read.delim(f_paths1[i],stringsAsFactors=F)
+    dim(mtx) %>% print
+    
+    # Remove psuedo-chromosome
+    paste0('  Removing pseudo-chrom and self looping.. ') %>% cat
+    chrs = paste0('chr',c(1:22,'X'))
+    which_chr = which(regions$chr %in% chrs)
+    regions_keep = regions[which_chr,]
+
+    # Remove self looping
+    which_keep1 = which(mtx$anchor1!=mtx$anchor2)
+    which_keep2 = which(mtx$anchor1<nrow(regions_keep) & mtx$anchor2<nrow(regions_keep))
+    which_keep  = intersect(which_keep1,which_keep2)
+    mtx_keep   = mtx[which_keep,]
+    dim(mtx_keep) %>% print
+        
+    # convert to TSV table and save a file
+    n = length(mtx_keep$anchor1)
+    tsv = data.frame(
+        regions[mtx_keep$anchor1,],
+        regions[mtx_keep$anchor2,],
+        loop  = paste0('loop',c(1:n))
+    )
+    f_name1 = paste0(out1,'/',f_names1[i],'.tsv')
+    write.table(tsv,f_name1,sep='\t',row.names=F)
+    paste0('  Write TSV file: ',f_name1,'\n') %>% cat
+    
+    # convert to BED table and save a file
+    bed_li = apply(tsv,1,function(row) {
+        data.frame(
+            chr   = row[c(1,4)],
+            start = row[c(2,5)],
+            end   = row[c(3,6)],
+            name  = paste0(row[7],c('.x','.y'))
+        )
+    })
+    bed = data.table::rbindlist(bed_li)
+    
+    f_name2 = paste0(out2,'/',f_names[i],'.bed')
+    write.table(bed,f_name2,sep='\t',col.names=F,row.names=F)
+    paste0('  Write BED file: ',f_name2,'\n') %>% cat
+    paste0('  ',pdtime(t1,2),'\n\n') %>% cat
+}
+pdtime(t0,1) %>% cat
+```
+
+> 1 db_3a_Allanlab/hic_idx/GSM2827786_CD4T1.idx... [1] 47699     2
+>   Removing pseudo-chrom and self looping.. [1] 46632     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827786_CD4T1.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827786_CD4T1.bed
+>   Job process: 31.2 sec
+>
+> 2 db_3a_Allanlab/hic_idx/GSM2827787_CD4T2.idx... [1] 61516     2
+>   Removing pseudo-chrom and self looping.. [1] 60203     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827787_CD4T2.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827787_CD4T2.bed
+>   Job process: 41.1 sec
+>
+> 3 db_3a_Allanlab/hic_idx/GSM2827788_CD8T1.idx... [1] 46580     2
+>   Removing pseudo-chrom and self looping.. [1] 45420     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827788_CD8T1.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827788_CD8T1.bed
+>   Job process: 32.7 sec
+>
+> 4 db_3a_Allanlab/hic_idx/GSM2827789_CD8T2.idx... [1] 47723     2
+>   Removing pseudo-chrom and self looping.. [1] 46700     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827789_CD8T2.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827789_CD8T2.bed
+>   Job process: 33.9 sec
+>
+> 5 db_3a_Allanlab/hic_idx/GSM2827790_HB1.idx... [1] 68111     2
+>   Removing pseudo-chrom and self looping.. [1] 66708     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827790_HB1.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827790_HB1.bed
+>   Job process: 46 sec
+>
+> 6 db_3a_Allanlab/hic_idx/GSM2827791_HB2.idx... [1] 66115     2
+>   Removing pseudo-chrom and self looping.. [1] 64809     2
+>   Write TSV file: db_3a_Allanlab/hic_tsv/GSM2827791_HB2.tsv
+>   Write BED file: db_3a_Allanlab/hic_bed/GSM2827791_HB2.bed
+>   Job process: 45.1 sec
+
+### Distance of Allan lab's data
+
+```bash
+
 ```
 
 
@@ -1206,10 +1456,10 @@ I moved the BED file `snp_regulome2b_104.bed` into the `summary` folder.
 GTEx version 8 includes 17,382 samples, 54 tissues and 948 donors. 
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbfilt gtex_ovl
-	--base r2d1_data/gwas_hg19_biomart_2003.bed
-	--gtex db_gwas/gtex_signif_5e-08.rds
+Rscript postgwas-exe.r ^
+	--dbfilt gtex_ovl ^
+	--base r2d1_data/gwas_hg19_biomart_2003.bed ^
+	--gtex db_gwas/gtex_signif_5e-08.rds ^
 	--out r2d1_data/gtex_eqtl
 ```
 
@@ -2473,7 +2723,7 @@ Rscript postgwas-exe.r
 >
 > Job done: 2020-03-09 01:27:47 for 3.1 sec
 
-## Gene summary
+## GTEx, Hi-C summary
 
 ### GTEx data
 
