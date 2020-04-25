@@ -27,6 +27,7 @@ venn_analysis = function(
     if(title=='') title = paste0('Venn analysis of ',nrow(union),' genes')
     if(wfig & length(grouplist)==3) {
         suppressMessages(library(eulerr))
+        suppressMessages(library(limma))
         f.name1 = paste0(out,'/venn_',g_names[1],'_',g_names[2],'.png')
         venn_counts = vennCounts(union)
         venn_c = unlist(venn_counts[,4])
