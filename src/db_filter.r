@@ -333,7 +333,7 @@ distance_filt = function(
         tag_alter = stringr::str_replace_all(rd_df2$tag, "[[:punct:]]", ".") # Remove special characters
         if(infotype=='ucsc') {
             paste0('\n  UCSC annotations: ') %>% cat
-            tags = lapply(tag_alter,function(tag) strsplit(tag,'\\_')[[1]][2]) %>%
+            tags = lapply(tag_alter,function(tag) strsplit(tag,'\\.')[[1]][2]) %>%
                 unlist %>% as.factor
         } else if(infotype=='tags') {
             paste0('\n Annotations: ') %>% cat
