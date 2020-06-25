@@ -55,7 +55,7 @@ pivot_gene = function(
 
     # Extract Ensgids
     paste0('  Extract ensgids... ') %>% cat
-    ensgid_pair = pair$ensgid
+    ensgid_pair = pair[,1]
     pair_val = pair[,-1]
     n = ncol(pair_val)
     ensgids_li = lapply(c(1:n),function(i) {
@@ -68,7 +68,7 @@ pivot_gene = function(
     ensgid_ = ensgid_pair %>% unique
     m = length(ensgids_li)
     df = NULL
-    for(i in 1:n) {
+    for(i in 1:m) {
         df = cbind(df,ensgids_li[[i]][match(ensgid_,ensgids_li[[i]])])
     }
     df1 = (df!='')           # Transcform values to TRUE, if ID exists.
@@ -180,8 +180,10 @@ summary_gene = function(
     if(!is.null(nearest)) paste0('Nearest file: ',nearest,'\n') %>% cat
 
     # Read pair files
+    paste0('  Read gene-snp pair files... ') %>% cat
     ensg_li = list(); snp_ensg_li = list(); tb_li = list()
     for(i in 1:n) {
+        #paste0('  ',i,' ',paths[i],'\n') %>% cat # for debug
         tb = try(read.delim(paths[i],stringsAsFactors=F))
         if('try-error' %in% class(tb)) {
             paste0('  [ERROR] ',f_paths[i],'\n') %>% cat
@@ -193,9 +195,11 @@ summary_gene = function(
         snp_ensg_li[[i]] = snp_ensg
         tb_li[[i]] = tb
     }
+    'done\n' %>% cat
 
     # Read nearest gene file
     if(!is.null(nearest)) {
+        paste0('  Read nearest gene file... ') %>% cat
         tb = read.csv(nearest,stringsAsFactors=F)
         colnames(tb)[2] = 'ensgid'
         tb_ncol = ncol(tb)
@@ -205,6 +209,7 @@ summary_gene = function(
         tb$ensgid_rsid = snp_ensg
         snp_ensg_li[[n+1]] = snp_ensg
         tb_li[[n+1]] = tb
+        dim(tb) %>% print
     }
 
     # Extract Ensgids
@@ -378,10 +383,13 @@ hic_pair = function(
     'ready\n' %>% cat
 
     # Read base files and filter by distance=0
-    colnm = c('chr','start','end','name','hic_chr','hic_start','hic_end','hic_loop','dist')
+    colnm1 = c('chr','start','end','name','hic_chr','hic_start','hic_end','hic_loop')
+    colnm2 = c('dist')
     paste0('  ',f_paths[1],', length= ') %>% cat
     gwas = data.table::fread(f_paths[1],header=F)
-    colnames(gwas) = colnm
+    k = ncol(gwas)
+    colnames(gwas)[1:8] = colnm1
+    colnames(gwas)[k] = colnm2
     paste0(nrow(gwas)) %>% cat
     gwas0 = subset(gwas,dist==0) %>% unique
     gwas_0 = gwas0[,c(4,8)]
@@ -389,7 +397,9 @@ hic_pair = function(
 
     paste0('  ',f_paths[2],', length= ') %>% cat
     gene = data.table::fread(f_paths[2],header=F)
-    colnames(gene) = colnm
+    k = ncol(gene)
+    colnames(gene)[1:8] = colnm1
+    colnames(gene)[k] = colnm2
     paste0(nrow(gene)) %>% cat
     gene0 = subset(gene,dist==0) %>% unique
     gene_0 = gene0[,c(4,8)]
