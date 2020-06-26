@@ -424,13 +424,14 @@ gwas_ldlink = function(
     } else                     debug   = FALSE
     
     if(length(args$popul)>0)   popul   = args$popul
-    if(length(args$r2d)>0)     r2d     = args$r2d
+    if(length(args$r2)>0)      r2      = args$r2
+    if(length(args$dprime)>0)  dprime  = args$dprime
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
         ldlink_down(b_path,out,popul,debug)
     } else if(args$ldlink == 'filter') {
-        ldlink_filter(b_path[1],b_path[2],out,r2d,debug)
+        ldlink_filter(b_path[1],b_path[2],out,r2,dprime,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else {
