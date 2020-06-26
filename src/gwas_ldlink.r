@@ -4,7 +4,7 @@ This is a function for LDlink data.
 
 Usage:
     Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
-    Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.6 --dprime 1
+    Rscript postgwas-exe.r --ldlink filter --base <base file> <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
     Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.5
     Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
 
@@ -397,12 +397,11 @@ ldlink_down = function(
     paste0('\n** Run function ldlink_down... ') %>% cat
     snps = read.delim(snp_path,stringsAsFactors=F)
     rsid = snps$rsid %>% unique
-    #rsid = rsid[1]
     paste0(rsid%>%length,'.. ') %>% cat
 
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     token = '669e9dc0b428' # Seungsoo Kim's personal token
-    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token, append=T)
+    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token) #append=T
     paste0('done\n') %>% cat
     
     # Rename downloaded file
