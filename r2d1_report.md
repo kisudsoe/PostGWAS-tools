@@ -116,7 +116,8 @@ Rscript postgwas-exe.r
   --ldlink filter
   --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink
   --out r2d1_data
-  --r2d 1
+  --r2 0.6
+  --dprime 1
 ```
 
 > ** Run function ldlink_filter...
@@ -620,14 +621,16 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/gtex_signif_5e-08.rds
 > Job done: 2020-02-28 00:15:35 for 2.9 min
 
-## Converting Stitzel lab's Hi-C data
+## Converting Hi-C data
+
+### Stitzel lab's data
 
 To analyze physical interaction map between SNPs to Genes, Stitzel lab's Hi-C data was converted to BED format.
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt hic_bed
-  --base db_1b_Stitzellab/GSE118588_RAW/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.txt db_1b_Stitzellab/GSE118588_RAW/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.txt
+Rscript postgwas-exe.r ^
+  --dbfilt hic_bed ^
+  --base db_1b_Stitzellab/GSE118588_RAW/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.txt db_1b_Stitzellab/GSE118588_RAW/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.txt ^
   --out db_1b_Stitzellab
 ```
 
@@ -640,6 +643,158 @@ Rscript postgwas-exe.r
 >   2     GSM3333898_Human_Islet_HiC_HiCCUPS_loops.txt    [1] 2580   20
 >   Write file: db_1b_Stitzellab/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed
 > Job done: 2020-03-21 02:27:33 for 12 sec
+
+### Suh lab (Yizhou)'s data
+
+**1. Tri-HiC data (T cell and Monocyte) - HiCCUPS**
+
+**Juicer toolbox**: https://github.com/aidenlab/juicer/wiki/Feature-Annotation
+
+**MS Visual Studio 2017** issue: requirements, `VC++ 2015.3 v140 toolset` `.NET Framework 3.5` https://stackoverflow.com/questions/43745099/using-cuda-with-visual-studio-2017
+
+> [CUDA: Host compiler targets unsupported OS](https://github.com/microsoft/vcpkg/issues/2791)
+>
+> Currently, CUDA 9.0 supports VC140 and VC141, but **CUDA 8.0 only supports VC140** which could also be delivered by VS2017. I would suggest reserve the possibility to use **CUDA 8.0 with VS2017**, for that many modified versions of Caffe need certain version of CUDA, and we could easily achieve this by notify user to **install VC140 in VS2017**. (If they use VS2015, then there'll be no problem).
+
+**Jcuda.org** download **version 0.8.0** and set as CLASSPATH: http://www.jcuda.org/downloads/downloads.html
+
+Using **HiCCUPS** to get locally enriched peaks:
+
+Usage: `Usage:   juicer_tools hiccups [-m matrixSize] [-k normalization (NONE/VC/VC_SQRT/KR)] [-c chromosome(s)] [-r resolution(s)] [-f fdr] [-p peak width] [-i window] [-t thresholds] [-d centroid distances] [--ignore_sparsity]<hicFile> <outputDirectory> [specified_loop_list] `
+
+To run this code, move to `2020-03 T1D v2.0\db_1a_Suhlab`.
+
+Parameters are followed the [default](https://github.com/aidenlab/juicer/wiki/HiCCUPS#defaults), resolution is selected as 5K only.
+
+- 2K resolution takes too long.
+
+```CMD
+# JCuda Error
+#java -Xms1024m -Xmx8192m -jar juicer_tools_1.19.02.jar hiccups hic/Mono_combined.hic hic_hiccups
+```
+
+```CMD
+hic_hiccups.bat
+#java -Xms2048m -Xmx8192m -jar juicer_tools_1.19.02.jar ^
+#  hiccups --cpu --threads 6 ^
+#  -m 512 -r 5000 -k KR -f 0.1 -p 4 -i 7 -t 0.02,1.5,1.75,2 -d 20000 ^
+#  hic/1018_Mono.hic ^
+#  hic_mono_1018_hiccups
+```
+
+> WARN [2020-04-27T21:32:36,279]  [Globals.java:138] [main]  Development mode is enabled
+> Reading file: hic/1018_Mono.hic
+> Using the following configurations for HiCCUPS:
+> Config res: 5000 peak: 4 window: 7 fdr: 10% radius: 20000
+> WARNING - You are using the CPU version of HiCCUPS.
+> The GPU version of HiCCUPS is the official version and has been tested extensively.
+> The CPU version only searches for loops within 8MB (by default) of the diagonal and is still experimental.
+> Using 6 CPU thread(s)
+> Unable to assess map sparsity; continuing with HiCCUPS
+> Running HiCCUPS for resolution 5000
+> Data not available for 4 at 5000 resolution
+> 4%
+> ...
+> 99%
+> 4%
+> ...
+> 99%
+> 26898 features written to file: C:\Users\kisud\OneDrive\Suh's Lab\2020-03 T1D v2.0\db_1a_Suhlab\hic_mono_1018_hiccups\enriched_pixels_5000.bedpe
+> 14457 features written to file: C:\Users\kisud\OneDrive\Suh's Lab\2020-03 T1D v2.0\db_1a_Suhlab\hic_mono_1018_hiccups\postprocessed_pixels_5000.bedpe
+> 14457 features written to file: C:\Users\kisud\OneDrive\Suh's Lab\2020-03 T1D v2.0\db_1a_Suhlab\hic_mono_1018_hiccups\merged_loops.bedpe
+> HiCCUPS complete
+
+**2. Converting HiCCUPS bedpe files to BED format**
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbfilt hic_bed ^
+  --base db_1a_Suhlab/hic_loops ^
+  --out db_1a_Suhlab/hic_bed
+```
+
+> ** Run function: db_filter.r/hic_bed... ready
+> 8 Files/folders input.
+>   1 db_1a_Suhlab/hic_loops/hic_mono_1018_hiccups_merged_loops.bedpe
+>   2 db_1a_Suhlab/hic_loops/hic_mono_1027_hiccups_merged_loops.bedpe
+>   3 db_1a_Suhlab/hic_loops/hic_mono_1035_hiccups_merged_loops.bedpe
+>   4 db_1a_Suhlab/hic_loops/hic_mono_1046_hiccups_merged_loops.bedpe
+>   5 db_1a_Suhlab/hic_loops/hic_T_1018_hiccups_merged_loops.bedpe
+>   6 db_1a_Suhlab/hic_loops/hic_T_1027_hiccups_merged_loops.bedpe
+>   7 db_1a_Suhlab/hic_loops/hic_T_1035_hiccups_merged_loops.bedpe
+>   8 db_1a_Suhlab/hic_loops/hic_T_1046_hiccups_merged_loops.bedpe
+> Total 8 file(s) is/are input.
+>
+>   1     hic_mono_1018_hiccups_merged_loops.bedpe        [1] 26996    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_mono_1018_hiccups_merged_loops.bed
+>
+>   2     hic_mono_1027_hiccups_merged_loops.bedpe        [1] 27330    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_mono_1027_hiccups_merged_loops.bed
+>
+>   3     hic_mono_1035_hiccups_merged_loops.bedpe        [1] 30023    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_mono_1035_hiccups_merged_loops.bed
+>
+>   4     hic_mono_1046_hiccups_merged_loops.bedpe        [1] 34225    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_mono_1046_hiccups_merged_loops.bed
+>
+>   5     hic_T_1018_hiccups_merged_loops.bedpe   [1] 14457    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_T_1018_hiccups_merged_loops.bed
+>
+>   6     hic_T_1027_hiccups_merged_loops.bedpe   [1] 20759    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_T_1027_hiccups_merged_loops.bed
+>
+>   7     hic_T_1035_hiccups_merged_loops.bedpe   [1] 21587    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_T_1035_hiccups_merged_loops.bed
+>
+>   8     hic_T_1046_hiccups_merged_loops.bedpe   [1] 17862    24
+>   Write file: db_1a_Suhlab/hic_bed/hic_T_1046_hiccups_merged_loops.bed
+> Job done: 2020-04-28 15:11:32 for 4.3 min
+
+### Aiden lab's data
+
+Converting HiCCUPS bedpe file to BED format.
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbfilt hic_bed ^
+  --base db_3b_Aidenlab/hic ^
+  --out db_3b_Aidenlab/hic_bed
+```
+
+> ** Run function: db_filter.r/hic_bed... ready
+> 3 Files/folders input.
+>   1 db_3b_Aidenlab/hic/GSE63525_GM12878_primary_HiCCUPS_looplist.txt
+>   2 db_3b_Aidenlab/hic/GSE63525_GM12878_replicate_HiCCUPS_looplist.txt
+>   3 db_3b_Aidenlab/hic/GSE63525_K562_HiCCUPS_looplist.txt
+> Total 3 file(s) is/are input.
+>
+>   1     GSE63525_GM12878_primary_HiCCUPS_looplist.txt   [1] 8054   20
+>   Write file: db_3b_Aidenlab/hic_bed/GSE63525_GM12878_primary_HiCCUPS_looplist.bed
+>
+>   2     GSE63525_GM12878_replicate_HiCCUPS_looplist.txt [1] 7484   20
+>   Write file: db_3b_Aidenlab/hic_bed/GSE63525_GM12878_replicate_HiCCUPS_looplist.bed
+>
+>   3     GSE63525_K562_HiCCUPS_looplist.txt      [1] 6057   20
+>   Write file: db_3b_Aidenlab/hic_bed/GSE63525_K562_HiCCUPS_looplist.bed
+> Job done: 2020-04-28 14:03:06 for 30.3 sec
+
+### Ferrer lab's data
+
+Converting pcHi-C TSV file to BED format
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbfilt hic_bed ^
+  --base db_4_Ferrerlab/pi_merged_washu_text.tsv ^
+  --out db_4_Ferrerlab
+```
+
+> ** Run function: db_filter.r/hic_bed... ready
+> Total 1 file(s) is/are input.
+>
+>   1     pi_merged_washu_text.tsv        [1] 175784      7
+>   Write file: db_4_Ferrerlab/pi_merged_washu_text.bed
+> Job done: 2020-04-29 10:29:30 for 2.7 min
 
 # 4. Distances from the annotations
 
@@ -771,7 +926,9 @@ bedtools sort -i ./meltonlab/GSM4171637_EN_ATAC_rep1.peaks.bed | bedtools closes
 bedtools sort -i ./meltonlab/GSE140500_SCbeta_TE.byH3K27ac.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > ./meltonlab_dist/SCbeta_TE_enh.tsv
 ```
 
-### Preparing Yizhou's β-cell ATAC-seq data
+### Preparing Yizhou's β-cell, T cell and Monocyte data
+
+#### ATAC-seq data (SC derived β-cell)
 
 This result data mapped on **hg19** version. See details in `db_Yizhou/README.md` file. Using `bedtools intersect`:
 
@@ -786,7 +943,9 @@ bedtools intersect -u
 
 Here, we used the background corrected (peudo) and union (pooled) pr1 peaks overlapped with pr2 peaks.
 
-### Distance of Yizhou's β-cell ATAC-seq data
+
+
+*** Distance of Yizhou's β-cell ATAC-seq data**
 
 Using `bedtools closest`:
 
@@ -796,6 +955,24 @@ bedtools closest -d
 	-b db/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
 	> data/SCbeta_YZ_pseudo_pool_ATAC.tsv
 ```
+
+#### Tri-HiC data (T cell and Monocyte)
+
+I ran this code at conda prompt.
+
+**For GWAS SNPs**
+
+```conda
+bedtools sort -i db_1a_Suhlab/hic_bed/hic_mono_1018_hiccups_merged_loops.bed | bedtools closest -d -a r2d1_data/gwas_hg19_biomart_2003.bed -b stdin > r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv
+```
+
+For UCSC annotations
+
+```conda
+
+```
+
+
 
 ### For Stitzel lab's EndoC-βH1 cell
 
