@@ -378,6 +378,7 @@ ldlink_filter = function(
     paste0('done\n') %>% cat
 
     # Write a TSV file
+    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     f_name1 = paste0(out,'/gwas_biomart.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
     write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
