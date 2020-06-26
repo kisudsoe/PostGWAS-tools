@@ -6,6 +6,7 @@ Usage:
     Rscript postgwas-exe.r --dbfilt ucsc --base <CDS> <Gene> <Promoter> --out <out folder>
     Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE
     Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh FALSE
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE --sep TRUE
 
 
 Functions:
