@@ -2,10 +2,15 @@
 
 # Help Messages ----------
 help_message = '
-Version: 2020-03-20
+Version: 2020-06-26
 
-Usage: Rscript postgwas-exe.r <Function calls>
-    --base <base file(s)> --out <out folder> <options> --debug <default:FALSE>
+Usage:
+    Rscript postgwas-exe.r --gwas <Function> --base <base file(s)> --out <out folder> [options:--p.criteria]
+    Rscript postgwas-exe.r --ldlink <Function> --base <base file(s)> --out <out folder> [options:--popul --r2 --dprime]
+    Rscript postgwas-exe.r --dbdown <Function> --out <out folder> [option:--hg]
+    Rscript postgwas-exe.r --dbfilt <Function> --base <base file/folder> --out <out folder> [option:--hg]
+    ...
+
     
 Function calls:
     --gwas    A function for GWAS Catalog data.
@@ -14,6 +19,7 @@ Function calls:
     --dbfilt  A function for filtering data.
     --dbvenn  A function for venn analysis.
     --dbgene  A function for gene analysis.
+    --dbcomp  A function for PCA analysis for datasets.
 
 Global arguments:
     --base    <Base input file path>
@@ -64,6 +70,9 @@ if(call=='help') {
 } else if(call=='dbgene') {
     source('src/db_gene.r')
     db_gene(args)
+} else if(call=='dbcomp') {
+    source('src/db_compare.r')
+    db_compare(args)
 } else {
     error_m = paste0('\n** [ERROR] There is no such function: "',commandLine[1],'". Try again.\n')
     cat(error_m)

@@ -2,22 +2,27 @@ help_message = '
 gwas_catalog, v2020-01-06
 This is a function for GWAS Catalog data.
 
-Usage: Rscript postgwas-exe.r --gwas <functions> --base <base file> --out <out folder> <...>
+Usage:
+    Rscript postgwas-exe.r --gwas trait --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --gwas gene --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --gwas study --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --filter trait --base <base TSV file> --out <out folder> --p.criteria 5e-8
+
 
 Functions:
-    trait   Generating pivot table for traits
-    gene    Generating pivot table for genes
-    study   Generating summary table for studies
-    filt    Filtering SNPs by P-values
+    trait   Generating pivot table for traits.
+    gene    Generating pivot table for genes.
+    study   Generating summary table for studies.
+    filter  Filtering SNPs by P-values.
 
 Global arguments:
     --base  <EFO0001359.tsv>
-            One base TSV file is mendatory.
+            An input base TSV file downloaded from GWAS Catalog is mendatory.
     --out   <Default:data folder>
-            Out files target path is mendatory. Default is "data" folder.
+            Out files target directory path that is mendatory. Default is "data" folder.
 
 Required arguments:
-    --p.criteria 5e-8
+    --p.criteria <5e-8>
             An argument for "--pivot filt". Default is 5e-8.
 '
 
@@ -246,46 +251,6 @@ trait_pivot = function(
 ## Functions End ##
 
 ## __INITE__ function
-gwas_summ = function(
-    gwas       = NULL,   # GAWS Catalog file path
-    out        = 'data', # Output folder path
-    p_criteria = 5e-8,   # P-value criteria
-    pivot      = c('trait','gene','study','filter'), # Generate pivot table options
-    debug      = F
-) {
-    # Read GWAS Catalog file
-    gdata = read.delim(gwas,stringsAsFactors=F)
-    file_nm = tools::file_path_sans_ext(gwas %>% basename)
-    if(debug) {
-        paste0('Read file, ',basename(gwas),'\t= ') %>% cat
-        dim(gdata) %>% print
-    }
-
-    # Generate TRAITS pivot table
-    if('trait' %in% pivot) {
-        paste0('\n** Run function trait_pivot:\n') %>% cat
-        trait_pivot(gdata, out, file_nm, debug)
-    }
-    
-    # Generate SNP-Gene-Min_P table
-    if('gene'  %in% pivot) {
-        paste0('\n** Run function gene_pivot:\n') %>% cat
-        gene_pivot(gdata, out, file_nm, debug)
-    }
-    
-    # Generate Study summary table
-    if('study' %in% pivot) {
-        paste0('\n** Run function study_pivot:\n') %>% cat
-        study_pivot(gdata, out, file_nm, debug)
-    }
-    
-    # Generate filtered SNP table
-    if('filter' %in% pivot) {
-        paste0('\n** Run function gwas_filt:\n') %>% cat
-        gwas_filt(gdata, out, p_criteria, debug)
-    }
-}
-
 gwas_catalog = function(
     args = args
 ) {
@@ -302,5 +267,29 @@ gwas_catalog = function(
     if(length(args$p.criteria)>0) { p_criteria = args$p.criteria
     } else                          p_criteria = 5e-8
     
-    gwas_summ(gwas,out,p_criteria,pivot,debug)
+    # Read GWAS Catalog file
+    gdata = read.delim(gwas,stringsAsFactors=F)
+    file_nm = tools::file_path_sans_ext(gwas %>% basename)
+    if(debug) {
+        paste0('Read file, ',basename(gwas),'\t= ') %>% cat
+        dim(gdata) %>% print
+    }
+
+    if(args$gwas == 'trait') {
+        # Generate TRAITS pivot table
+        paste0('\n** Run function trait_pivot:\n') %>% cat
+        trait_pivot(gdata, out, file_nm, debug)
+    } else if(args$gwas == 'gene') {
+        # Generate SNP-Gene-Min_P table
+        paste0('\n** Run function gene_pivot:\n') %>% cat
+        gene_pivot(gdata, out, file_nm, debug)
+    } else if(args$gwas == 'study') {
+        # Generate Study summary table
+        paste0('\n** Run function study_pivot:\n') %>% cat
+        study_pivot(gdata, out, file_nm, debug)
+    } else if(args$gwas == 'filter') {
+        # Generate filtered SNP table
+        paste0('\n** Run function gwas_filt:\n') %>% cat
+        gwas_filt(gdata, out, p_criteria, debug)
+    }
 }

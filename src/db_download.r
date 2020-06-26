@@ -3,14 +3,22 @@ db_download, v2020-02-27
 This is a function call for downloading databases
     Roadmap, ENCODE, RegulomeDB, GTEx v8, and lncRNASNP2
 
-Usage: Rscript postgwas-exe.r --dbdown <function> --out <out folder>
+Usage:
+    Rscript postgwas-exe.r --dbdown roadmap --out <out folder>
+    Rscript postgwas-exe.r --dbdown encode --out <out folder>
+    Rscript postgwas-exe.r --dbdown regulome --out <out folder>
+    Rscript postgwas-exe.r --dbdown gtex --out <out folder>
+    Rscript postgwas-exe.r --dbdown lncrna --out <out folder>
+    Rscript postgwas-exe.r --dbdown genes --out <out folder> --hg hg19
+    Rscript postgwas-exe.r --dbdown genes --out <out folder> --hg hg38
+
 
 Functions:
     roadmap   Downloading Roadmap data (hg19).
     encode    Downloading ENCODE data (hg19).
-    regulome  Downloading RegulomeDB data (≥2b).
-    gtex      Downloading GTEx v8 data.
-    lncrna    Downloading lncRNASNP2 data.
+    regulome  Downloading RegulomeDB data (≥2b, hg19).
+    gtex      Downloading GTEx v8 data (hg38).
+    lncrna    Downloading lncRNASNP2 data (hg38).
     genes     Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
 
 Global arguments:

@@ -2,14 +2,19 @@ help_message = '
 db_filter, v2020-03-10
 This is a function call for filtering data.
 
-Usage: Rscript postgwas-exe.r --dbfilt <function> --base <base file(s)> --out <out folder> <...>
+Usage:
+    Rscript postgwas-exe.r --dbfilt ucsc --base <CDS> <Gene> <Promoter> --out <out folder>
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh FALSE
+
 
 Functions:
     ucsc        Compile the ucsc downloaded promoter/gene/cds region annotations.
     roadmap     Filtering Roadmap data by enhancer tags.
     gtex        Filtering GTEx data by eQTL p-value.
     gtex_ovl    Overlapping the GTEx data with the input GWAS SNPs.
-    hic_bed     Converting the hiC data to the BED format.
+    hic_bed     --base <HiCCUPS files> --out <out folder>
+                Converting the HiCCUPS data to the BED format.
     dist        Filtering distance data from Bedtools closest function.
     regulome    Filtering and overlapping by Regulome score ≥2b.
     lnc_ovl     Overlapping the lncRNASNP2 data with the input GWAS SNPs.
@@ -64,8 +69,6 @@ hic_bed = function(
     ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
     # If the base path is folder, get the file list
-    fl_name = basename(f_hics)
-    file_nm = tools::file_path_sans_ext(fl_name)
 	paths1 = list.files(f_hics,full.name=T)
 	n = length(paths1)
     if(n>0) {
@@ -83,6 +86,8 @@ hic_bed = function(
             }
         }
     } else paths = f_hics
+    fl_name = basename(paths)
+    file_nm = tools::file_path_sans_ext(fl_name)
 	paste0('Total ',length(paths),' file(s) is/are input.\n') %>% cat
 
     # Multiple process
@@ -339,7 +344,7 @@ distance_filt = function(
             paste0('\n Annotations: ') %>% cat
             tags = tag_alter %>% as.factor
         } else {
-            paste0('\n[ERROR] There is no infotype option: "',infotype,'". 
+            paste0('\n[ERROR] You chose wrong infotype option: "',infotype,'". 
   You should choose one of these: "ucsc", "tags" or NULL.\n') %>% cat
             quit()
         }
@@ -639,7 +644,7 @@ db_filter = function(
     if(length(args$debug)>0) {    debug    = args$debug
     } else                        debug    = FALSE
 
-    # Reguired arguments
+    # Required arguments
     if(length(args$meta)>0) {     meta     = args$meta
     } else                        meta     = NULL
     if(length(args$ctype)>0) {    ctype    = args$ctype
