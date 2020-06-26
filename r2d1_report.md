@@ -154,7 +154,7 @@ File name change: `db_gwas/gwas_biomart.bed` -> `db_gwas/gwas_biomart_fill.bed`
 
 For further analysis, you have to generate **BED** format files for both **hg19** and **hg38**.
 
-Usage: `Rscript postgwas-exe.r --ldlink bed --base <input file> <input folder> --out <out folder>`
+Usage: `Rscript postgwas-exe.r --ldlink bed --base <input file> --out <out folder>`
 
 ```CMD
 Rscript postgwas-exe.r
