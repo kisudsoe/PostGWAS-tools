@@ -399,7 +399,6 @@ ldlink_down = function(
     rsid = snps$rsid %>% unique
     #rsid = rsid[1]
     paste0(rsid%>%length,'.. ') %>% cat
-    quit()
 
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     token = '669e9dc0b428' # Seungsoo Kim's personal token
