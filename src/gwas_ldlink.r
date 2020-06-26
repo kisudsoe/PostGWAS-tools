@@ -110,8 +110,8 @@ ldlink_filter = function(
     snp_path = NULL,   # GWAS file path
     ld_path  = NULL,   # LDlink download folder path
     out      = 'data', # Out folder path
-    r2       = NULL,   # LDlink filter criteria. R2>0.6 and/or D'=1
-    dprimt   = NULL,   # LDlink filter criteria. R2>0.6 and/or D'=1
+    r2       = NULL,   # LDlink filter R2 criteria
+    dprime   = NULL,   # LDlink filter Dprime criteria
     debug    = F
 ) {
     # Function specific library
