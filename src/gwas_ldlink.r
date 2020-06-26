@@ -414,18 +414,20 @@ ldlink_down = function(
 gwas_ldlink = function(
     args = NULL
 ) {
-    if(length(args$help)>0) {  help    = args$help
-    } else                     help    = FALSE
-    if(help) {                 cat(help_message); quit() }
+    if(length(args$help)>0) {   help    = args$help
+    } else                      help    = FALSE
+    if(help) {                  cat(help_message); quit() }
     
-    if(length(args$base)>0)    b_path  = args$base
-    if(length(args$out)>0)     out     = args$out
-    if(length(args$debug)>0) { debug   = args$debug
-    } else                     debug   = FALSE
+    if(length(args$base)>0)     b_path  = args$base
+    if(length(args$out)>0)      out     = args$out
+    if(length(args$debug)>0) {  debug   = args$debug
+    } else                      debug   = FALSE
     
-    if(length(args$popul)>0)   popul   = args$popul
-    if(length(args$r2)>0)      r2      = args$r2
-    if(length(args$dprime)>0)  dprime  = args$dprime
+    if(length(args$popul)>0)    popul   = args$popul
+    if(length(args$r2)>0) {     r2      = args$r2
+    } else                      r2      = NULL
+    if(length(args$dprime)>0) { dprime  = args$dprime
+    } else                      dprime  = NULL
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
