@@ -44,6 +44,7 @@ ldlink_bed = function(
     debug     = F
 ) {
     paste0('\n** Run function ldlink_bed... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     snps = read.delim(ldfl_path)
     dim(snps) %>% print
 
@@ -101,7 +102,6 @@ ldlink_bed = function(
         hg38_snp_lenth = snp_bed_hg38$end - snp_bed_hg38$start
         table(hg38_snp_lenth) %>% print
     }
-    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     f_name2 = paste0(out,'/gwas_hg38_biomart_',nrow(snp_bed_hg38),'.bed')
     write.table(snp_bed_hg38,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write file:\t',f_name2,'\n') %>% cat
