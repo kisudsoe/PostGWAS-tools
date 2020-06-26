@@ -1,9 +1,13 @@
 help_message = '
-gwas_ldlink, v2020-03-14
+gwas_ldlink, v2020-06-26
 This is a function for LDlink data.
 
-Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out folder> <...>
-    --ldlink <Functions: dn/fl>
+Usage:
+    Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
+    Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.6 --dprime 1
+    Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.5
+    Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
+
 
 Functions:
     down     This is a function for LDlink data download.
@@ -13,14 +17,16 @@ Functions:
 Global arguments:
     --base   <EFO0001359.tsv>
              One base TSV file is mendatory.
+             A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
+             A TSV file processed from "filter" function for "bed" function.
     --out    <default: data>
              Out folder path is mendatory. Default is "data" folder.
 
 Required arguments:
     --popul  <CEU TSI FIN GBR IBS ...>
-             An argument for the "--ldlink dn". One or more population option have to be included.
-    --r2d    <1/2/3/4>
-             An argument for the "--ldlink fl". Choose one number among these options:
+             An argument for the "--ldlink ddown". One or more population option have to be included.
+    --r2     An argument for the "--ldlink filter". Set a criteria for r2 over.
+    --dprime An argument for the "--ldlink filter". Set a criteria for dprime over.
                 1) r2 >0.6 and Dprime =1  <- The most stringent criteria.
                 2) r2 >0.6               <- Usual choice to define LD association.
                 3) Dprime =1
@@ -104,7 +110,8 @@ ldlink_filter = function(
     snp_path = NULL,   # GWAS file path
     ld_path  = NULL,   # LDlink download folder path
     out      = 'data', # Out folder path
-    r2d      = NULL,   # LDlink filter criteria. R2>0.6 and/or D'=1
+    r2       = NULL,   # LDlink filter criteria. R2>0.6 and/or D'=1
+    dprimt   = NULL,   # LDlink filter criteria. R2>0.6 and/or D'=1
     debug    = F
 ) {
     # Function specific library
@@ -139,36 +146,44 @@ ldlink_filter = function(
     paste0('  Read LDlink results\t\t= ') %>% cat; dim(ldlink_df) %>% print
     
     # Filter the LDlink data
-    if(r2d==1) {
-        cat('Filtering by "r2 > 0.6 and Dprime = 1":\n')
-        ldlink_1 = subset(ldlink_df,R2>0.6 & Dprime==1)
-    } else if(r2d==2) {
-        cat('Filtering by "r2 > 0.6":\n')
-	    ldlink_1 = subset(ldlink_df,R2>0.6) # r2 > 0.6
-    } else if(r2d==3) {
-        cat('Filtering by "Dprime = 1":\n')
-	    ldlink_1 = subset(ldlink_df,Dprime==1) # D' = 1
-    } else if(r2d==4) {
-        cat('Filtering by "r2 > 0.6 or Dprime = 1":\n')
-	    ldlink_1 = subset(ldlink_df,R2>0.6 | Dprime==1) # r2 > 0.6 or D' = 1
-    } else if(r2d==5) {
-        cat('Filtering by "r2 > 0.8":\n')
-	    ldlink_1 = subset(ldlink_df,R2>0.8) # r2 > 0.8
-    } else if(r2d==6) {
-        cat('No filtering:\n')
-        ldlink_1 = ldlink_df
-    } else cat('Which filtering option is not supported yet.\n')
+    if(!is.null(r2)) {
+        r2 = as.numeric(r2)
+        if(r2<1) {
+            ldlink_df = subset(ldlink_df,R2>r2)
+            paste0('    Filtering by "r2 > ',r2,'": ') %>% cat
+        } else if(r2==1) {
+            ldlink_df = subset(ldlink_df,R2==r2)
+            paste0('    Filtering by "r2 = ',r2,'": ') %>% cat
+        }
+        dim(ldlink_df) %>% print
+    } else paste0('    [Msg] No filter criteria for r2.\n') %>% cat
+
+    if(!is.null(dprime)) {
+        dprimt = as.numeric(dprime)
+        if(dprime<1) {
+            ldlink_df = subset(ldlink_df,Dprime<dprime)
+            paste0('    Filtering by "Dprime > ',r2,'": ') %>% cat
+        } else if(dprime==1) {
+            ldlink_df = subset(ldlink_df,Dprime==dprime)
+            paste0('    Filtering by "Dprime = ',dprime,'": ') %>% cat
+        }
+        dim(ldlink_df) %>% print
+    } else paste0('    [Msg] No filter criteria for Dprime.\n') %>% cat
+
     ldlink_2 = data.frame(
-        gwasSNPs = ldlink_1$SNPid,
-        ldSNPs   = ldlink_1$RS_Number,
-        ld_coord = ldlink_1$Coord
+        gwasSNPs = ldlink_df$SNPid,
+        ldSNPs   = ldlink_df$RS_Number,
+        ld_coord = ldlink_df$Coord
     ) %>% unique
     paste0('  Filtered data dimension \t= ') %>% cat; dim(ldlink_2) %>% print
+    
     ldlink_ = ldlink_2[!ldlink_2$`ldSNPs` %in% c("."),] # Exclude no rsid elements
     ex = nrow(ldlink_2[ldlink_2$`ldSNPs` %in% c("."),])
     paste0('  Excluded no rsid elements\t= ') %>% cat; print(ex)
-    if(r2d==6) {
-        ldlink_3 = ldlink_1
+    
+    # Save total LD SNPs
+    if(!is.null(r2) & !is.null(dprime)) {
+        ldlink_3 = ldlink_df
         ldlink_3$No = NULL
         colnames(ldlink_3)[1:3] = c('gwasSNPs','ldSNPs','ld_coord')
 
@@ -382,12 +397,12 @@ ldlink_down = function(
     paste0('\n** Run function ldlink_down... ') %>% cat
     snps = read.delim(snp_path,stringsAsFactors=F)
     rsid = snps$rsid %>% unique
-    rsid = rsid[1]
+    #rsid = rsid[1]
     paste0(rsid%>%length,'.. ') %>% cat
 
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     token = '669e9dc0b428' # Seungsoo Kim's personal token
-    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token, append=F)
+    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token, append=T)
     paste0('done\n') %>% cat
     
     # Rename downloaded file
