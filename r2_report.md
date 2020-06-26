@@ -70,6 +70,377 @@ Rscript postgwas-exe.r ^
 
 Roadmap, ENCODE, RegulomeDB, GTEx, lncRNASNP2, and Ensembl Gene annotation were already downloaded in `r2d1_report.md`.
 
+## ATAC data compare
+
+1. Generating merged bed file
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 bedmerge ^
+  --base	 db_1_meltonlab/atac_beta db_1a_Suhlab/atac db_1b_Stitzellab/atac db_2_Pritchardlab/bed_ATAC_T_mono db_4_Ferrerlab/atac ^
+  --out		 pca/atac_merge_input.bed
+```
+
+> ** Run function: db_compare.r/bedmerge...
+> 1 db_1_meltonlab/atac_beta: [1] 6
+>   db_1_meltonlab/atac_beta/GSM4171638_SCbeta_ATAC_rep1.peaks.bed
+>    db_1_meltonlab/atac_beta/GSM4171640_Beta_ATAC_rep1.peaks.bed
+>    db_1_meltonlab/atac_beta/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed
+>    db_1_meltonlab/atac_beta/GSM4171643_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed
+>    db_1_meltonlab/atac_beta/GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed
+>    db_1_meltonlab/atac_beta/GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed
+> 2 db_1a_Suhlab/atac: [1] 2
+>   db_1a_Suhlab/atac/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed
+>    db_1a_Suhlab/atac/YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed
+> 3 db_1b_Stitzellab/atac: [1] 1
+>   db_1b_Stitzellab/atac/GSM3333912_EndoC_BH1_ATACseq_broadPeak.fdr0.05.noBlacklist.bed
+> 4 db_2_Pritchardlab/bed_ATAC_T_mono: [1] 123
+> 5 db_4_Ferrerlab/atac: [1] 1
+>   db_4_Ferrerlab/atac/atac_consistent_peaks.bed
+> ** 133 BED file paths are ready.
+>
+>   Data merge...
+>     20/133 process done.
+>     40/133 process done.
+>     60/133 process done.
+>     80/133 process done.
+>     100/133 process done.
+>     120/133 process done. 133..   done: [1] 98083348        4
+>   Write file: pca/atac_merge_input.bed
+> Job done: 2020-04-29 21:05:02 for 16.7 min
+
+2. Using bedtools merge
+
+```bash
+sortBed -i pca/atac_merge_input.bed | mergeBed -i stdin > pca/atac_merge.bed
+```
+
+3. Using bedtools distance
+
+```bash
+bash bash_sh/dbcomp_atac_dist.sh
+```
+
+4. Get union table for PCA analysis
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 uniontb ^
+  --base	 pca/atac_dist ^
+  --out		 pca/atac_uniontb.csv
+```
+
+> ** Run function: db_compare.r/uniontb...
+> 1 pca/atac_dist: [1] 135
+> ** 135 dist file paths are ready.
+>   
+>      Read data...
+>        20/135 process done.
+>        40/135 process done.
+>        60/135 process done.
+>        80/135 process done.
+>        100/135 process done.
+>        120/135 process done. 135..
+>      Data union... [1] 1038289     136
+>      Write file: pca/atac_uniontb.csv
+>   Job done: 2020-04-29 22:14:08 for 21.4 min
+
+5. Draw PCA plot
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/atac_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/atac_meta.tsv ^
+  --filt	 Melton Suh Stitzel Pritchard Ferrer
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>   Read file: pca/atac_uniontb.csv... [1] 1038289     136
+>   Convert T/F to 1/0... done
+>   Read meta file: pca/atac_meta.tsv... [1] 133   3
+>   Filter option: Melton, Suh, Stitzel, Pritchard, Ferrer >> [1] 133
+>   PCA analysis... done
+>   Write file: pca/atac_uniontb_pca.csv
+>   Draw PCA plot... hull.. done
+> Save plot: pca/atac_uniontb_pca.png
+> Job done: 2020-04-29 22:18:21 for 3.4 min
+
+Change file name: `atac_uniontb_pca.png` -> `atac_uniontb-all_pca.png`
+
+![](pca\atac_uniontb-all_pca.png)
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/atac_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/atac_meta.tsv ^
+  --filt	 Melton Stitzel Pritchard Ferrer
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>     Read file: pca/atac_uniontb.csv... [1] 1038289     136
+>     Convert T/F to 1/0... done
+>     Read meta file: pca/atac_meta.tsv... [1] 133   3
+>     Filter option: Melton, Stitzel, Pritchard, Ferrer >> [1] 131
+>     PCA analysis... done
+>     Write file: pca/atac_uniontb_pca.csv
+>     Draw PCA plot... hull.. done
+> Save plot: pca/atac_uniontb_pca.png
+> Job done: 2020-04-29 22:29:51 for 3.3 min
+
+File name change: `atac_uniontb_pca.png` -> `atac_uniontb-suh_pca.png`
+
+![](pca\atac_uniontb-suh_pca.png)
+
+
+
+## ChIP-seq Enhancer data compare
+
+1.  Generating merged bed file
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 bedmerge ^
+  --base	 db_1_meltonlab/enh_beta db_1b_Stitzellab/enh db_3_Tanlab/enh_bed_files db_4_Ferrerlab/enh_active db_gwas/roadmap_enh_panc,T,mono ^
+  --out		 pca/enh_merge_input.bed
+```
+
+> ** Run function: db_compare.r/bedmerge...
+> 1 db_1_meltonlab/enh_beta: [1] 4
+>   db_1_meltonlab/enh_beta/GSE140500_Beta_SE.byH3K27ac.bed
+>      db_1_meltonlab/enh_beta/GSE140500_Beta_TE.byH3K27ac.bed
+>    db_1_meltonlab/enh_beta/GSE140500_SCbeta_SE.byH3K27ac.bed
+>      db_1_meltonlab/enh_beta/GSE140500_SCbeta_TE.byH3K27ac.bed
+>    2 db_1b_Stitzellab/enh: [1] 1
+>      db_1b_Stitzellab/enh/EndoC_BH1_enh.bed
+>    3 db_3_Tanlab/enh_bed_files: [1] 6
+>      db_3_Tanlab/enh_bed_files/Th1_enh.bed
+>       db_3_Tanlab/enh_bed_files/Th1_enh_control.bed
+>    db_3_Tanlab/enh_bed_files/Th1_enh_t1d.bed
+>    db_3_Tanlab/enh_bed_files/Treg_enh.bed
+>   db_3_Tanlab/enh_bed_files/Treg_enh_control.bed
+>      db_3_Tanlab/enh_bed_files/Treg_enh_t1d.bed
+>    4 db_4_Ferrerlab/enh_active: [1] 1
+>      db_4_Ferrerlab/enh_active/islet_regulome_active_enh.bed
+>    5 db_gwas/roadmap_enh_panc,T,mono: [1] 20
+>    ** 32 BED file paths are ready.
+>    
+>      Data merge...
+>        20/32 process done. 32..   done: [1] 2965364       4
+>     Write file: pca/enh_merge_input.bed
+> Job done: 2020-04-30 11:05:14 for 13.3 sec
+
+2. Using bed tools merge
+
+```bash
+sortBed -i pca/enh_merge_input.bed | mergeBed -i stdin > pca/enh_merge.bed
+```
+
+3. Using bedtools distance
+
+```bash
+bash bash_sh/dbcomp_enh_dist.sh
+```
+
+4. Get union table for PCA analysis
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 uniontb ^
+  --base	 pca/enh_dist ^
+  --out		 pca/enh_uniontb.csv
+```
+
+> ** Run function: db_compare.r/uniontb...
+> 1 pca/enh_dist: [1] 30
+> ** 30 dist file paths are ready.
+>
+>     Read data...
+>        10/30 process done.
+>        20/30 process done.
+>        30/30 process done. 30..
+>      Data union... [1] 291127     31
+>      Write file: pca/enh_uniontb.csv
+>    Job done: 2020-04-30 11:09:29 for 23.2 sec
+
+5. Draw PCA plot
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/enh_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/enh_meta.tsv ^
+  --filt	 roadmap_immn roadmap_panc Melton Suh Stitzel Tan Ferrer
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>     Read file: pca/enh_uniontb.csv... [1] 291127     31
+>     Convert T/F to 1/0... done
+>     Read meta file: pca/enh_meta.tsv... [1] 30  3
+>     Filter option: roadmap, Melton, Suh, Stitzel, Tan, Ferrer >> [1] 30
+>     PCA analysis... done
+>     Write file: pca/enh_uniontb_pca.csv
+>     Draw PCA plot... hull.. done
+> Save plot: pca/enh_uniontb_pca.png
+> Job done: 2020-04-30 11:23:19 for 29.1 sec
+
+File name change: `enh_uniontb_pca.png` -> `enh_uniontb-all_pca.png`
+
+![](pca\enh_uniontb-all_pca.png)
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/enh_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/enh_meta.tsv ^
+  --filt	 roadmap_immn Suh Tan
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>   Read file: pca/enh_uniontb.csv... [1] 291127     31
+>   Convert T/F to 1/0... done
+>   Read meta file: pca/enh_meta.tsv... [1] 30  3
+>   Filter option: roadmap_immn, Suh, Tan >> [1] 22
+>   PCA analysis... done
+>   Write file: pca/enh_uniontb_pca.csv
+>   Draw PCA plot... hull.. done
+> Save plot: pca/enh_uniontb_pca.png
+> Job done: 2020-04-30 11:25:52 for 27.8 sec
+
+File name change: `enh_uniontb_pca.csv` -> `enh_uniontb-immn_pca.csv`
+
+## Hi-C data compare
+
+1. Generating merged bed file
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 bedmerge ^
+  --base	 db_1a_Suhlab/hic_bed_lftovr_hg19 db_1b_Stitzellab/hic db_3a_Allanlab/hic_bed db_3b_Aidenlab/hic_bed db_4_Ferrerlab/hic ^
+  --out		 pca/hic_merge_input.bed
+```
+
+> ** Run function: db_compare.r/bedmerge...
+> 1 db_1a_Suhlab/hic_bed_lftovr_hg19: [1] 8
+>   db_1a_Suhlab/hic_bed_lftovr_hg19/hic_mono_1018_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_mono_1027_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_mono_1035_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_mono_1046_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_T_1018_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_T_1027_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_T_1035_hiccups_merged_loops_hg19.bed
+>    db_1a_Suhlab/hic_bed_lftovr_hg19/hic_T_1046_hiccups_merged_loops_hg19.bed
+> 2 db_1b_Stitzellab/hic: [1] 2
+>   db_1b_Stitzellab/hic/GSM3333898_Human_Islet_HiC_HiCCUPS_loops.bed
+>    db_1b_Stitzellab/hic/GSM3333916_EndoC_BH1_HiC_HiCCUPS_loops.bed
+> 3 db_3a_Allanlab/hic_bed: [1] 6
+>   db_3a_Allanlab/hic_bed/GSM2827786_CD4T1.bed
+>    db_3a_Allanlab/hic_bed/GSM2827787_CD4T2.bed
+>    db_3a_Allanlab/hic_bed/GSM2827788_CD8T1.bed
+>    db_3a_Allanlab/hic_bed/GSM2827789_CD8T2.bed
+>    db_3a_Allanlab/hic_bed/GSM2827790_HB1.bed
+>    db_3a_Allanlab/hic_bed/GSM2827791_HB2.bed
+> 4 db_3b_Aidenlab/hic_bed: [1] 3
+>   db_3b_Aidenlab/hic_bed/GSE63525_GM12878_primary_HiCCUPS_looplist.bed
+>    db_3b_Aidenlab/hic_bed/GSE63525_GM12878_replicate_HiCCUPS_looplist.bed
+>    db_3b_Aidenlab/hic_bed/GSE63525_K562_HiCCUPS_looplist.bed
+> 5 db_4_Ferrerlab/hic: [1] 1
+>   db_4_Ferrerlab/hic/pi_merged_washu_text.bed
+> ** 20 BED file paths are ready.
+>
+>   Data merge... 20..   done: [1] 1465395       4
+>   Write file: pca/hic_merge_input.bed
+> Job done: 2020-04-29 19:12:46 for 14.1 sec
+
+2. Using bed tools merge
+
+```bash
+sortBed -i pca/hic_merge_input.bed | mergeBed -i stdin > pca/hic_merge.bed
+```
+
+3. Using bedtools distance
+
+```bash
+bash bash_sh/dbcomp_hic_dist.sh
+```
+
+4. Get union table for PCA analysis
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 uniontb ^
+  --base	 pca/hic_dist ^
+  --out		 pca/hic_uniontb.csv ^
+  --hic		 TRUE
+```
+
+> ** Run function: db_compare.r/uniontb...
+> 1 pca/hic_dist: [1] 20
+> ** 20 dist file paths are ready.
+>
+>   Read data...
+>     5/20 process done.
+>     10/20 process done.
+>     15/20 process done.
+>     20/20 process done. 20..
+>   Data union... [1] 13631    21
+>   Write file: pca/hic_uniontb.csv
+> Job done: 2020-04-29 19:52:42 for 28 min
+
+5. Draw PCA plot
+
+```CMD
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/hic_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/hic_meta.tsv ^
+  --filt	 Suh Stitzel Allan Aiden Ferrer
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>   Read file: pca/hic_uniontb.csv... [1] 13631    21
+>   Convert T/F to 1/0... done
+>   Read meta file: pca/hic_meta.tsv... [1] 20  3
+>   Filter option: Suh, Stitzel, Allan, Aiden, Ferrer >> [1] 18
+>   PCA analysis... done
+>   Write file: pca/hic_uniontb_pca.csv
+>   Draw PCA plot... hull.. done
+> Save plot: pca/hic_uniontb_pca.png
+> Job done: 2020-04-29 20:07:19 for 2.8 sec
+
+File name change: `hic_uniontb_pca.png` -> `hic_uniontb-all_pca.png`
+
+![](pca\hic_uniontb-all_pca.png)
+
+```CMD
+# WITHOUT beta/islet related cells
+Rscript postgwas-exe.r ^
+  --dbcomp	 pcaplot ^
+  --base	 pca/hic_uniontb.csv ^
+  --out		 pca ^
+  --meta	 pca/hic_meta.tsv ^
+  --filt	 Suh Allan Aiden
+```
+
+> ** Run function: db_compare.r/pcaplot...
+>   Read file: pca/hic_uniontb.csv... [1] 13631    21
+>   Convert T/F to 1/0... done
+>   Read meta file: pca/hic_meta.tsv... [1] 20  3
+>   Filter option: Suh, Allan, Aiden >> [1] 15
+>   PCA analysis... done
+>   Write file: pca/hic_uniontb_pca.csv
+>   Draw PCA plot... hull.. done
+> Save plot: pca/hic_uniontb_pca.png
+> Job done: 2020-04-30 10:47:56 for 2.5 sec
+
+File name change: `hic_uniontb_pca.png` -> ``
+
 # 3. Filtering/converting the annotations
 
 UCSC annotations, Roadmap, GTEx, Stitzel lab's Hi-C data were already filtered in `r2d1_report.md`.
@@ -116,9 +487,15 @@ Rscript postgwas-exe.r ^
 
 Filtering GTEx eQTL data by p-value < 5e-8 is already done. See details in `r2d1_report.md`.
 
-## Converting Stitzel lab's Hi-C data
+## Converting additional data
+
+### Stitzel lab's Hi-C data
 
 This step is already done. See details in `r2d1_report.md`.
+
+### Ferror lab's Enhancer, pcHi-C data
+
+This step is simply done by excel. See details for pcHi-C data conversion in `r2d1_report.md`.
 
 
 
@@ -154,10 +531,14 @@ bash files are located in `bash_sh` folder.
 bash 1_meltonlab_dist_r2.sh
 ```
 
-### Suh lab Yizhou's β-cell ATAC-seq data
+### Suh lab Yizhou's β-cell ATAC-seq, Tri-Hic data
 
 ```bash
 bash 1a_suhlab_dist_r2.sh
+```
+
+```bash
+bash 1a_suhlab_dist_hic_r2.sh
 ```
 
 ### Stitzel lab's EndoC-βH1 cell ATAC-seq, enhancer, Hi-C data
@@ -182,6 +563,18 @@ bash 3_3_tan_dist_r2.sh
 
 ```bash
 bash 3a_allanlab_dist_r2.sh
+```
+
+### Aiden lab's GM12878, K562 cells Hi-C data
+
+```bash
+bash 3b_aidenlab_dist_hic_r2.sh
+```
+
+### Ferrer lab's islet ATAC, enhancer, pcHi-C data
+
+```bash
+bash 4_ferrerlab_dist_r2.sh
 ```
 
 
@@ -321,7 +714,7 @@ Move file: `r2_data/snp_lncrnasnp_316.bed` -> `r2_data/summary_r2/snp_lncrnasnp_
 
 ## Additional data
 
-### Melton lab's data
+### Melton lab's data - ATAC, Enhancer
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -352,9 +745,10 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-04-21 10:52:18 for 3.2 sec
 
-### Suh lab Yizhou's data
+### Suh lab Yizhou's data - ATAC, Tri-HiC
 
 ```CMD
+# ATAC-seq data
 Rscript postgwas-exe.r ^
   --dbfilt dist ^
   --base r2_data/1a_suhlab_dist_r2
@@ -387,6 +781,182 @@ Rscript postgwas-exe.r ^
 > Job process: 0.2 sec
 >
 > Job done: 2020-04-21 10:53:37 for 0.7 sec
+
+```CMD
+# Tri-HiC data for mono_1018 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/mono_1018_gwas.tsv r2_data/1a_suhlab_dist_r2/mono_1018_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/mono_1018_gwas.tsv, length= 12968,  overlap= 787
+>   r2_data/1a_suhlab_dist_r2/mono_1018_gene.tsv, length= 3187877,        overlap= 828970
+>
+>   Process gwas_loop.. 787.. done
+>   Process gene_loop.. 828970.. done
+>   Process merge for TSV.. 787.. [1] 15839     5
+>   Write file: r2_data/summary_gene_r2/hic_mono_1018_gwas_1440.tsv
+>
+>   Process extract for BED.. 787.. [1] 288   4
+>   Write file: r2_data/summary_r2/snp_hic_mono_1018_gwas_288.bed
+> Job done: 2020-04-28 22:48:36 for 24.6 sec
+
+```CMD
+# Tri-HiC data for mono_1027 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/mono_1027_gwas.tsv r2_data/1a_suhlab_dist_r2/mono_1027_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/mono_1027_gwas.tsv, length= 12143,  overlap= 798
+>   r2_data/1a_suhlab_dist_r2/mono_1027_gene.tsv, length= 3195753,        overlap= 832957
+>
+>   Process gwas_loop.. 798.. done
+>   Process gene_loop.. 832957.. done
+>   Process merge for TSV.. 798.. [1] 14104     5
+>   Write file: r2_data/summary_gene_r2/hic_mono_1027_gwas_1345.tsv
+>
+>   Process extract for BED.. 798.. [1] 325   4
+>   Write file: r2_data/summary_r2/snp_hic_mono_1027_gwas_325.bed
+> Job done: 2020-04-28 22:50:15 for 24.8 sec
+
+```CMD
+# Tri-HiC data for mono_1035 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/mono_1035_gwas.tsv r2_data/1a_suhlab_dist_r2/mono_1035_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/mono_1035_gwas.tsv, length= 14052,  overlap= 937
+>   r2_data/1a_suhlab_dist_r2/mono_1035_gene.tsv, length= 3656912,        overlap= 957084
+>
+>   Process gwas_loop.. 937.. done
+>   Process gene_loop.. 957084.. done
+>   Process merge for TSV.. 937.. [1] 19948     5
+>   Write file: r2_data/summary_gene_r2/hic_mono_1035_gwas_1699.tsv
+>
+>   Process extract for BED.. 937.. [1] 311   4
+>   Write file: r2_data/summary_r2/snp_hic_mono_1035_gwas_311.bed
+> Job done: 2020-04-28 22:51:40 for 30.2 sec
+
+```CMD
+# Tri-HiC data for mono_1046 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/mono_1046_gwas.tsv r2_data/1a_suhlab_dist_r2/mono_1046_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/mono_1046_gwas.tsv, length= 14856,  overlap= 1047
+>   r2_data/1a_suhlab_dist_r2/mono_1046_gene.tsv, length= 3831503,        overlap= 1048554
+>
+>   Process gwas_loop.. 1047.. done
+>   Process gene_loop.. 1048554.. done
+>   Process merge for TSV.. 1047.. [1] 20809     5
+>   Write file: r2_data/summary_gene_r2/hic_mono_1046_gwas_1871.tsv
+>
+>   Process extract for BED.. 1047.. [1] 372   4
+>   Write file: r2_data/summary_r2/snp_hic_mono_1046_gwas_372.bed
+> Job done: 2020-04-28 22:52:47 for 33.9 sec
+
+```CMD
+# Tri-HiC data for T_1018 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/T_1018_gwas.tsv r2_data/1a_suhlab_dist_r2/T_1018_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/T_1018_gwas.tsv, length= 12942,     overlap= 528
+>   r2_data/1a_suhlab_dist_r2/T_1018_gene.tsv, length= 2864793,   overlap= 536919
+>
+>   Process gwas_loop.. 528.. done
+>   Process gene_loop.. 536919.. done
+>   Process merge for TSV.. 528.. [1] 11233     5
+>   Write file: r2_data/summary_gene_r2/hic_T_1018_gwas_1233.tsv
+>
+>   Process extract for BED.. 528.. [1] 222   4
+>   Write file: r2_data/summary_r2/snp_hic_T_1018_gwas_222.bed
+> Job done: 2020-04-28 22:53:39 for 15.7 sec
+
+```CMD
+# Tri-HiC data for T_1027 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/T_1027_gwas.tsv r2_data/1a_suhlab_dist_r2/T_1027_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/T_1027_gwas.tsv, length= 11986,     overlap= 738
+>   r2_data/1a_suhlab_dist_r2/T_1027_gene.tsv, length= 3552381,   overlap= 755083
+>
+>   Process gwas_loop.. 738.. done
+>   Process gene_loop.. 755083.. done
+>   Process merge for TSV.. 738.. [1] 15000     5
+>   Write file: r2_data/summary_gene_r2/hic_T_1027_gwas_1462.tsv
+>
+>   Process extract for BED.. 738.. [1] 244   4
+>   Write file: r2_data/summary_r2/snp_hic_T_1027_gwas_244.bed
+> Job done: 2020-04-28 22:54:19 for 22.4 sec
+
+```CMD
+# Tri-HiC data for T_1035 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/T_1035_gwas.tsv r2_data/1a_suhlab_dist_r2/T_1035_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/T_1035_gwas.tsv, length= 12129,     overlap= 822
+>   r2_data/1a_suhlab_dist_r2/T_1035_gene.tsv, length= 3781085,   overlap= 798756
+>
+>   Process gwas_loop.. 822.. done
+>   Process gene_loop.. 798756.. done
+>   Process merge for TSV.. 822.. [1] 16740     5
+>   Write file: r2_data/summary_gene_r2/hic_T_1035_gwas_1626.tsv
+>
+>   Process extract for BED.. 822.. [1] 258   4
+>   Write file: r2_data/summary_r2/snp_hic_T_1035_gwas_258.bed
+> Job done: 2020-04-28 22:59:22 for 24.8 sec
+
+```CMD
+# Tri-HiC data for T_1046 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/1a_suhlab_dist_r2/T_1046_gwas.tsv r2_data/1a_suhlab_dist_r2/T_1046_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/1a_suhlab_dist_r2/T_1046_gwas.tsv, length= 12267,     overlap= 682
+>   r2_data/1a_suhlab_dist_r2/T_1046_gene.tsv, length= 3312327,   overlap= 667108
+>
+>   Process gwas_loop.. 682.. done
+>   Process gene_loop.. 667108.. done
+>   Process merge for TSV.. 682.. [1] 15410     5
+>   Write file: r2_data/summary_gene_r2/hic_T_1046_gwas_1522.tsv
+>
+>   Process extract for BED.. 682.. [1] 244   4
+>   Write file: r2_data/summary_r2/snp_hic_T_1046_gwas_244.bed
+> Job done: 2020-04-28 22:59:55 for 19.8 sec
 
 ### Stitzel lab's data - ATAC, Enhancer, Hi-C
 
@@ -483,7 +1053,7 @@ Rscript postgwas-exe.r ^
 >   Write file: r2_data/summary_r2/snp_hic_EndoC_BH1_HiC_gwas_265.bed
 > Job done: 2020-04-22 18:00:07 for 7.9 sec
 
-### Pritchard lab's data
+### Pritchard lab's data - ATAC-seq
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -503,7 +1073,7 @@ Rscript postgwas-exe.r ^
 >
 > Job done: 2020-04-21 11:23:42 for 1.2 min
 
-### Tan lab's data
+### Tan lab's data - Enhancer
 
 ```CMD
 Rscript postgwas-exe.r ^
@@ -660,7 +1230,129 @@ Rscript postgwas-exe.r ^
 >   Write file: r2_data/summary_r2/snp_hic_CD8_T2_gwas_3720.bed
 > Job done: 2020-04-22 18:47:33 for 4.9 min
 
+### Aiden lab's data - Hi-C
 
+```CMD
+# Hi-C data for GM12878_primary (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/3b_aidenlab_dist_r2/GM12878_primary_gwas.tsv r2_data/3b_aidenlab_dist_r2/GM12878_primary_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/3b_aidenlab_dist_r2/GM12878_primary_gwas.tsv, length= 7506,   overlap= 614
+>   r2_data/3b_aidenlab_dist_r2/GM12878_primary_gene.tsv, length= 1496697,        overlap= 162699
+>
+>   Process gwas_loop.. 614.. done
+>   Process gene_loop.. 162699.. done
+>   Process merge for TSV.. 614.. [1] 6923    5
+>   Write file: r2_data/summary_gene_r2/hic_GM12878_primary_gwas_485.tsv
+>
+>   Process extract for BED.. 614.. [1] 347   4
+>   Write file: r2_data/summary_r2/snp_hic_GM12878_primary_gwas_347.bed
+> Job done: 2020-04-28 23:03:55 for 9.1 sec
+
+```CMD
+# Hi-C data for GM12878_replicate (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/3b_aidenlab_dist_r2/GM12878_replicate_gwas.tsv r2_data/3b_aidenlab_dist_r2/GM12878_replicate_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/3b_aidenlab_dist_r2/GM12878_replicate_gwas.tsv, length= 7312, overlap= 553
+>   r2_data/3b_aidenlab_dist_r2/GM12878_replicate_gene.tsv, length= 1440751,      overlap= 159468
+>
+>   Process gwas_loop.. 553.. done
+>   Process gene_loop.. 159468.. done
+>   Process merge for TSV.. 553.. [1] 6055    5
+>   Write file: r2_data/summary_gene_r2/hic_GM12878_replicate_gwas_562.tsv
+>
+>   Process extract for BED.. 553.. [1] 279   4
+>   Write file: r2_data/summary_r2/snp_hic_GM12878_replicate_gwas_279.bed
+> Job done: 2020-04-28 23:04:37 for 8.7 sec
+
+```CMD
+# Hi-C data for K562 (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/3b_aidenlab_dist_r2/K562_gwas.tsv r2_data/3b_aidenlab_dist_r2/K562_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/3b_aidenlab_dist_r2/K562_gwas.tsv, length= 6777,      overlap= 586
+>   r2_data/3b_aidenlab_dist_r2/K562_gene.tsv, length= 1332121,   overlap= 148040
+>
+>   Process gwas_loop.. 586.. done
+>   Process gene_loop.. 148040.. done
+>   Process merge for TSV.. 586.. [1] 11288     5
+>   Write file: r2_data/summary_gene_r2/hic_K562_gwas_433.tsv
+>
+>   Process extract for BED.. 586.. [1] 366   4
+>   Write file: r2_data/summary_r2/snp_hic_K562_gwas_366.bed
+> Job done: 2020-04-28 23:05:39 for 9.5 sec
+
+### Ferrer lab's data - ATAC, Enhancer, pcHi-C
+
+```CMD
+# ATAC-seq data
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2_data/4_ferrerlab_dist_r2/islet_atac_peaks.tsv ^
+  --out r2_data/4_ferrerlab_over_r2
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 1
+> File islet_atac_peaks... nrow= 5896.. done
+>   Annotations occupied by SNPs  = [1] 209
+>   SNPs in annotations           = [1] 325
+>   Write file: r2_data/4_ferrerlab_over_r2/snp_islet_atac_peaks_325.bed
+> Job done: 2020-04-29 13:11:50 for 0.3 sec
+
+```CMD
+# ChromHMM annotation
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2_data/4_ferrerlab_dist_r2/islet_active_enh.tsv ^
+  --out r2_data/4_ferrerlab_over_r2
+```
+
+> ** Run function: db_filter.r/distance_filt_multi...
+> Input file N    = [1] 1
+> File islet_active_enh... nrow= 5891.. done
+>   Annotations occupied by SNPs  = [1] 51
+>   SNPs in annotations           = [1] 73
+>   Write file: r2_data/4_ferrerlab_over_r2/snp_islet_active_enh_73.bed
+> Job done: 2020-04-29 13:19:47 for 0.3 sec
+
+```CMD
+# pcHi-C data for human islet (TSV, BED)
+Rscript postgwas-exe.r ^
+  --dbgene	 hic_pair ^
+  --base	 r2_data/4_ferrerlab_dist_r2/islet_pcHiC_gwas.tsv r2_data/4_ferrerlab_dist_r2/islet_pcHiC_gene.tsv ^
+  --out		 r2_data/summary_gene_r2 r2_data/summary_r2 ^
+  --bed		 TRUE
+```
+
+> ** Run function: db_gene.r/hic... ready
+>   r2_data/4_ferrerlab_dist_r2/islet_pcHiC_gwas.tsv, length= 5890,       overlap= 0
+>   r2_data/4_ferrerlab_dist_r2/islet_pcHiC_gene.tsv, length= 1163547,    overlap= 0
+>
+>   Process gwas_loop.. 0.. done
+>   Process gene_loop.. 0.. done
+>   Process merge for TSV.. 0.. [1] 0 0
+>   Write file: r2_data/summary_gene_r2/hic_islet_pcHiC_gwas_0.tsv
+>
+>   Process extract for BED.. 0.. [1] 0 0
+>   Write file: r2_data/summary_r2/snp_hic_islet_pcHiC_gwas_0.bed
+> Job done: 2020-04-29 13:20:20 for 3.9 sec
 
 # 6. BED union list
 
@@ -1203,7 +1895,12 @@ Rscript postgwas-exe.r ^
 >   2 Write a BED file: r2_data/summary_r2/snp_union_3_tanlab_over_r2_Treg_enh_285.bed
 > Job done: 2020-04-21 12:17:13 for 3.2 sec
 
+### Ferrer lab union list
 
+Copy the files in the `r2_data/4_ferrerlab_over_r2` to `r2_data/summary_r2`.
+
+* `snp_islet_active_enh_73.bed` -> `snp_union_4_ferrerlab_over_r2_islet_active_enh_73.bed`
+* `snp_islet_atac_peaks_325` -> `snp_union_4_ferrerlab_over_r2_islet_atac_peaks_325.bed`
 
 # 7. Summary annotations
 
@@ -1223,43 +1920,48 @@ Rscript postgwas-exe.r ^
 ```
 
 > ** Run function: db_venn.r/summ... ready
-> 149 Files/folders input.
->     1 r2_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_2444.bed
->     2 r2_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_1982.bed
+> 164 Files/folders input.
+>   1 r2_data/gtex_eqtl/snp_gtex_Adipose_Subcutaneous_2444.bed
+>   2 r2_data/gtex_eqtl/snp_gtex_Adipose_Visceral_Omentum_1982.bed
 >
->     ...
+>   ...
 >
->     148 r2_data/summary_r2/snp_union_3_tanlab_over_r2_Treg_enh_285.bed
->     149 r2_data/summary_r2/snp_union_gtex_eqtl_3921.bed
-> Total 149 file(s) is/are input.
+>   163 r2_data/summary_r2/snp_union_4_ferrerlab_over_r2_islet_atac_peaks_325.bed
+>   164 r2_data/summary_r2/snp_union_gtex_eqtl_3921.bed
+> Total 164 file(s) is/are input.
 >
 > ** Run function: db_venn.r/venn_bed...
->     Read 149 files
+> Error in read.table(file = file, header = header, sep = sep, quote = quote,  :
+>   no lines available in input
+> In addition: Warning message:
+> package 'eulerr' was built under R version 3.6.2
+>   [ERROR] r2_data/summary_r2/snp_hic_islet_pcHiC_gwas_0.bed
+>   Read 164 files
 >
 > [Message] Can't plot Venn diagram for more than 5 sets.
 >
 > [Message] Can't plot Euler plot.
 >
 > ** Back to function: db_venn.r/summ...
->     Returned union list dim       = [1] 10426   153
+>   Returned union list dim       = [1] 10472   167
 >
->     [PASS] uni_save       = FALSE
+>   [PASS] uni_save       = FALSE
 >
->     GWAS dim      = [1] 5891   11
->     Merge dim     = [1] 5890  157
->     Write a CSV file: r2_data/summary_r2_gwas.csv
+>   GWAS dim      = [1] 5891   11
+>   Merge dim     = [1] 5890  171
+>   Write a CSV file: r2_data/summary_r2_gwas.csv
 >
->     ENCODE dim    = [1] 12201    13
->     Merge dim     = [1] 7828  152
->     Write a CSV file: r2_data/summary_r2_encode.csv
+>   ENCODE dim    = [1] 12201    13
+>   Merge dim     = [1] 7828  166
+>   Write a CSV file: r2_data/summary_r2_encode.csv
 >
->     Nearest gene dim      = [1] 6511    9
->     Search biomaRt... 424.. 407.. [1] 6511    5
+>   Nearest gene dim      = [1] 6511    9
+>   Search biomaRt... 424.. 407.. [1] 6511    5
 >   CDS dim               = [1] 18361    11
->     Merge dim             = [1] 6890  157
->     Write a CSV file: r2_data/summary_r2_nearest.csv
->   
->Job done: 2020-04-23 15:59:09 for 19.3 sec
+>   Merge dim             = [1] 6890  171
+>   Write a CSV file: r2_data/summary_r2_nearest.csv
+>
+> Job done: 2020-04-29 15:04:57 for 18.2 sec
 
 ## Gene lavel summary
 
@@ -1285,12 +1987,12 @@ Rscript postgwas-exe.r ^
 Rscript postgwas-exe.r
   --dbgene summary
   --base r2_data/summary_gene_r2
-  --nearest r2_data/summary_nearest.csv
+  --nearest r2_data/summary_r2_nearest.csv
   --out r2_data
 ```
 
 > ** Run function: db_gene.r/summary_gene... ready
-> 10 Files/folders input.
+> 21 Files/folders input.
 >   1 r2_data/summary_gene_r2/gtex_eqtl_286.tsv
 >   2 r2_data/summary_gene_r2/hic_B1_gwas_4071.tsv
 >   3 r2_data/summary_gene_r2/hic_B2_gwas_4342.tsv
@@ -1299,35 +2001,67 @@ Rscript postgwas-exe.r
 >   6 r2_data/summary_gene_r2/hic_CD8_T1_gwas_3021.tsv
 >   7 r2_data/summary_gene_r2/hic_CD8_T2_gwas_3386.tsv
 >   8 r2_data/summary_gene_r2/hic_EndoC_BH1_HiC_gwas_453.tsv
->   9 r2_data/summary_gene_r2/hic_Primary_Islet_HiC_gwas_166.tsv
->   10 r2_data/summary_gene_r2/hic_Primary_Islet_HiC_gwas_179.tsv
-> Total 10 files are input.
-> Nearest file: r2_data/summary_nearest.csv
->   Extracting Ensgids... 3616.. biomaRt... Cache found
+>   9 r2_data/summary_gene_r2/hic_GM12878_primary_gwas_485.tsv
+>   10 r2_data/summary_gene_r2/hic_GM12878_replicate_gwas_562.tsv
+>   11 r2_data/summary_gene_r2/hic_islet_pcHiC_gwas_2131.tsv
+>   12 r2_data/summary_gene_r2/hic_K562_gwas_433.tsv
+>   13 r2_data/summary_gene_r2/hic_mono_1018_gwas_1440.tsv
+>   14 r2_data/summary_gene_r2/hic_mono_1027_gwas_1345.tsv
+>   15 r2_data/summary_gene_r2/hic_mono_1035_gwas_1699.tsv
+>   16 r2_data/summary_gene_r2/hic_mono_1046_gwas_1871.tsv
+>   17 r2_data/summary_gene_r2/hic_Primary_Islet_HiC_gwas_179.tsv
+>   18 r2_data/summary_gene_r2/hic_T_1018_gwas_1233.tsv
+>   19 r2_data/summary_gene_r2/hic_T_1027_gwas_1462.tsv
+>   20 r2_data/summary_gene_r2/hic_T_1035_gwas_1626.tsv
+>   21 r2_data/summary_gene_r2/hic_T_1046_gwas_1522.tsv
+> Total 21 files are input.
+> Nearest file: r2_data/summary_r2_nearest.csv
+>   Read gene-snp pair files... done
+>   Read nearest gene file... [1] 6890  172
 > [1] 3416    3
 >
 >   Parsing gene name... 3415.. [1] 3416    3
->   ENSGid-Rsid list... 127976.. [1] 127976      3
->   Merging biomaRt annotations.. [1] 127982      5
->   Merging eQTL, Hi-C, nearest genes... [1] 127982     16
->   Merging GTEx eQTL SNP slopes... [1] 127982     67
->   Write file: r2d1_data/summary_gene_r2_pairs.csv
-> Job done: 2020-04-23 13:39:21 for 1.3 min
+>   ENSGid-Rsid list... 173286.. [1] 173286      3
+>   Merging biomaRt annotations.. [1] 173292      5
+>   Merging eQTL, Hi-C, nearest genes... [1] 173292     27
+>   Merging GTEx eQTL SNP slopes... [1] 173292     78
+>
+>   Write file: r2_data/summary_gene_r2_pairs.csv
+> Job done: 2020-04-29 15:08:22 for 1.5 min
 
-### Pivotting Hi-C, GTEx, Nearest genes
+### Pivoting Hi-C, GTEx, Nearest genes
 
 ```CMD
+# Nearest genes
 Rscript postgwas-exe.r
   --dbgene	 pivot_gene
-  --base	 r2_data/summary_gene_r2_pairs_summ.tsv
+  --base	 r2_data/summary_gene_r2_nearest_pivot.tsv
   --out		 r2_data
 ```
 
 > ** Run function: db_gene.r/pivot_gene... ready
->   Read summary_gene_pair TSV file       [1] 22937    40
->   Extract ensgids... union table.. [1] 3616   40
+>   Read summary_gene_pair TSV file... [1] 2379   49
+>   Extract ensgids... union table.. [1] 424  49
 >   Write file: r2_data/summary_gene_pivot.csv
-> Job done: 2020-04-23 20:31:26 for 0.5 sec
+> Job done: 2020-04-29 16:12:46 for 0.1 sec
+
+File name change: `summary_gene_pivot.csv` -> `summary_gene_nearest_pivot.csv`
+
+```CMD
+# Nearest, GTEx, Hi-C
+Rscript postgwas-exe.r
+  --dbgene	 pivot_gene
+  --base	 r2_data/summary_gene_r2_total_pivot.tsv
+  --out		 r2_data
+```
+
+> ** Run function: db_gene.r/pivot_gene... ready
+>     Read summary_gene_pair TSV file... [1] 57375    54
+>     Extract ensgids... union table.. [1] 8294   54
+>     Write file: r2_data/summary_gene_pivot.csv
+> Job done: 2020-04-29 18:11:44 for 1 sec
+
+File name change: `summary_gene_pivot.tsv` -> `summary_gene_total_pivot.tsv`
 
 ## DAVID GO/KEGG analysis
 
