@@ -9,8 +9,8 @@ Usage:
     Rscript postgwas-exe.r --dbdown regulome --out <out folder>
     Rscript postgwas-exe.r --dbdown gtex --out <out folder>
     Rscript postgwas-exe.r --dbdown lncrna --out <out folder>
-    Rscript postgwas-exe.r --dbdown genes --out <out folder> --hg hg19
-    Rscript postgwas-exe.r --dbdown genes --out <out folder> --hg hg38
+    Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg19
+    Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg38
 
 
 Functions:
@@ -19,7 +19,7 @@ Functions:
     regulome  Downloading RegulomeDB data (≥2b, hg19).
     gtex      Downloading GTEx v8 data (hg38).
     lncrna    Downloading lncRNASNP2 data (hg38).
-    genes     Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
+    gene      Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
 
 Global arguments:
     --out     <out folder>
@@ -27,7 +27,7 @@ Global arguments:
 
 Required arguments:
     --hg      <hg19/hg38>
-              A required argument for the "genes" function. Choose one human genome version.
+              A required argument for the "gene" function. Choose one human genome version.
 '
 
 ## Load global libraries ##
@@ -40,6 +40,7 @@ biomart_gene = function(
 ) {
     # Function specific library
     suppressMessages(library(biomaRt))
+    mkdir_out(out)
 
     # Get Ensembl BiomaRt
     paste0('\n** Run function: db_download.r/biomart_gene...\n') %>% cat
