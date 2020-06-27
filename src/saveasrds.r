@@ -1,7 +1,7 @@
 # This file was edited for postgwastools at 2020-02-27 by Seungsoo Kim
 
 # Read file and save as rds file
-#suppressMessages(library(data.table))
+suppressMessages(library(data.table))
 suppressMessages(library(tools))
 suppressMessages(library(dplyr))
 suppressMessages(library(rtracklayer))

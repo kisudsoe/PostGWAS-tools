@@ -247,8 +247,8 @@ lncrna_down = function(
     # Function specific library
     source('src/saveasrds.r')
 
-    # Download from RegulomeDB
-    paste0('\n** Run function: db_download.r/regulome_down...\n') %>% cat
+    # Download from lncRNASNP2
+    paste0('\n** Run function: db_download.r/lncrna_down...\n') %>% cat
     mkdir_out(out)
 
     url_li = list(
