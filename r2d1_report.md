@@ -800,23 +800,31 @@ Rscript postgwas-exe.r ^
 
 ## For General annotations
 
-Using `bedtools closest` in bash, this process required a lot of resouce (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
+Using `bedtools closest` in bash, this process required a lot of resource (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
+
+Roadmap annotations
 
 ```bash
-bedtools sort -i db/roadmap_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_enh.tsv # Error: std::bad_alloc <- memory shortage error
+bedtools sort -i db/roadmap_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_enh.tsv
 ```
 
 ```bash
-#bedtools sort -i db/roadmap_total.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_total.tsv
+#bedtools sort -i db/roadmap_total.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_total.tsv # Error: std::bad_alloc <- memory shortage error
 ```
+
+Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
 
 ```bash
 #./bin/bedtools sort -i 2020_t1d/db/roadmap_087_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_087_enh.tsv
 ```
 
+ENCODE annotations
+
 ```bash
 bedtools sort -i db/wgEncodeRegTfbsClusteredV3.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/encode_tfbs.tsv
 ```
+
+Ensembl gene annotations
 
 ```bash
 bedtools sort -i db/ensembl_gene_hg19.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/ensGene_hg19.tsv
@@ -826,7 +834,7 @@ bedtools sort -i db/ensembl_gene_hg19.bed | bedtools closest -d -a gwas_hg19_bio
 bedtools sort -i db/ucsc_tbBrowser_ensGene_CDS_hg19.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/ensGene_cds_hg19.tsv
 ```
 
-Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
+UCSC gene annotations
 
 ```bash
 bedtools sort -i db/ucsc_annot.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin	> data/ucsc_annot.tsv
