@@ -797,6 +797,8 @@ Rscript postgwas-exe.r ^
 UCSC gene annotations
 
 ```bash
+# bedtools sort -i db/ucsc_annot.bed > bedtools sort -i db/ucsc_annot_sort.bed
+# bedtools closest -d -a gwas_hg19_biomart_2003.bed -b db/ucsc_annot_sort.bed > data/ucsc_annot.tsv
 bedtools sort -i db/ucsc_annot.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin	> data/ucsc_annot.tsv
 ```
 
