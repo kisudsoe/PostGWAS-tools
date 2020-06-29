@@ -557,13 +557,7 @@ Rscript postgwas-exe.r ^
 > Write file: db_gwas/roadmap_enh.bed
 > Job done: 2020-04-11 19:17:57 for 6 min
 
-### Enhancer in each cell type with metadata
-
-To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
-
-* Original data at Roadmap homepage: https://egg2.wustl.edu/roadmap/web_portal/meta.html
-* Google doc: https://docs.google.com/spreadsheets/u/0/d/1yikGx4MsO9Ei36b64yOy9Vb6oPC5IBGlFbYEt-N6gOM/edit?usp=sharing#gid=15
-* mdozmorov's Github: https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types
+### Enhancer in each cell type
 
 ```CMD
 Rscript postgwas-exe.r
@@ -800,23 +794,23 @@ Rscript postgwas-exe.r ^
 
 ## For General annotations
 
-Using `bedtools closest` in bash, this process required a lot of resource (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
-
 Roadmap annotations
 
 ```bash
 bedtools sort -i db/roadmap_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_enh.tsv
 ```
 
-```bash
-#bedtools sort -i db/roadmap_total.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_total.tsv # Error: std::bad_alloc <- memory shortage error
-```
+* Using `bedtools closest` in bash, this process required a lot of resource (e.g., ~19GB of RAM). Therefore, files were moved to AWS to BNL server which is highly secured. Then I ran the bellow processes:
 
-Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
+  ```bash
+  #bedtools sort -i db/roadmap_total.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/roadmap_total.tsv # Error: std::bad_alloc <- memory shortage error
+  ```
 
-```bash
-#./bin/bedtools sort -i 2020_t1d/db/roadmap_087_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_087_enh.tsv
-```
+* Then result files were downloaded from the BNL server to AWS EC2 to local `data_gwas/distance/` folder.
+
+  ```bash
+  #./bin/bedtools sort -i 2020_t1d/db/roadmap_087_enh.bed | ./bin/bedtools closest -d -a 2020_t1d/gwas_hg19_biomart_2003.bed -b stdin > 2020_t1d/data/roadmap_087_enh.tsv
+  ```
 
 ENCODE annotations
 
@@ -1334,6 +1328,12 @@ Rscript postgwas-exe.r
 
 ## Roadmap each cell type
 
+To identify cell type-specific enhancers, filtering the enhancer tags by each cell type. See details in `db_gwas/roadmap_metadata.tsv`:
+
+* Original data at Roadmap homepage: https://egg2.wustl.edu/roadmap/web_portal/meta.html
+* Google doc: https://docs.google.com/spreadsheets/u/0/d/1yikGx4MsO9Ei36b64yOy9Vb6oPC5IBGlFbYEt-N6gOM/edit?usp=sharing#gid=15
+* mdozmorov's Github: https://github.com/mdozmorov/genomerunner_web/wiki/Roadmap-cell-types
+
 To identify Roadmap cell type-specific enhancer signal overlapped with the T1D SNPs:
 
 Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
@@ -1694,7 +1694,7 @@ I moved the BED file `snp_lncrnasnp_88.bed` into the `summary` folder.
 
 
 
-# 6. BED summary
+# 6. BED summary - Generating union BED files
 
 ## General annotations
 
