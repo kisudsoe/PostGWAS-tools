@@ -794,6 +794,12 @@ Rscript postgwas-exe.r ^
 
 ## For General annotations
 
+UCSC gene annotations
+
+```bash
+bedtools sort -i db/ucsc_annot.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin	> data/ucsc_annot.tsv
+```
+
 Roadmap annotations
 
 ```bash
@@ -826,12 +832,6 @@ bedtools sort -i db/ensembl_gene_hg19.bed | bedtools closest -d -a gwas_hg19_bio
 
 ```bash
 bedtools sort -i db/ucsc_tbBrowser_ensGene_CDS_hg19.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > data/ensGene_cds_hg19.tsv
-```
-
-UCSC gene annotations
-
-```bash
-bedtools sort -i db/ucsc_annot.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin	> data/ucsc_annot.tsv
 ```
 
 
