@@ -48,10 +48,10 @@ From the downloaded GWAS Catalog data, basic statistics of the trait are need to
 Usage: `Rscript postgwas-exe.r --gwas <options> --base <input file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-	--gwas trait gene study
-    --base db_gwas/EFO0001359_2020-02-19.tsv
-    --out db_gwas
+Rscript postgwas-exe.r ^
+  --gwas trait gene study ^
+  --base db_gwas/EFO0001359_2020-02-19.tsv ^
+  --out db_gwas
 ```
 
 > ** Run function trait_pivot:
@@ -70,11 +70,11 @@ Using the downloaded GWAS Catalog file, SNPs are needed to filter by the P-value
 Usage: `Rscript postgwas-exe.r --gwas <option> --base <input file> --out <out folder> --p.criteria <number>`
 
 ```CMD
-Rscript postgwas-exe.r
-	--gwas filter
-    --base db_gwas/EFO0001359_2020-02-19.tsv
-    --out db_gwas
-    --p.criteria 5e-8
+Rscript postgwas-exe.r ^
+  --gwas filter ^
+  --base db_gwas/EFO0001359_2020-02-19.tsv ^
+  --out db_gwas ^
+  --p.criteria 5e-8
 ```
 
 > ** Run function gwas_filt:
@@ -92,11 +92,11 @@ Usage: `Rscript postgwas-exe.r --ldlink down --base <input file> --out <out fold
 
 ```CMD
 # Download LD SNPs from 152 query SNPs takes about ~1.2 hrs
-Rscript postgwas-exe.r
-    --ldlink down
-    --base db_gwas/gwas_5e-08_152.tsv
-    --out db_gwas/ldlink2
-    --popul CEU TSI FIN GBR IBS
+Rscript postgwas-exe.r ^
+  --ldlink down ^
+  --base db_gwas/gwas_5e-08_152.tsv ^
+  --out db_gwas/ldlink2 ^
+  --popul CEU TSI FIN GBR IBS
 ```
 
 > ** Run function ldlink_dn... 152.. done
@@ -112,11 +112,11 @@ Filtering the LDlink data by the criteria, r<sup>2</sup> > 0.6 and D' = 1.
 Usage: `Rscript postgwas-exe.r --ldlink filter --base <input file> <input folder> --out <out folder> --r2d <option>`
 
 ```CMD
-Rscript postgwas-exe.r
-  --ldlink filter
-  --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink
-  --out r2d1_data
-  --r2 0.6
+Rscript postgwas-exe.r ^
+  --ldlink filter ^
+  --base db_gwas/gwas_5e-08_152.tsv db_gwas/ldlink ^
+  --out r2d1_data ^
+  --r2 0.6 ^
   --dprime 1
 ```
 
@@ -157,10 +157,10 @@ For further analysis, you have to generate **BED** format files for both **hg19*
 Usage: `Rscript postgwas-exe.r --ldlink bed --base <input file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-    --ldlink bed
-    --base r2d1_data/gwas_biomart_fill.tsv
-    --out r2d1_data
+Rscript postgwas-exe.r ^
+  --ldlink bed ^
+  --base r2d1_data/gwas_biomart_fill.tsv ^
+  --out r2d1_data
 ```
 
 > ** Run function ldlink_bed... [1] 2003    8
@@ -178,9 +178,9 @@ Usage: `Rscript postgwas-exe.r --dbdown roadmap --out <out folder>`
 
 ```cmd
 # Downloading roadmap data takes ~35 min
-Rscript postgwas-exe.r
-	--dbdown roadmap
-	--out db_gwas/roadmap
+Rscript postgwas-exe.r ^
+  --dbdown roadmap ^
+  --out db_gwas/roadmap
 ```
 
 > ** Run function: db_download.r/roadmap_down...
@@ -204,9 +204,9 @@ Downloading `wgEncodeRegTfbsClusteredV3.bed.gz` file (81 MB) which is regulatory
 Usage: `Rscript postgwas-exe.r --dbdown encode --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbdown encode
-	--out db_gwas/encode
+Rscript postgwas-exe.r ^
+  --dbdown encode ^
+  --out db_gwas/encode
 ```
 
 > ** Run function: db_download.r/encode_down...
@@ -231,9 +231,9 @@ Downloading files:
 Usage: `Rscript postgwas-exe.r --dbdown regulome --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbdown regulome
-	--out db_gwas/regulome
+Rscript postgwas-exe.r ^
+  --dbdown regulome ^
+  --out db_gwas/regulome
 ```
 
 > ** Run function: db_download.r/regulome_down...
@@ -262,9 +262,9 @@ Usage: `Rscript postgwas-exe.r --dbdown gtex --out <out folder>`
 
 ```CMD
 # Converting gtex data takes ~1 hr
-Rscript postgwas-exe.r
-	--dbdown gtex
-	--out db_gwas/gtex
+Rscript postgwas-exe.r ^
+  --dbdown gtex ^
+  --out db_gwas/gtex
 ```
 
 > ** Run function: db_download.r/gtex_down...
@@ -303,9 +303,9 @@ Rscript postgwas-exe.r
 In lncRNASNP2, 141,353 human lncRNAs and 10,205,295 SNPs were archived.
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbdown lncrna
-	--out db_gwas/lncrna
+Rscript postgwas-exe.r ^
+  --dbdown lncrna ^
+  --out db_gwas/lncrna
 ```
 
 > ** Run function: db_download.r/regulome_down...
@@ -335,10 +335,10 @@ Rscript postgwas-exe.r
 Downloading Ensembl gene coordinates through biomaRt (hg19)
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbdown gene
-	--out db_gwas
-	--hg hg19
+Rscript postgwas-exe.r ^
+  --dbdown gene ^
+  --out db_gwas ^
+  --hg hg19
 ```
 
 > ** Run function: db_download.r/biomart_gene...
@@ -425,9 +425,9 @@ For downloading hg19 gene body regions:
 ## UCSC annotations - Compiling promoter/gene/cds regions
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt ucsc 
-  --base db_gwas/ucsc_tbBrowser_ensGene_CDS_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_wholeGene_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_Up2K_hg19.bed
+Rscript postgwas-exe.r ^
+  --dbfilt ucsc ^
+  --base db_gwas/ucsc_tbBrowser_ensGene_CDS_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_wholeGene_hg19.bed db_gwas/ucsc_tbBrowser_ensGene_Up2K_hg19.bed ^
   --out db_gwas
 ```
 
@@ -455,10 +455,10 @@ Usage: `Rscript postgwas-exe.r --dbfilt roadmap --base <base folder> --out <out 
 
 ```CMD
 Rscript postgwas-exe.r ^
-	--dbfilt roadmap ^
-	--base db_gwas/roadmap ^
-	--out db_gwas ^
-	--enh TRUE
+  --dbfilt roadmap ^
+  --base db_gwas/roadmap ^
+  --out db_gwas ^
+  --enh TRUE
 ```
 
 > ** Run function: db_filter.r/roadmap_filt...
@@ -492,10 +492,10 @@ Total roadmap annotations are achieved by this code.
 ```CMD
 # This step takes a lot of system memomry (~20 GB) and about ~6 min.
 Rscript postgwas-exe.r ^
-	--dbfilt roadmap ^
-	--base db_gwas/roadmap ^
-	--out db_gwas ^
-	--enh FALSE
+  --dbfilt roadmap ^
+  --base db_gwas/roadmap ^
+  --out db_gwas ^
+  --enh FALSE
 ```
 
 > ** Run function: db_filter.r/roadmap_filt...
@@ -560,12 +560,12 @@ Rscript postgwas-exe.r ^
 ### Enhancer in each cell type
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbfilt roadmap
-	--base db_gwas/roadmap
-	--out  db_gwas/roadmap_enh
-	--enh  TRUE
-	--sep  TRUE
+Rscript postgwas-exe.r ^
+  --dbfilt roadmap ^
+  --base db_gwas/roadmap ^
+  --out  db_gwas/roadmap_enh ^
+  --enh  TRUE ^
+  --sep  TRUE
 ```
 
 > ** Run function: db_filter.r/roadmap_filt...
@@ -595,10 +595,10 @@ Filtering GTEx eQTL data by p-value <5e-8.
 
 ```CMD
 Rscript postgwas-exe.r ^
-	--dbfilt gtex ^
-	--base db_gwas/gtex/Gtex_Analysis_v8_eQTL_rsid.rds ^
-	--out db_gwas
-	--pval 5e-8
+  --dbfilt gtex ^
+  --base db_gwas/gtex/Gtex_Analysis_v8_eQTL_rsid.rds ^
+  --out db_gwas ^
+  --pval 5e-8
 ```
 
 > ** Run function: db_filter.r/gtex_filt...
@@ -846,14 +846,14 @@ Full code was wrote in `db_gwas/roadmap_dist.sh`:
 bedtools sort -i roadmap_enh/roadmap_001_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_001_enh.tsv
 bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
 ...
-bedtools sort -i roadmap_enh/roadmap_002_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_002_enh.tsv
+bedtools sort -i roadmap_enh/roadmap_127_enh.bed | bedtools closest -d -a gwas_hg19_biomart_2003.bed -b stdin > roadmap_dist/roadmap_127_enh.tsv
 ```
 
 ### Roadmap enhancer merge/closest
 
 ```CMD
 bedtools sort -i db_gwas/roadmap_enh.bed | bedtools merge -i stdin -c 1 -o count > db_gwas/roadmap_enh_merge.bed
-bedtools sort -i r2d1_data/gwas_hg19_biomart_2003.bed | bedtools closest -d -a stdin -b db_gwas/roadmap_enh_merge.bed > r2d1_data/distance/roadmap_enh_merge.tsv
+bedtools sort -i r2d1_data/gwas_hg19_biomart_2003.bed | bedtools closest -d -a stdin -b db_gwas/roadmap_enh_merge.bed > roadmap_enh_merge.tsv
 ```
 
 
@@ -878,45 +878,45 @@ peaks.bed file (mapped on **hg19**) list:
 Using `bedtools closest` in bash:
 
 ```bash
-bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171638_SCbeta_ATAC_rep1.peaks.bed
-	> data/SCbeta_ATAC.tsv
+bedtools closest -d \
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171638_SCbeta_ATAC_rep1.peaks.bed \
+  > data/SCbeta_ATAC.tsv
+```
+
+```bash
+bedtools closest -d \
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171640_Beta_ATAC_rep1.peaks.bed \
+  > data/Beta_ATAC.tsv
 ```
 
 ```bash
 bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171640_Beta_ATAC_rep1.peaks.bed
-	> data/Beta_ATAC.tsv
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed \
+  > data/SCbeta_in_vivo_ATAC_rep1.tsv
 ```
 
 ```bash
 bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171642_in_vivo-matured_SCbeta_ATAC_rep1.peaks.bed
-	> data/SCbeta_in_vivo_ATAC_rep1.tsv
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171643_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed \
+  > data/SCbeta_in_vivo_ATAC_rep2.tsv
 ```
 
 ```bash
 bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171643_in_vivo-matured_SCbeta_ATAC_rep2.peaks.bed
-	> data/SCbeta_in_vivo_ATAC_rep2.tsv
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed \
+  > data/SCbeta_12h_ATAC.tsv
 ```
 
 ```bash
 bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171644_in_vitro-matured_SCbeta_ATAC_12h.peaks.bed
-	> data/SCbeta_12h_ATAC.tsv
-```
-
-```bash
-bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed
-	> data/SCbeta_72h_ATAC.tsv
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/GSM4171645_in_vitro-matured_SCbeta_ATAC_72h.peaks.bed \
+  > data/SCbeta_72h_ATAC.tsv
 ```
 
 ### Distance of Meltonlab each cell type data
@@ -938,9 +938,9 @@ This result data mapped on **hg19** version. See details in `db_Yizhou/README.md
 
 ```bash
 bedtools intersect -u
-	-a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed
-	-b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed
-	> YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
+  -a YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled.pf_peaks.bed \
+  -b YY005-beta-cell-1_R1.nodup.tn5.pr2_pooled.pf_peaks.bed \
+  > YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
 ```
 
 `YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed` file has pseudo_pooled pr1 data overlapped with pr2 data. And `YY005-beta-cell-1_R1.nodup.tn5_pooled.pf_peaks.bed` file has union peaks from the four samples.
@@ -955,9 +955,9 @@ Using `bedtools closest`:
 
 ```bash
 bedtools closest -d
-	-a gwas_hg19_biomart_2003.bed
-	-b db/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed
-	> data/SCbeta_YZ_pseudo_pool_ATAC.tsv
+  -a gwas_hg19_biomart_2003.bed \
+  -b db/YY005-beta-cell-1_R1.nodup.tn5.pr1_pooled_pseudo_over.bed \
+  > data/SCbeta_YZ_pseudo_pool_ATAC.tsv
 ```
 
 #### Tri-HiC data (T cell and Monocyte)
@@ -1309,10 +1309,10 @@ Separating by the tags and identifying tag overlapped T1D SNPs:
 Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/distance/ucsc_annot.tsv
-  --out r2d1_data/summary
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/distance/ucsc_annot.tsv ^
+  --out r2d1_data/summary ^
   --infotype ucsc
 ```
 
@@ -1338,13 +1338,13 @@ To identify cell type-specific enhancers, filtering the enhancer tags by each ce
 
 To identify Roadmap cell type-specific enhancer signal overlapped with the T1D SNPs:
 
-Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
+Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base folder> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/0_roadmap_dist
-  --out r2d1_data/0_roadmap_over
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/0_roadmap_dist ^
+  --out r2d1_data/0_roadmap_over ^
   --meta db_gwas/roadmap_meta.tsv
 ```
 
@@ -1365,10 +1365,10 @@ To identify Melton lab's stem cell-derived/primary β-cell ATAC-seq signal and C
 Usage: `Rscript postgwas-exe.r --dbfilt dist --base <base file> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/1_meltonlab_dist
-  --out r2d1_data/1_meltonlab_over
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/1_meltonlab_dist ^
+  --out r2d1_data/1_meltonlab_over ^
   --meta db_gwas/meltonlab_meta.tsv
 ```
 
@@ -1387,9 +1387,9 @@ Rscript postgwas-exe.r
 Yizhou's SC-derived beta-cell ATAC-seq signals overlapped with the T1D SNPs:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/1a_suhlab_dist
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/1a_suhlab_dist ^
   --out r2d1_data/1a_suhlab_over
 ```
 
@@ -1425,9 +1425,9 @@ Rscript postgwas-exe.r
 Immortalized human primary β cell line EndoC-βH1 cells ATAC-seq signals overlapped with the T1D SNPs:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ATAC_broadPeak.tsv
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ATAC_broadPeak.tsv ^
   --out r2d1_data/1b_stitzellab_over
 ```
 
@@ -1442,10 +1442,10 @@ Rscript postgwas-exe.r
 ### ChromHMM annotation
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ChromHMM.tsv
-  --out r2d1_data/1b_stitzellab_over
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/1b_stitzellab_dist/EndoC_BH1_ChromHMM.tsv ^
+  --out r2d1_data/1b_stitzellab_over ^
   --infotype tags
 ```
 
@@ -1482,9 +1482,9 @@ Usage: `Rscript postgwas-exe.r --gene hic_dist --base <base files> --out <out fo
 Save as TSV file:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbgene hic_pair
-  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv
+Rscript postgwas-exe.r ^
+  --dbgene hic_pair ^
+  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv ^
   --out r2d1_data/summary_gene
 ```
 
@@ -1501,10 +1501,10 @@ Rscript postgwas-exe.r
 Save as BED file:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbgene hic_pair
-  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv
-  --out r2d1_data/summary
+Rscript postgwas-exe.r ^
+  --dbgene hic_pair ^
+  --base r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/Primary_Islet_HiC_gene.tsv ^
+  --out r2d1_data/summary ^
   --bed TRUE
 ```
 
@@ -1523,9 +1523,9 @@ Rscript postgwas-exe.r
 Save as TSV file:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbgene hic_pair
-  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv
+Rscript postgwas-exe.r ^
+  --dbgene hic_pair ^
+  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv ^
   --out r2d1_data/summary_gene
 ```
 
@@ -1542,10 +1542,10 @@ Rscript postgwas-exe.r
 Save as BED file:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbgene hic_pair
-  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv
-  --out r2d1_data/summary
+Rscript postgwas-exe.r ^
+  --dbgene hic_pair ^
+  --base r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gwas.tsv r2d1_data/1b_stitzellab_hic/EndoC_BH1_HiC_gene.tsv ^
+  --out r2d1_data/summary ^
   --bed TRUE
 ```
 
@@ -1564,10 +1564,10 @@ Rscript postgwas-exe.r
 25 blood immune cell types ATAC-seq data:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/2_pritchardlab_dist
-  --out r2d1_data/2_pritchardlab_over
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/2_pritchardlab_dist ^
+  --out r2d1_data/2_pritchardlab_over ^
   --meta db_gwas/pritchardlab_meta.tsv
 ```
 
@@ -1586,10 +1586,10 @@ Rscript postgwas-exe.r
 T<sub>H</sub>1 and T<sub>REG</sub> cells enhancer regions overlapped with the T1D SNPs:
 
 ```CMD
-Rscript postgwas-exe.r
-  --dbfilt dist
-  --base r2d1_data/3_tanlab_dist
-  --out r2d1_data/3_tanlab_over
+Rscript postgwas-exe.r ^
+  --dbfilt dist ^
+  --base r2d1_data/3_tanlab_dist ^
+  --out r2d1_data/3_tanlab_over ^
   --meta db_gwas/tanlab_meta.tsv
 ```
 
@@ -1611,10 +1611,10 @@ Although Regulome data is old fashioned, it is still used for annotations. The T
 Usage: `Rscript postgwas-exe.r --dbfilt regulome --base <base files> --out <out folder>`
 
 ```CMD
-Rscript postgwas-exe.r
-	--dbfilt regulome
-	--base r2d1_data/gwas_hg19_biomart_2003.bed
-	--regulm db_gwas/regulome
+Rscript postgwas-exe.r ^
+	--dbfilt regulome ^
+	--base r2d1_data/gwas_hg19_biomart_2003.bed ^
+	--regulm db_gwas/regulome ^
 	--out r2d1_data
 ```
 
@@ -1644,10 +1644,16 @@ GTEx version 8 includes 17,382 samples, 54 tissues and 948 donors.
 
 ```CMD
 Rscript postgwas-exe.r ^
-	--dbfilt gtex_ovl ^
-	--base r2d1_data/gwas_hg19_biomart_2003.bed ^
-	--gtex db_gwas/gtex_signif_5e-08.rds ^
-	--out r2d1_data/gtex_eqtl
+  --dbfilt gtex_ovl ^
+  --base r2d1_data/gwas_hg19_biomart_2003.bed ^
+  --gtex db_gwas/gtex_signif_5e-08.rds ^
+  --out r2d1_data/gtex_eqtl
+
+Rscript postgwas-exe.r ^
+  --dbfilt gtex_ovl ^
+  --base data_Ashley/gwas_hg19_biomart_294.bed ^
+  --gtex gtex_signif_5e-08.rds ^
+  --out data_Ashley/gtex_eqtl
 ```
 
 > ** Run function: db_filter.r/gtex_overlap...
@@ -1663,7 +1669,7 @@ Rscript postgwas-exe.r ^
 >   
 >Job done: 2020-03-17 22:03:54 for 2.2 min
 
-I moved the BED file `gtex_eqtl/gtex_signif_1349.tsv` to the `r2d1_data` folder.
+I moved the TSV file `gtex_eqtl/gtex_signif_1349.tsv` to the `r2d1_data` folder.
 
 ## lncRNASNP2 data
 
