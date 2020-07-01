@@ -407,7 +407,7 @@ distance_filt_multi = function(
     o = lapply(c(1:n),function(i) {
         # find metadata by EID
         if(!is.null(meta)) {
-            j = which(meta_dat$f_name==base_f[i])
+            j = which(meta_dat$f_names==base_f[i])
             if(length(j)==0) {
                 paste0('[BREAK] ',base_f[i],' is not existing in meta file.\n') %>% cat
                 return(NULL)
