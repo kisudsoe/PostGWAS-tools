@@ -27,11 +27,6 @@ Required arguments:
              An argument for the "--ldlink ddown". One or more population option have to be included.
     --r2     An argument for the "--ldlink filter". Set a criteria for r2 over.
     --dprime An argument for the "--ldlink filter". Set a criteria for dprime over.
-                1) r2 >0.6 and Dprime =1  <- The most stringent criteria.
-                2) r2 >0.6               <- Usual choice to define LD association.
-                3) Dprime =1
-                4) r2 >0.6 or Dprime =1
-                5) r2 >0.8
 '
 
 ## Load global libraries ##
