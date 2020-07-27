@@ -1,10 +1,15 @@
 # Post GWAS tools
 
-```CMD
-Version: 2020-03-20
+```bash
+Version: 2020-06-26
 
-Usage: Rscript postgwas-exe.r <Function calls>
-    --base <base file(s)> --out <out folder> <options> --debug <default:FALSE>
+Usage:
+    Rscript postgwas-exe.r --gwas <Function> --base <base file(s)> --out <out folder> [options:--p.criteria]
+    Rscript postgwas-exe.r --ldlink <Function> --base <base file(s)> --out <out folder> [options:--popul --r2 --dprime]
+    Rscript postgwas-exe.r --dbdown <Function> --out <out folder> [option:--hg]
+    Rscript postgwas-exe.r --dbfilt <Function> --base <base file/folder> --out <out folder> [option:--hg]
+    ...
+
     
 Function calls:
     --gwas    A function for GWAS Catalog data.
@@ -13,6 +18,7 @@ Function calls:
     --dbfilt  A function for filtering data.
     --dbvenn  A function for venn analysis.
     --dbgene  A function for gene analysis.
+    --dbcomp  A function for PCA analysis for datasets.
 
 Global arguments:
     --base    <Base input file path>
@@ -28,41 +34,58 @@ Running functions with "--help" argument prints [Function] usage information.
 
 
 
-## --gwas
+# Quick start
 
-```CMD
-gwas_catalog, v2020-01-06
+This function is not developed yet.
+
+
+
+# Step-specific tools
+
+## --gwas: src/gwas_catalog.r
+
+```bash
+gwas_catalog, v2020-06-26
 This is a function for GWAS Catalog data.
 
-Usage: Rscript postgwas-exe.r --gwas <functions> --base <base file> --out <out folder> <...>
+Usage:
+    Rscript postgwas-exe.r --gwas trait --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --gwas gene --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --gwas study --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --filter trait --base <base TSV file> --out <out folder> --p.criteria 5e-8
+
 
 Functions:
-    trait   Generating pivot table for traits
-    gene    Generating pivot table for genes
-    study   Generating summary table for studies
-    filt    Filtering SNPs by P-values
+    trait   Generating pivot table for traits.
+    gene    Generating pivot table for genes.
+    study   Generating summary table for studies.
+    filter  Filtering SNPs by P-values.
 
 Global arguments:
     --base  <EFO0001359.tsv>
-            One base TSV file is mendatory.
+            An input base TSV file downloaded from GWAS Catalog is mendatory.
     --out   <Default:data folder>
-            Out files target path is mendatory. Default is "data" folder.
+            Out files target directory path that is mendatory. Default is "data" folder.
 
 Required arguments:
-    --p.criteria 5e-8
+    --p.criteria <5e-8>
             An argument for "--pivot filt". Default is 5e-8.
 ```
 
 
 
-## --ldlink
+## --ldlink: src/gwas_ldlink.r
 
-```CMD
-gwas_ldlink, v2020-03-14
+```bash
+gwas_ldlink, v2020-06-26
 This is a function for LDlink data.
 
-Usage: Rscript postgwas-exe.r --ldlink <Function> --base <base file> --out <out folder> <...>
-    --ldlink <Functions: dn/fl>
+Usage:
+    Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
+    Rscript postgwas-exe.r --ldlink filter --base <base file> <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
+    Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.5
+    Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
+
 
 Functions:
     down     This is a function for LDlink data download.
@@ -72,65 +95,102 @@ Functions:
 Global arguments:
     --base   <EFO0001359.tsv>
              One base TSV file is mendatory.
+             A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
+             A TSV file processed from "filter" function for "bed" function.
     --out    <default: data>
              Out folder path is mendatory. Default is "data" folder.
 
 Required arguments:
     --popul  <CEU TSI FIN GBR IBS ...>
-             An argument for the "--ldlink dn". One or more population option have to be included.
-    --r2d    <1/2/3/4>
-             An argument for the "--ldlink fl". Choose one number among these options:
-                1) r2 >0.6 and Dprime =1  <- The most stringent criteria.
-                2) r2 >0.6               <- Usual choice to define LD association.
-                3) Dprime =1
-                4) r2 >0.6 or Dprime =1
-                5) r2 >0.8
+             An argument for the "--ldlink ddown". One or more population option have to be included.
+    --r2     An argument for the "--ldlink filter". Set a criteria for r2 over.
+    --dprime An argument for the "--ldlink filter". Set a criteria for dprime over.
 ```
 
 
 
-## --dbdown
+## --dbdown: src/db_download.r
 
-```CMD
-db_download, v2020-02-27
+```bash
+db_download, v2020-07-22
 This is a function call for downloading databases
     Roadmap, ENCODE, RegulomeDB, GTEx v8, and lncRNASNP2
 
-Usage: Rscript postgwas-exe.r --dbdown <function> --out <out folder>
+Usage:
+    Rscript postgwas-exe.r --dbdown roadmap --out <out folder>
+    Rscript postgwas-exe.r --dbdown encode --out <out folder>
+    Rscript postgwas-exe.r --dbdown regulome --out <out folder>
+    Rscript postgwas-exe.r --dbdown gtex --out <out folder>
+    Rscript postgwas-exe.r --dbdown lncrna --out <out folder>
+    Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg19
+    Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg38
+    Rscript postgwas-exe.r --dbdown genebed --base <Rsid list TSV file path> --out <out folder> --hg hg19
+    Rscript postgwas-exe.r --dbdown genebed --base <Rsid list TSV file path> --out <out folder> --hg hg38
+
 
 Functions:
     roadmap   Downloading Roadmap data (hg19).
     encode    Downloading ENCODE data (hg19).
-    regulome  Downloading RegulomeDB data (≥2b).
-    gtex      Downloading GTEx v8 data.
-    lncrna    Downloading lncRNASNP2 data.
-    genes     Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
+    regulome  Downloading RegulomeDB data (≥2b, hg19).
+    gtex      Downloading GTEx v8 data (hg38).
+    lncrna    Downloading lncRNASNP2 data (hg38).
+    gene      Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
+    genebed   Downloading seed SNP coordinates from biomaRt
 
 Global arguments:
     --out     <out folder>
               Download folder path is mendatory. Default is "db" folder.
 
-Required arguments:
+Function-specific arguments:
+    --base    <Rsid list file path>
     --hg      <hg19/hg38>
-              A required argument for the "genes" function. Choose one human genome version.
+              A required argument for the "gene" function. Choose one human genome version.
 ```
 
 
 
-## --dbfilt
+## --bedtools: src/bedtools.r
 
-```CMD
-db_filter, v2020-03-10
+```bash
+bedtools, v2020-07-22
+This is a function call for generating bedtools command.
+
+Usage:
+    Rscript postgwas-exe.r --bedtools bash --base <base file> --out <out folder>
+
+
+Function:
+    bash    Generating bash command scripts to run bedtools
+
+Global arguments:
+    --base  <base file path>
+            Mendatory. For bash function.
+    --out   <out folder path>
+            Mendatory. For bash function.
+```
+
+
+
+## --dbfilt: src/db_filter.r
+
+```bash
+db_filter, v2020-07-23
 This is a function call for filtering data.
 
-Usage: Rscript postgwas-exe.r --dbfilt <function> --base <base file(s)> --out <out folder> <...>
+Usage:
+    Rscript postgwas-exe.r --dbfilt ucsc --base <CDS> <Gene> <Promoter> --out <out folder>
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh FALSE
+    Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE --sep TRUE
+
 
 Functions:
     ucsc        Compile the ucsc downloaded promoter/gene/cds region annotations.
     roadmap     Filtering Roadmap data by enhancer tags.
     gtex        Filtering GTEx data by eQTL p-value.
     gtex_ovl    Overlapping the GTEx data with the input GWAS SNPs.
-    hic_bed     Converting the hiC data to the BED format.
+    hic_bed     --base <HiCCUPS files> --out <out folder>
+                Converting the HiCCUPS data to the BED format.
     dist        Filtering distance data from Bedtools closest function.
     regulome    Filtering and overlapping by Regulome score ≥2b.
     lnc_ovl     Overlapping the lncRNASNP2 data with the input GWAS SNPs.
@@ -174,10 +234,10 @@ Required arguments:
 
 
 
-## --dbvenn
+## --dbvenn: src/db_venn.r
 
-```CMD
-db_venn, v2020-03-13
+```bash
+db_venn, v2020-07-22
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
@@ -228,34 +288,41 @@ Required arguments:
 
 
 
-## --dbgene
+## --dbgene: src/db_gene.r
 
-```CMD
-Version: v2020-03-25
+```bash
+Version: v2020-04-29
 This is a function call for gene analysis to compile the Hi-C and eQTL data.
 
-Usage: Rscript postgwas-exe.r --dbgene <function> --base <base files> --out <out folder>
+Usage: Rscript postgwas-exe.r --dbgene <function> --base <base files> --out <out folder> [options]
 
 Functions:
-    hic_pair   Extract Hi-C linked SNP-Gene pairs.
-    gtex_pair  Extract eQTL linked SNP-Gene pairs.
-    summary    Summarizing GWAS SNPs-Gene pairs.
-    david_go   Summarizing DAVID GO analysis result.
+    hic_pair    Extract Hi-C linked SNP-Gene pairs.
+    gtex_pair   Extract eQTL linked SNP-Gene pairs.
+    summary     Summarizing GWAS SNPs-Gene pairs.
+    david_go    Summarizing DAVID GO analysis result.
+    pivot_gene  Pivotting the gene summary pair table to gene level summary.
 
 Global arguments:
-    --base     <base files>
-               For "hic_pair" function, two input files are:
-                 [1] gwas_dist file, [2] gene_dist file
-    --out      <out folder>
-               Out folder path is mendatory. Default is "data" folder.
+    --base      <base files>
+                For "hic_pair" function, two input files are:
+                  [1] gwas_dist file, [2] gene_dist file
+    --out       <out folder>
+                Out folder path is mendatory. Default is "data" folder.
+                If the "bed=TRUE" option put in "hic_pair", out folder could be two.
 
 Required arguments:
-    --bed      <default:FALSE>
-               An optional argument for the "hic_pair" function.
-               To save as BED format file.
-    --nearest  <nearest gene summary file path>
-               An optional argument for the "summary" function.
-               Add nearest gene summary table to the hic gene summary.
-    --fdr      <default:0.05>
-               An optional argument for the "david_go" function.
+    --bed       <default:FALSE>
+                An optional argument for the "hic_pair" function.
+                To save as BED format file.
+    --nearest   <nearest gene summary file path>
+                An optional argument for the "summary" function.
+                Add nearest gene summary table to the hic gene summary.
+    --criteria  <default:0.05>
+                An optional argument for the "david_go" function.
+    --stat      <default:fdr>
+                An optional argument for the "david_go" function.
+                Either --fdr or --pval have to choose.
+    --dataset   An optional argument for the "david_go" function.
+                Add filtering dataset name.
 ```
