@@ -1,5 +1,5 @@
 help_message = '
-db_venn, v2020-03-13
+db_venn, v2020-07-22
 This is a function call for venn analysis of filtered DB data.
 
 Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
