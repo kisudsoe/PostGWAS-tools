@@ -58,7 +58,7 @@ File name change: `r2_data/gwas_biomart.tsv` -> `r2_data/gwas_biomart.fill.tsv`
 Rscript postgwas-exe.r ^
   --ldlink 	bed ^
   --base 	r2_data/gwas_biomart_fill.tsv ^
-  --out 	r2_data	
+  --out 	r2_data
 ```
 
 > ** Run function ldlink_bed... [1] 5891   11
