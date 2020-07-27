@@ -1,8 +1,10 @@
 # Prolyl hydroxylase ACACB (ACC2) and EGLN3 (PHD3)
 
-## Requirements
 
-Install R in bash
+
+# 0. Requirements
+
+## Install R in bash
 
 ```bash
 sudo apt update
@@ -10,7 +12,8 @@ sudo apt -y upgrade
 sudo apt -y install r-base
 ```
 
-R libraries
+## Install R libraries
+
 * biomaRt (Bioconductor)
   * Issue for "XML had Non Zero Exit Status" error: https://stackoverflow.com/questions/20671814/non-zero-exit-status-r-3-0-1-xml-and-rcurl
   * `$ sudo apt-get install libcurl4-openssl-dev libxml2-dev`
@@ -26,7 +29,7 @@ R libraries
 * eulerr (CRAN)
 * tools (CRAN)
 
-Install R libraries
+Install R libraries from Bioconductor and CRAN
 
 ```R
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -37,7 +40,11 @@ BiocManager::install("limma")
 install.packages(c('dplyr','data.table','eulerr'))
 ```
 
-* Install Bedtools: https://bedtools.readthedocs.io/en/latest/content/installation.html
+
+
+## Install Bedtools
+
+Install Bedtools: https://bedtools.readthedocs.io/en/latest/content/installation.html
 
 
 
@@ -97,7 +104,8 @@ Rscript postgwas-exe.r ^
   --ldlink down ^
   --base Haigis-r0.6/seed_rsid_10.txt ^
   --out Haigis-r0.6/ldlink ^
-  --popul YRI LWK GWD MSL ESN ASW ACB MXL PUR CLM PEL CHB JPT CHS CDX KHV CEU TSI FIN GBR IBS GIH PJL BEB STU ITU
+  --popul AFR AMR EAS EUR SAS
+  #--popul YRI LWK GWD MSL ESN ASW ACB MXL PUR CLM PEL CHB JPT CHS CDX KHV CEU TSI FIN GBR IBS GIH PJL BEB STU ITU
 ```
 
 > ** Run function ldlink_down... 10..
@@ -629,4 +637,10 @@ Rscript postgwas-exe.r \
 
 # 6. Search eQTLs from gene query
 
-See details in `Gene query for eQTL.ipynb`
+This step is not developed for command version yet. See details in `Gene query for eQTL.ipynb`.
+
+
+
+# * Notes
+
+Ensembl human gene ID to symbol converting tool: http://biotools.fr/human/ensembl_symbol_converter 
