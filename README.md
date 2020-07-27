@@ -1,33 +1,36 @@
 # Post GWAS tools
 
 ```bash
-Version: 2020-06-26
+Version: 2020-07-22
 
 Usage:
     Rscript postgwas-exe.r --gwas <Function> --base <base file(s)> --out <out folder> [options:--p.criteria]
     Rscript postgwas-exe.r --ldlink <Function> --base <base file(s)> --out <out folder> [options:--popul --r2 --dprime]
+    Rsciprt postgwas-exe.r --bedtools bash --base <base file> --out <out folder>
     Rscript postgwas-exe.r --dbdown <Function> --out <out folder> [option:--hg]
     Rscript postgwas-exe.r --dbfilt <Function> --base <base file/folder> --out <out folder> [option:--hg]
+    Rscript postgwas-exe.r --dbvenn <Function> --base <base file/folder> --out <out folder> [optioons:--sub_dir,--uni_save,--ann_gwas,--ann_encd,--ann_near,--ann_eqtl]
     ...
 
     
 Function calls:
-    --gwas    A function for GWAS Catalog data.
-    --ldlink  A function for LDlink data.
-    --dbdown  A function for downloading databases.
-    --dbfilt  A function for filtering data.
-    --dbvenn  A function for venn analysis.
-    --dbgene  A function for gene analysis.
-    --dbcomp  A function for PCA analysis for datasets.
+    --gwas      A function for GWAS Catalog data.
+    --ldlink    A function for LDlink data.
+    --bedtools 
+    --dbdown    A function for downloading databases.
+    --dbfilt    A function for filtering data.
+    --dbvenn    A function for venn analysis.
+    --dbgene    A function for gene analysis.
+    --dbcomp    A function for PCA analysis for datasets.
 
 Global arguments:
-    --base    <Base input file path>
-              This is mendatory.
-    --out     <Out folder path>
-              This is mendatory.
-    --debug   <default: FALSE>
-              TRUE/FALSE: Rich description for debugging.
-              This is optional.
+    --base      <Base input file path>
+                This is mendatory.
+    --out       <Out folder path>
+                This is mendatory.
+    --debug     <default: FALSE>
+                TRUE/FALSE: Rich description for debugging.
+                This is optional.
 
 Running functions with "--help" argument prints [Function] usage information.
 ```
