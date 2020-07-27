@@ -1,5 +1,5 @@
 help_message = '
-Version: v2020-03-25
+Version: v2020-04-29
 This is a function call for gene analysis to compile the Hi-C and eQTL data.
 
 Usage: Rscript postgwas-exe.r --dbgene <function> --base <base files> --out <out folder> [options]
