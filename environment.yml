@@ -1,0 +1,27 @@
+name: postgwas-env
+channels:
+    - conda-forge               
+    - defaults                  
+    - bioconda                  
+    - golobor
+dependencies:
+    - python=3.7
+    - parallel
+    - pbgzip
+    - lz4-c
+    - samtools>=1.4
+    - sra-tools>=2.8.1
+    - fastqc
+    - bwa
+    - seqtk
+    - setuptools 
+    - pip
+    - cython 
+    - numpy 
+    - dask
+    - nose 
+    - pairix
+    - pairtools
+    - pip:
+        - cooler>=0.8.5
+        - toolz
