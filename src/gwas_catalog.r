@@ -1,5 +1,5 @@
 help_message = '
-gwas_catalog, v2020-01-06
+gwas_catalog, v2020-06-26
 This is a function for GWAS Catalog data.
 
 Usage:
