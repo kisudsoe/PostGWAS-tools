@@ -68,7 +68,7 @@ summ_ann = function(
 	suppressMessages(library(biomaRt))
 
 	# Prepare...
-	paste0('\n** Run function: db_venn.r/summ... ') %>% cat
+	paste0('\n** Run function: db_venn.r/summ_ann... ') %>% cat
 	ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
 	# If the base path is folder, get the file list
@@ -76,6 +76,7 @@ summ_ann = function(
 	paths1 = list.files(f_paths,full.name=T)
 	n = length(paths1)
 	paste0(n,' Files/folders input.\n') %>% cat
+	if(n==0) return(NULL)
 
 	paths = NULL; paths_li = list(); dir_nm_li = list(); j = 0
 	for(i in 1:n) {
@@ -124,8 +125,12 @@ summ_ann = function(
 		union_df = venn_bed(paths,out,fig=NULL,uni_list=TRUE)
 	}
 	paste0('** Back to function: db_venn.r/summ...\n') %>% cat
-	paste0('  Returned union list dim\t= ') %>% cat; dim(union_df) %>% print
+	paste0('  Returned union list dim = ') %>% cat; dim(union_df) %>% print
 	union_summ = union_df[,c(-2,-3,-4)]
+	if(is.null(union_df)) { # debug 2020-07-22
+		paste0('\n\n[Warning] NULL union table was returned.\n\n') %>% cat
+		return(NULL)
+	}
 
 	# Write union BED file
 	dir_name = dir_name[1] # debug 2020-03-17
@@ -135,18 +140,19 @@ summ_ann = function(
 		} else f_name1 = paste0(out,'/snp_union_',unique(union_df)%>%nrow,'.bed')
 		write.table(union_df[,c(2:4,1)] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
 		paste0('  Write a BED file: ',f_name1,'\n') %>% cat
-	} else paste0('\n  [PASS] uni_save\t= ',uni_save,'\n') %>% cat
+	} else paste0('\n  [PASS] uni_save = ',uni_save,'\n') %>% cat
 
 	# Generate GWAS summary
 	if(!is.null(ann_gwas)) {
 		## Read GWAS annotation TSV file
-		paste0('\n  GWAS dim\t= ') %>% cat
+		paste0('\n  GWAS dim = ') %>% cat
 		gwas = read.delim(ann_gwas,stringsAsFactors=F)
 		dim(gwas) %>% print
 
 		## Merge union data and GWAS annotation
-		paste0('  Merge dim\t= ') %>% cat
-		gwas_ann   = gwas[,1:8]
+		paste0('  Merge dim = ') %>% cat
+		if(ncol(gwas)>=8) { gwas_ann = gwas[,1:8]
+		} else {            gwas_ann = gwas }
 		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
 		dim(gwas_merge) %>% print
 
@@ -159,12 +165,12 @@ summ_ann = function(
 	# Generate ENCODE summary
 	if(!is.null(ann_encd)) {
 		## Read ENCODE Tfbs distance file
-		paste0('\n  ENCODE dim\t= ') %>% cat
+		paste0('\n  ENCODE dim = ') %>% cat
 		enc = read.delim(ann_encd,header=F)
 		dim(enc) %>% print
 
 		## Merge union data and ENCODE annotation
-		paste0('  Merge dim\t= ') %>% cat
+		paste0('  Merge dim = ') %>% cat
 		k = ncol(enc)
 		which_row = which(enc[,k]==0)
 		enc_      = enc[which_row,]
@@ -186,7 +192,7 @@ summ_ann = function(
 	# Generate nearest gene summary
 	if(!is.null(ann_near)) {
 		## Read nearest gene distance file
-		paste0('\n  Nearest gene dim\t= ') %>% cat
+		paste0('\n  Nearest gene dim = ') %>% cat
 		near = read.delim(ann_near,header=F)
 		dim(near) %>% print
 
@@ -220,7 +226,7 @@ summ_ann = function(
 
 		## Read CDS distance file
 		if(!is.null(ann_cds)) {
-			paste0('  CDS dim\t\t= ') %>% cat
+			paste0('  CDS dim = ') %>% cat
 			cds = read.delim(ann_cds,header=F)
 			dim(cds) %>% print
 
@@ -240,10 +246,10 @@ summ_ann = function(
 			)
 
 		## Merge union data, nearest gene data, and CDS data
-			paste0('  Merge dim\t\t= ') %>% cat
+			paste0('  Merge dim = ') %>% cat
 			ann_li   = list(gene_ann,cds_ann,union_summ)
 		} else {
-			paste0('  Merge dim\t\t= ') %>% cat
+			paste0('  Merge dim = ') %>% cat
 			ann_li   = list(gene_ann,union_summ)
 		}
 		merge_allx = function(x,y) {
@@ -265,12 +271,12 @@ summ_ann = function(
 	# Generate GTEx eQTL summary
 	if(!is.null(ann_gtex)) {
 		## Read GTEx eQTL annotation TSV file
-		paste0('\n  GTEx dim\t= ') %>% cat
+		paste0('\n  GTEx dim = ') %>% cat
 		gtex = read.delim(ann_gtex)
 		dim(gtex) %>% print
 
 		## Merge union data and the GTEx annotation
-		paste0('  Merge dim\t= ') %>% cat
+		paste0('  Merge dim = ') %>% cat
 		gtex_ann   = gtex[,c(-7,-8)]
 		gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
 		dim(gtex_merge) %>% print
@@ -284,12 +290,12 @@ summ_ann = function(
 	# Generate lncRNA summary
 	if(!is.null(ann_lnc)) {
 		## Read lncRNA annotation TSV file
-		paste0('\n  lncRNA dim\t= ') %>% cat
+		paste0('\n  lncRNA dim = ') %>% cat
 		lnc = read.delim(ann_lnc)
 		dim(lnc) %>% print
 
 		## Merge union data and the GTEx annotation
-		paste0('  Merge dim\t= ') %>% cat
+		paste0('  Merge dim = ') %>% cat
 		lnc_ann   = lnc
 		lnc_merge = merge(lnc_ann,union_summ,by.x='dbsnp',by.y='rsid',all.x=T) %>% unique
 		dim(lnc_merge) %>% print
@@ -367,7 +373,7 @@ venn_bed = function(
 			circle.col = rainbow(subtitle%>%length)
 		)
 		dev.off()
-		paste0('\nFigure draw:\t\t',fig_name1,'\n') %>% cat
+		paste0('\nFigure draw: ',fig_name1,'\n') %>% cat
 	} else if(n>4) {
 		if(debug) message("\n[Message] Can't plot Venn diagram for more than 5 sets.")
 	}
@@ -399,7 +405,7 @@ venn_bed = function(
 		)
 		print(p)
 		dev.off()
-		paste0('\nFigure draw:\t\t',fig_name2,'\n') %>% cat
+		paste0('\nFigure draw: ',fig_name2,'\n') %>% cat
 	} else {
 		if(debug) message("\n[Message] Can't plot Euler plot.")
 	}
@@ -417,7 +423,7 @@ venn_bed = function(
 	union_out = merge(snp_df,union_df,by='rsid',all=T)
 	if(!uni_list) {
 		write.table(union_out,f_name1,row.name=F,quote=F,sep='\t')
-		paste0('Write TSV file:\t\t',f_name1,'\n') %>% cat
+		paste0('Write TSV file: ',f_name1,'\n') %>% cat
 	}
 
 	# Extract core/union snp list
@@ -445,7 +451,7 @@ venn_bed = function(
 	f_name2 = paste0(out,'/snp_core_',unique(core_df)%>%nrow,'.bed')
 	if(!uni_list) {
 		write.table(core_df,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-		paste0('Write snp list as a BED file:\t',f_name2,'\n\n') %>% cat
+		paste0('Write snp list as a BED file: ',f_name2,'\n\n') %>% cat
 		
 	# Return union snp list for further annotationss
 	} else return(union_out)

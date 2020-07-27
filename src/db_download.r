@@ -11,6 +11,8 @@ Usage:
     Rscript postgwas-exe.r --dbdown lncrna --out <out folder>
     Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg19
     Rscript postgwas-exe.r --dbdown gene --out <out folder> --hg hg38
+    Rscript postgwas-exe.r --dbdown genebed --base <Rsid list TSV file path> --out <out folder> --hg hg19
+    Rscript postgwas-exe.r --dbdown genebed --base <Rsid list TSV file path> --out <out folder> --hg hg38
 
 
 Functions:
@@ -20,12 +22,14 @@ Functions:
     gtex      Downloading GTEx v8 data (hg38).
     lncrna    Downloading lncRNASNP2 data (hg38).
     gene      Downloading Ensembl Biomart Gene coordinates (hg19/hg38).
+    genebed   Downloading seed SNP coordinates from biomaRt
 
 Global arguments:
     --out     <out folder>
               Download folder path is mendatory. Default is "db" folder.
 
-Required arguments:
+Function-specific arguments:
+    --base    <Rsid list file path>
     --hg      <hg19/hg38>
               A required argument for the "gene" function. Choose one human genome version.
 '
@@ -34,6 +38,128 @@ Required arguments:
 suppressMessages(library(dplyr))
 
 ## Functions Start ##
+gene_bed = function(
+    base = NULL,   # Rsid list file path
+    out  = 'data', # Out folder path
+    hg   = 'hg19'  # Human genome version
+) {
+    # Function specific library
+    suppressMessages(library(biomaRt))
+    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
+
+    # Read Rsid list
+    paste0('Read, ',base,' = ') %>% cat
+    rsids = read.delim(base) %>% unique
+    rsids_v = rsids$rsid %>% unlist
+    length(rsid_v) %>% print
+
+    # Search biomart hg19 to get coordinates
+    paste0('Search biomart for SNP coordinates:\n') %>% cat
+    paste0('  Query SNPs\t\t= ') %>% cat; length(rsids_v) %>% print
+    if(hg=='hg19') {
+        paste0('  Hg19 result table\t= ') %>% cat
+        hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
+                        dataset='hsapiens_snp',path='/biomart/martservice')
+        snp_attr1 = c("refsnp_id","chr_name","chrom_start","chrom_end")
+        snps_hg19_bio1 = getBM(
+            attributes = snp_attr1,
+            filters    = "snp_filter",
+            values     = rsids_v,
+            mart       = hg19_snp) %>% unique
+        snps_merge = merge(rsids,snps_hg19_bio1,
+                        by.x='rsid',by.y='refsnp_id',all.x=T)
+        which_na = is.na(snps_merge$chr_name) %>% which
+
+        if(length(which_na)>0) {
+            snps_na = snps_merge[which_na,1]
+            snp_attr2 = c("refsnp_id",'synonym_name',"chr_name","chrom_start","chrom_end")
+            snps_hg19_bio2 = getBM(
+                attributes = snp_attr2,
+                filters    = "snp_synonym_filter",
+                values     = snps_na,
+                mart       = hg19_snp) %>% unique
+            snps_hg19_bio2 = snps_hg19_bio2[,c(2:5)]
+            colnames(snps_hg19_bio2)[1] = "refsnp_id"
+            snps_hg19_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
+        } else snps_hg19_bio = snps_hg19_bio1
+        colnames(snps_hg19_bio) = c('rsid','chr','start','end')
+        snps_bio_ = subset(snps_hg19_bio,chr %in% c(1:22,'X','Y'))
+        snps_bio_[,2] = paste0('chr',snps_bio_[,2])
+        #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
+        dim(snps_bio_) %>% print
+    } else if(hg=='hg38') {
+        paste0('  Hg38 result table\t= ') %>% cat
+        hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",dataset="hsapiens_snp")
+        snps_bio1 = getBM(
+            attributes = snp_attr1,
+            filters    = "snp_filter",
+            values     = rsids_v,
+            mart       = hg38_snp) %>% unique
+        snps_merge = merge(snps_,snps_bio1,
+                        by.x='rsid',by.y='refsnp_id',all.x=T)
+        which_na = is.na(snps_merge$chr_name) %>% which
+
+        if(length(which_na)>0) {
+            snps_na = snps_merge[which_na,1]
+            snps_bio2 = getBM(
+                attributes = snp_attr2,
+                filters    = "snp_synonym_filter",
+                values     = snps_na,
+                mart       = hg38_snp) %>% unique
+            snps_bio2 = snps_bio2[,c(2:5)]
+            colnames(snps_bio2)[1] = "refsnp_id"
+            snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
+        } else snps_bio = snps_bio1
+        colnames(snps_bio) = c('rsid','chr','start','end')
+        snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
+        snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
+        #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
+        dim(snps_bio_) %>% print
+    }
+    
+    # Add Cytoband annotation (hg19)
+    hg19_chr = snps_bio_$chr
+    hg19_end = snps_bio_$end
+
+    ## Download cytoband data from UCSC
+    paste0('  Cytoband annotation... ') %>% cat
+    cyto     = circlize::read.cytoband(species = 'hg19')$df
+    colnames(cyto) = c('chr','start','end','cytoband','tag')
+
+    ## Extract and merge cytoband data
+    n = length(hg19_chr)
+    cytoband = lapply(c(1:n),function(i) {
+        CHR = hg19_chr[i]
+        POS = hg19_end[i]
+        cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
+        chr = strsplit(CHR %>% as.character,'chr') %>% unlist
+        cytoband = paste0(chr[2],cyto_sub)
+        return(cytoband)
+    }) %>% unlist
+    paste0(length(cytoband),'.. ') %>% cat
+    snps_merge = cbind(snps_bio_,cytoband)
+    paste0('done\n') %>% cat
+
+    # Write a TSV file
+    snp_n = snps_merge$rsid %>% unique %>% length
+    f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.tsv')
+    paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
+    write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
+    paste0('\nWrite TSV file: ',f_name1,'\n') %>% cat
+
+    # Write a BED file
+    f_name2 = paste0(out,'/gwas_biomart_',snp_n,'.bed')
+    snps_bed = data.frame(
+        chr   = snps_merge$chr,
+        start = snps_merge$start,
+        end   = snps_merge$end,
+        rsid  = snps_merge$rsid
+    )
+    write.table(snps_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    paste0('Write BED file: ',f_name2,'\n') %>% cat
+}
+
+
 biomart_gene = function(
     out = 'data', # Download folder path
     hg  = 'hg19'  # Human genome version. Choose either 'hg19' or 'hg38'
@@ -287,6 +413,7 @@ db_download = function(
     } else                   help = FALSE
     if(help) {               cat(help_message); quit() }
 
+    if(length(args$base)>0)  base = args$base
     if(length(args$out)>0)   out  = args$out
     if(length(args$hg)>0)    hg   = args$hg
 
@@ -303,6 +430,8 @@ db_download = function(
         lncrna_down(out)
     } else if(args$dbdown == 'gene') {
         biomart_gene(out,hg)
+    } else if(args$dbdown == 'genebed') {
+        gene_bed(base,out,hg)
     } else {
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$dbdown,collapse=', '),'\n') %>% cat

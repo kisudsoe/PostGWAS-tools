@@ -8,6 +8,5 @@ pdtime = function(time,type=1) {
     else if(d>=3600) d=paste(round(d/3600,1),"hr")
     if(type==1) out = paste("Job done:",t,"for",d)
     else if(type==2) out = paste("Job process:",d)
-    #cat(out)
     return(out)
 }

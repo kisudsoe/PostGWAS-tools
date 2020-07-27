@@ -67,7 +67,8 @@ hic_bed = function(
 ) {
     # Preparing...
     paste0('\n** Run function: db_filter.r/hic_bed... ') %>% cat
-    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
+    'Ready\n' %>% cat
 
     # If the base path is folder, get the file list
 	paths1 = list.files(f_hics,full.name=T)
@@ -133,7 +134,8 @@ ucsc_compile = function(
 
     # Preparing...
     paste0('\n** Run function: db_filter.r/ucsc_compile... ') %>% cat
-    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
+    'Ready\n' %>% cat
 
     # Read UCSC BED files
     paste0('  Read CDS file, dim\t\t= ') %>% cat
@@ -190,10 +192,16 @@ ucsc_compile = function(
 lncrna_overlap = function(
     snp_path = NULL,  # Input GWAS SNP file path
     lnc_path = NULL,  # lncRNASNP2 data downloaded folder path
-    out      = 'data' # Out folder path
+    out      = 'data' # Out folder path. Will generate 'summary' subfoleder.
 ) {
     # Preparing...
-    paste0('\n** Run function: db_filter.r/lncrna_overlap... \n') %>% cat
+    paste0('\n** Run function: db_filter.r/lncrna_overlap... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
+    out_summary = paste0(out,'/summary')
+    ifelse(!dir.exists(out_summary), dir.create(out_summary),'')
+    'Ready\n' %>% cat
+
+    # Read SNP file
     snp = read.delim(snp_path,header=F)
     colnames(snp) = c('chr','start','end','rsid')
     dbsnp  = gsub('(.*)_.*','\\1',snp[,4])
@@ -208,16 +216,16 @@ lncrna_overlap = function(
     paste0('3 lncRNASNP2 data load...\n') %>% cat
     paste0('  Read: ',slnc_path) %>% cat
     snplnc = readRDS(slnc_path)
-    paste0(';\t\tdim = ') %>% cat; dim(snplnc) %>% print
+    paste0(', = ') %>% cat; dim(snplnc) %>% print
 
     paste0('  Read: ',ann_path) %>% cat
     ann = readRDS(ann_path)
     colnames(ann)[1] = 'lncRNA'
-    paste0(';\t\t\t\tdim = ') %>% cat; dim(ann) %>% print
+    paste0(', = ') %>% cat; dim(ann) %>% print
 
     paste0('  Read: ',dis_path) %>% cat
     dis = readRDS(dis_path)
-    paste0(';\tdim = ') %>% cat; dim(dis) %>% print
+    paste0(', = ') %>% cat; dim(dis) %>% print
     
     # Overlapping lncRNA data with input GWAS SNPs
     snp_lnc = merge(snp_df,snplnc,by='dbsnp')
@@ -228,7 +236,7 @@ lncrna_overlap = function(
     ) %>% print
 
     # Save as a BED file
-    f_name1 = paste0(out,'/snp_lncrnasnp_',unique(snp_lnc$dbsnp)%>%length,'.bed')
+    f_name1 = paste0(out_summary,'/snp_lncrnasnp_',unique(snp_lnc$dbsnp)%>%length,'.bed')
     write.table(snp_lnc[,2:5],f_name1,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('\n  Write file: ',f_name1,'\n') %>% cat
 
@@ -245,10 +253,16 @@ lncrna_overlap = function(
 regulome_filt = function(
     snp_path = NULL,  # Input GWAS SNP file path
     reg_path = NULL,  # Regulome data downloaded folder path
-    out      = 'data' # Out folder path
+    out      = 'data' # Out folder path. Will generate 'summary' subfolder.
 ) {
+    # Preparing...
+    paste0('\n** Run function: db_filter.r/regulome_filt... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
+    out_summary = paste0(out,'/summary')
+    ifelse(!dir.exists(out_summary), dir.create(out_summary),'')
+    'Ready\n' %>% cat
+
     # Read a GWAS SNP BED file input
-    paste0('\n** Run function: db_filter.r/regulome_filt...\n') %>% cat
     snp   = read.delim(snp_path,header=F)
     rsids = gsub('(.*)_.*','\\1',snp[,4])
     paste0('Input GWAS SNPs N\t= ') %>% cat; length(rsids) %>% print
@@ -295,7 +309,7 @@ regulome_filt = function(
     # Save as BED file
     snp_rsid = data.frame(snp,rsid=rsids)
     snp_bed  = subset(snp_rsid,rsid %in% snp_2b$rsid) %>% unique
-    f_name2  = paste0(out,'/snp_regulome2b_',nrow(snp_bed),'.bed')
+    f_name2  = paste0(out_summary,'/snp_regulome2b_',nrow(snp_bed),'.bed')
     write.table(snp_bed[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write file: ',f_name2,'\n\n') %>% cat
 }
@@ -309,8 +323,11 @@ distance_filt = function(
     debug
 ) {
     # Preparing..
+    paste0('\n** Run function: db_filter.r/distance_filt... ') %>% cat
     f_name = tools::file_path_sans_ext(basename(f_path))
-    paste0('File ',f_name,'... ') %>% cat
+    'Ready\n' %>% cat
+
+    paste0('  File ',f_name,'... ') %>% cat
     rd = data.table::fread(f_path) %>% as.data.frame
     paste0('nrow= ',nrow(rd),'.. ') %>% cat
 
@@ -371,9 +388,14 @@ distance_filt = function(
         # Save as a BED file
         snp_bed = rd_df2[,1:4] %>% unique
         snp_n   = unique(snp_bed$rsid) %>% length
-        f_name2 = paste0(out,'/snp_',f_name,'_',snp_n,'.bed')
-        write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-        paste0('  Write file: ',f_name2,'\n') %>% cat
+        if(snp_n>0) {
+            ifelse(!dir.exists(out), dir.create(out),'')
+            f_name2 = paste0(out,'/snp_',f_name,'_',snp_n,'.bed')
+            write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+            paste0('  Write file: ',f_name2,'\n') %>% cat
+        } else if(snp_n==0) {
+            paste0('  [SKIP] SNP N = 0\n') %>% cat
+        }
     }
 }
 
@@ -413,7 +435,7 @@ distance_filt_multi = function(
                 return(NULL)
             }
             # mkdir by groups column in meta_dat file
-            ifelse(!dir.exists(sub_dir[j]), dir.create(sub_dir[j]),'')
+            #ifelse(!dir.exists(sub_dir[j]), dir.create(sub_dir[j]),'')
             out = sub_dir[j]
         }
 
@@ -432,17 +454,22 @@ distance_filt_multi = function(
 gtex_overlap = function(
     f_path = NULL,   # Inpust GWAS SNPs file path
     f_gtex    = NULL,   # Filtered GTEx RDS file path
-    out       = 'data', # Out folder path
+    out       = 'data', # Out folder path. Will generate gtex_eqlt subfoler.
     tissue_nm = NULL,   # Optional tissue name
     debug
 ) {
     # Preparing...
-    paste0('\n** Run function: db_filter.r/gtex_overlap...\n') %>% cat
+    paste0('\n** Run function: db_filter.r/gtex_overlap... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),'')
+    out_gtex_eqtl = paste0(out,'/gtex_eqtl')
+    ifelse(!dir.exists(out_gtex_eqtl), dir.create(out_gtex_eqtl),'')
+    'Ready\n' %>% cat
+
+    # Read SNP file
     snp = read.delim(f_path,header=F)
     colnames(snp) = c('chr','start','end','ann')
     rsids = gsub('(.*)_.*','\\1',snp[,4])
-    paste0('Input GWAS SNPs N\t= ',length(rsids),'\n') %>% cat
-    ifelse(!dir.exists(out), dir.create(out),'')
+    paste0('Input GWAS SNPs N = ',length(rsids),'\n') %>% cat
 
     # Load filtered GTEx RDS file
     f_ext = tools::file_ext(f_gtex)
@@ -451,16 +478,16 @@ gtex_overlap = function(
     } else if(f_ext=='rds') {
         gtex = readRDS(f_gtex)
     } else {
-        paste0('[ERROR] Unknown GTEx file format. gz/rds file is needed.')
+        paste0('[ERROR] Unknown GTEx file format. gz/rds file format is required.')
         quit
     }
     colnames(gtex)[9] = 'rsid'
-    paste0('  ',basename(f_gtex),', dim\t= ') %>% cat
+    paste0('  ',basename(f_gtex),', dim = ') %>% cat
     dim(gtex) %>% print
 
     # Overlapping eQTLs
     eqtls = subset(gtex, rsid %in% rsids)
-    paste0('  Overlapped eQTL-gene pairs\t= ') %>% cat
+    paste0('  Overlapped eQTL-gene pairs = ') %>% cat
     nrow(eqtls) %>% print
 
     # Filter by tissue (optional)
@@ -472,53 +499,44 @@ gtex_overlap = function(
     } else {
         f_name1 = paste0(out,'/gtex_signif_',unique(eqtls$rsid)%>%length,'.tsv')
     }
-    paste0('  eQTLs N\t\t= ') %>% cat; unique(eqtls$rsid) %>% length %>% print
-    paste0('  Associated eGenes\t= ') %>% cat; unique(eqtls$gene_id) %>% length %>% print
+    paste0('  eQTLs N = ') %>% cat; unique(eqtls$rsid) %>% length %>% print
+    paste0('  Associated eGenes = ') %>% cat; unique(eqtls$gene_id) %>% length %>% print
 
     # Save as a TSV file
-    write.table(eqtls,f_name1,row.names=F,quote=F,sep='\t')
-    paste0('\nWrite file: ',f_name1,'\n') %>% cat
+    if(nrow(eqtls)>0) {
+        write.table(eqtls,f_name1,row.names=F,quote=F,sep='\t')
+        paste0('\nWrite file: ',f_name1,'\n') %>% cat
+    } else {
+        paste0('\n[Warning] No overlapped eQTL was found. Please check query SNPs in GTEx homepage.\n\n') %>% cat
+        return(NULL)
+    }
+    
 
     # Generate as BED file
     snp_rsid = data.frame(snp,rsid=rsids)
     tissue_names = unique(eqtls$tissue)
     tissue_n = length(tissue_names)
-    paste0('\nGenerating BED files for ',tissue_n,' tissues.. ') %>% cat
+    paste0('\nGenerating BED files at ',out_gtex_eqtl,
+        ' for ',tissue_n,' tissues.. ') %>% cat
     o = lapply(c(1:tissue_n),function(i) {
         # Filter by tissue
         tissue_name  = tissue_names[i]
         eqtls_tissue = subset(eqtls,tissue==tissue_name)
         snp_bed = subset(snp_rsid,rsid %in% eqtls_tissue$rsid)[,1:4] %>% unique
         if(debug) {
-            paste0('\n',tissue_name,'\n  eQTL BED, dim\t= ') %>% cat
+            paste0('\n',tissue_name,'\n  eQTL BED, dim = ') %>% cat
             dim(snp_bed) %>% print
             paste0('  eQTL SNP N\t\t= ') %>% cat
             unique(snp_bed$ann) %>% length %>% print
         }
 
         # Save as a BED file
-        f_name2 = paste0(out,'/snp_gtex_',tissue_name,
+        f_name2 = paste0(out_gtex_eqtl,'/snp_gtex_',tissue_name,
             '_',unique(snp_bed$ann)%>%length,'.bed')
         write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
         if(debug) paste0('\nWrite file: ',f_name2,'\n') %>% cat
     })
     'done\n\n' %>% cat
-
-    ## Below codes are old.. ##
-    #snp_bed  = subset(snp_rsid,rsid %in% eqtls$rsid)[,1:4] %>% unique
-    #paste0('\n  GTEx eQTL BED, dim\t= ') %>% cat
-    #dim(snp_bed) %>% print
-    #paste0('  eQTL SNP N\t\t= ') %>% cat
-    #unique(snp_bed$ann) %>% length %>% print
-
-    # Filter by tissue (optional)
-    #if(!is.null(tissue_nm)) {
-    #    f_name2 = paste0(out,'/snp_gtex_',tissue_nm,'_',unique(snp_bed$ann)%>%length,'.bed')
-    #} else f_name2 = paste0(out,'/snp_gtex_',unique(snp_bed$ann)%>%length,'.bed')
-
-    # Save as a BED file
-    #write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-    #paste0('\nWrite file: ',f_name2,'\n') %>% cat
 }
 
 gtex_filt = function(
@@ -683,8 +701,7 @@ db_filter = function(
     } else if(args$dbfilt == 'hic_bed') {
         hic_bed(b_path,out)
     } else {
-        paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
-            paste0(args$ldlink,collapse=', '),'\n') %>% cat
+        paste0('[Error] There is no such function "',args$dbfilt,'" in db_filte.\n') %>% cat
     }
     paste0(pdtime(t0,1),'\n') %>% cat
 }

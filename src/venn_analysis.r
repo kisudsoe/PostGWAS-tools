@@ -1,7 +1,43 @@
+venn_tb = function(
+    grouplist = NULL,
+    out       = NULL,
+    title     = NULL
+) {
+    wfig  = FALSE
+    wfile = TRUE
+    venn_analysis(
+        grouplist = grouplist,
+        out       = out,
+        title     = title,
+        wfig      = wfig,
+        wfile     = wfile,
+        verbose   = FALSE
+    )
+}
+
+
+venn_fig = function(
+    grouplist = NULL,
+    out       = NULL,
+    title     = NULL
+) {
+    wfig  = TRUE
+    wfile = FALSE
+    venn_analysis(
+        grouplist = grouplist,
+        out       = out,
+        title     = title,
+        wfig      = wfig,
+        wfile     = wfile,
+        verbose   = FALSE
+    )
+}
+
+
 venn_analysis = function(
     grouplist = NULL,
     out       = NULL,
-    title     = '',
+    title     = NULL,
     wfig      = TRUE,
     wfile     = TRUE,
     verbose   = FALSE
@@ -24,7 +60,7 @@ venn_analysis = function(
     colnames(union) = g_titles		# Names attach to venn diagram
     
     # Draw Venn Diagram
-    if(title=='') title = paste0('Venn analysis of ',nrow(union),' genes')
+    if(is.null(title)) title = paste0('Venn analysis of ',nrow(union),' genes')
     if(wfig & length(grouplist)==3) {
         suppressMessages(library(eulerr))
         suppressMessages(library(limma))

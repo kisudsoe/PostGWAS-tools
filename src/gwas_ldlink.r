@@ -45,6 +45,9 @@ ldlink_bed = function(
 ) {
     paste0('\n** Run function ldlink_bed... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
+
+    # Read file
+    paste0('Read, ',ldfl_path,' = ') %>% cat
     snps = read.delim(ldfl_path)
     dim(snps) %>% print
 
@@ -128,8 +131,8 @@ ldlink_filter = function(
         'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
     ldlink    = paste0(ld_path,'/',snpids,'.txt')
     snptb     = data.frame(snpids=snpids, ldlink=ldlink)
-    
     paste0(nrow(snptb),'\n') %>% cat
+    
     ldlink_li = apply(snptb,1,function(row) {
         tb1 = try(
             read.table(as.character(row[2]),sep='\t',
@@ -142,6 +145,7 @@ ldlink_filter = function(
             tb2 = data.frame(SNPid=rep(row[1],nrow(tb1)),tb1)
             return(tb2)
         }
+        dim(tb1) %>% print #<- for debug
     })
     ldlink_df = data.table::rbindlist(ldlink_li) %>% unique
     paste0('  Read LDlink results\t\t= ') %>% cat; dim(ldlink_df) %>% print
@@ -379,11 +383,15 @@ ldlink_filter = function(
     paste0('done\n') %>% cat
 
     # Write a TSV file
+    snp_n = snps_merge$rsid %>% unique %>% length
     ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
-    f_name1 = paste0(out,'/gwas_biomart.tsv')
+    f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
     write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
     paste0('Write file: ',f_name1,'\n') %>% cat
+
+    # Write a BED file
+    f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.bed')
 }
 
 ldlink_down = function(
