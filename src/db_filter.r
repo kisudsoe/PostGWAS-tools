@@ -1,5 +1,5 @@
 help_message = '
-db_filter, v2020-03-10
+db_filter, v2020-07-23
 This is a function call for filtering data.
 
 Usage:
