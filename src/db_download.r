@@ -1,5 +1,5 @@
 help_message = '
-db_download, v2020-02-27
+db_download, v2020-07-22
 This is a function call for downloading databases
     Roadmap, ENCODE, RegulomeDB, GTEx v8, and lncRNASNP2
 
