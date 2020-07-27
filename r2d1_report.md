@@ -168,7 +168,7 @@ Rscript postgwas-exe.r ^
 > Write file:     r2d1_data_gwas/gwas_hg38_biomart_2002.bed
 > Job done: 2020-02-25 23:56:09 for 1.9 sec
 
-# 2. Downloading annotation data
+# 2. Downloading annotation dataf
 
 ## Roadmap download
 
