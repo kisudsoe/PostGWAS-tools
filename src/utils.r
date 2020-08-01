@@ -1,12 +1,14 @@
 help_message = '
-bedtools, v2020-07-22
-This is a function call for generating bedtools command.
+utils, v2020-08-01
+This is a function call for utils such as generating bedtools command.
 
 Usage:
-    Rscript postgwas-exe.r --bedtools bash --base <base file> --out <out folder>
+    Rscript postgwas-exe.r --utils gene --base <base file> --out <out folder>
+    Rscript postgwas-exe.r --utils bash --base <base file> --out <out folder>
 
 
 Function:
+    gene    Finding traits and their risk SNPs from input gene list
     bash    Generating bash command scripts to run bedtools
 
 Global arguments:
@@ -14,6 +16,10 @@ Global arguments:
             Mendatory. For bash function.
     --out   <out folder path>
             Mendatory. For bash function.
+
+Required arguments:
+    --age   <age-related traits meta file path>
+            Optional. For gene function.
 '
 
 
@@ -28,7 +34,7 @@ bash_script = function(
     debug  = FALSE
 ) {
     # Preparing...
-    paste0('\n** Run function: bedtools.r/bash_script... ') %>% cat
+    paste0('\n** Run function: utils.r/bash_script... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),'')
     out_genome = paste0(out,'/genome_dist')
     ifelse(!dir.exists(out_genome), dir.create(out_genome),'')
@@ -89,7 +95,7 @@ bash_script = function(
 
 
 ## INIT Function ##
-bed_tools = function(
+utils = function(
     args = NULL
 ) {
     # Help message
@@ -105,10 +111,10 @@ bed_tools = function(
 
     # Run function
     source('src/pdtime.r'); t0=Sys.time()
-    if(args$bedtools=='bash') {
+    if(args$utils=='bash') {
         bash_script(b_path,out,debug)
     } else {
-        paste0('[Error] There is no such function "',args$bedtools,'" in bedtools.\n') %>% cat
+        paste0('[Error] There is no such function "',args$utils,'" in utils.\n') %>% cat
     }
     paste0(pdtime(t0,1),'\n') %>% cat
 }
