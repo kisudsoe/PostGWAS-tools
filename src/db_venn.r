@@ -501,7 +501,7 @@ db_venn = function(
 			ann_near,ann_cds,ann_gtex,ann_lnc)
 	} else {
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
-            paste0(args$ldlink,collapse=', '),'\n') %>% cat
+            paste0(args$ldlink,collapse=', '),'\n\n') %>% cat
 	}
 	paste0(pdtime(t0,1),'\n') %>% cat
 }
