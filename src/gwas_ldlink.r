@@ -4,8 +4,7 @@ This is a function for LDlink data.
 
 Usage:
     Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
-    Rscript postgwas-exe.r --ldlink filter --base <base file> <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
-    Rscript postgwas-exe.r --ldlink filter --base <base file> --out <out folder> --r2 0.5
+    Rscript postgwas-exe.r --ldlink filter --base <base file> --ldlink <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
     Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
 
 
@@ -121,7 +120,7 @@ ldlink_filter = function(
     paste0('\n** Run function ldlink_filter...\n') %>% cat
     paste0('Read download files... ') %>% cat
     snpdf     = read.delim(snp_path,stringsAsFactors=F) %>% unique
-    snpids    = snpdf$rsid %>% unique
+    snpids    = snpdf$Rsid %>% unique
     col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
         'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
     ldlink    = paste0(ld_path,'/',snpids,'.txt')
@@ -156,7 +155,7 @@ ldlink_filter = function(
             paste0('    Filtering by "r2 = ',r2,'": ') %>% cat
         }
         dim(ldlink_df) %>% print
-    } else paste0('    [Msg] No filter criteria for r2.\n') %>% cat
+    } else paste0('    [Message] No filter criteria for r2.\n') %>% cat
 
     if(!is.null(dprime)) {
         dprimt = as.numeric(dprime)
@@ -168,7 +167,7 @@ ldlink_filter = function(
             paste0('    Filtering by "Dprime = ',dprime,'": ') %>% cat
         }
         dim(ldlink_df) %>% print
-    } else paste0('    [Msg] No filter criteria for Dprime.\n') %>% cat
+    } else paste0('    [Message] No filter criteria for Dprime.\n') %>% cat
 
     ldlink_2 = data.frame(
         gwasSNPs = ldlink_df$SNPid,
@@ -195,7 +194,7 @@ ldlink_filter = function(
     }
     
     # Basic summary of LDlink results
-    paste0('Basic summary of LDlink results:\n') %>% cat
+    paste0('\nBasic summary of LDlink results:\n') %>% cat
     paste0('  SNP Tier 1\t\t\t= ',length(snpids),'\n') %>% cat
     snp_t2 = setdiff(ldlink_$ldSNPs,snpids) %>% unique
     paste0('  SNP Tier 2\t\t\t= ',length(snp_t2),'\n') %>% cat
@@ -217,8 +216,8 @@ ldlink_filter = function(
     paste0('  SNP source annotation table\t= ') %>% cat; dim(snp_src) %>% print
 
     # Add LD block annotation
-    paste0('Add annotations:\n') %>% cat
-    paste0('  LD block annotation... ') %>% cat
+    paste0('\nAdd annotations:\n') %>% cat
+    paste0('  Calculate LD block index... ') %>% cat
     ldlink_2 = ldlink_
     colnames(ldlink_2)[2] = 'rsid'
     ldlink_3 = merge(snps_,ldlink_2,by='rsid',all.x=T)
@@ -262,7 +261,7 @@ ldlink_filter = function(
     group2 %>% length %>% print
 
     # Search biomart hg19 to get coordinates
-    paste0('Search biomart for SNP coordinates:\n') %>% cat
+    paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
     paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
     paste0('  Hg19 result table\t= ') %>% cat
     hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
@@ -379,14 +378,14 @@ ldlink_filter = function(
 
     # Write a TSV file
     snp_n = snps_merge$rsid %>% unique %>% length
-    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
+    ifelse(!dir.exists(out), dir.create(out),'') # mkdir
     f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
     write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
-    paste0('Write file: ',f_name1,'\n') %>% cat
+    paste0('\nWrite file: ',f_name1,'\n') %>% cat
 
     # Write a BED file
-    f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.bed')
+    f_name1 = paste0(out,'/gwas_biomart_ld_r2_',snp_n,'.bed')
 }
 
 ldlink_down = function(
@@ -397,14 +396,15 @@ ldlink_down = function(
 ) {
     # Function specific library
     suppressMessages(library(LDlinkR))
+    paste0('\n** Run function ldlink_down... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
     # Download from LDlink
-    paste0('\n** Run function ldlink_down... ') %>% cat
+    paste0('Rsid query = ') %>% cat
     snps = read.delim(snp_path,stringsAsFactors=F)
-    rsid = snps$rsid %>% unique
+    rsid = snps$Rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
 
-    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
     token = '669e9dc0b428' # Seungsoo Kim's personal token
     LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token) #append=T
     paste0('done\n') %>% cat
@@ -419,31 +419,32 @@ ldlink_down = function(
 gwas_ldlink = function(
     args = NULL
 ) {
-    if(length(args$help)>0) {   help    = args$help
-    } else                      help    = FALSE
+    if(length(args$help)>0) {   help     = args$help
+    } else                      help     = FALSE
     if(help) {                  cat(help_message); quit() }
     
-    if(length(args$base)>0)     b_path  = args$base
-    if(length(args$out)>0)      out     = args$out
-    if(length(args$debug)>0) {  debug   = args$debug
-    } else                      debug   = FALSE
+    if(length(args$base)>0)     b_path   = args$base
+    if(length(args$out)>0)      out      = args$out
+    if(length(args$debug)>0) {  debug    = args$debug
+    } else                      debug    = FALSE
     
-    if(length(args$popul)>0)    popul   = args$popul
-    if(length(args$r2)>0) {     r2      = args$r2
-    } else                      r2      = NULL
-    if(length(args$dprime)>0) { dprime  = args$dprime
-    } else                      dprime  = NULL
+    if(length(args$popul)>0)    popul    = args$popul
+    if(length(args$ldpath)>0)   ld_path = args$ldpath
+    if(length(args$r2)>0) {     r2       = args$r2
+    } else                      r2       = NULL
+    if(length(args$dprime)>0) { dprime   = args$dprime
+    } else                      dprime   = NULL
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
         ldlink_down(b_path,out,popul,debug)
     } else if(args$ldlink == 'filter') {
-        ldlink_filter(b_path[1],b_path[2],out,r2,dprime,debug)
+        ldlink_filter(b_path,ld_path,out,r2,dprime,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else {
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
     }
-    paste0(pdtime(t0,1),'\n') %>% cat
+    paste0(pdtime(t0,1),'\n\n') %>% cat
 }
