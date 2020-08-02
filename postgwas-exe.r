@@ -5,11 +5,11 @@ help_message = '
 Version: 2020-07-22
 
 Usage:
-    Rscript postgwas-exe.r --gene <Function>
-    Rscript postgwas-exe.r --gwas <Function> --base <base file(s)> --out <out folder> [options:--p.criteria]
+    Rscript postgwas-exe.r --gene   <Function>
+    Rscript postgwas-exe.r --gwas   <Function> --base <base file(s)> --out <out folder> [options:--p.criteria]
     Rscript postgwas-exe.r --ldlink <Function> --base <base file(s)> --out <out folder> [options:--popul --r2 --dprime]
-    Rsciprt postgwas-exe.r --utils bash --base <base file> --out <out folder>
-    Rscript postgwas-exe.r --dbdown <Function> --out <out folder> [option:--hg]
+    Rsciprt postgwas-exe.r --utils  <Function> --base <base file>    --out <out folder>
+    Rscript postgwas-exe.r --dbdown <Function> --out  <out folder> [option:--hg]
     Rscript postgwas-exe.r --dbfilt <Function> --base <base file/folder> --out <out folder> [option:--hg]
     Rscript postgwas-exe.r --dbvenn <Function> --base <base file/folder> --out <out folder> [optioons:--sub_dir,--uni_save,--ann_gwas,--ann_encd,--ann_near,--ann_eqtl]
     ...
