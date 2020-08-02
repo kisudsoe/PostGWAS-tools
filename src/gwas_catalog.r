@@ -275,6 +275,7 @@ gwas_catalog = function(
         dim(gdata) %>% print
     }
 
+    source('src/pdtime.r'); t0=Sys.time()
     if(args$gwas == 'trait') {
         # Generate TRAITS pivot table
         paste0('\n** Run function trait_pivot:\n') %>% cat
@@ -292,4 +293,5 @@ gwas_catalog = function(
         paste0('\n** Run function gwas_filt:\n') %>% cat
         gwas_filt(gdata, out, p_criteria, debug)
     }
+    paste0(pdtime(t0,1),'\n\n') %>% cat
 }
