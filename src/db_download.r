@@ -45,16 +45,17 @@ gene_bed = function(
 ) {
     # Function specific library
     suppressMessages(library(biomaRt))
-    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
+    paste0('\n** Run function: db_download.r/gene_bed...') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat # mkdir
 
     # Read Rsid list
     paste0('Read, ',base,' = ') %>% cat
     rsids = read.delim(base) %>% unique
-    rsids_v = rsids$rsid %>% unlist
-    length(rsid_v) %>% print
+    dim(rsids) %>% print
 
     # Search biomart hg19 to get coordinates
     paste0('Search biomart for SNP coordinates:\n') %>% cat
+    rsids_v = rsids$Rsid %>% unlist %>% as.character
     paste0('  Query SNPs\t\t= ') %>% cat; length(rsids_v) %>% print
     if(hg=='hg19') {
         paste0('  Hg19 result table\t= ') %>% cat
@@ -67,7 +68,7 @@ gene_bed = function(
             values     = rsids_v,
             mart       = hg19_snp) %>% unique
         snps_merge = merge(rsids,snps_hg19_bio1,
-                        by.x='rsid',by.y='refsnp_id',all.x=T)
+                        by.x='Rsid',by.y='refsnp_id',all.x=T)
         which_na = is.na(snps_merge$chr_name) %>% which
 
         if(length(which_na)>0) {
@@ -82,7 +83,7 @@ gene_bed = function(
             colnames(snps_hg19_bio2)[1] = "refsnp_id"
             snps_hg19_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
         } else snps_hg19_bio = snps_hg19_bio1
-        colnames(snps_hg19_bio) = c('rsid','chr','start','end')
+        colnames(snps_hg19_bio) = c('Rsid','chr','start','end')
         snps_bio_ = subset(snps_hg19_bio,chr %in% c(1:22,'X','Y'))
         snps_bio_[,2] = paste0('chr',snps_bio_[,2])
         #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
@@ -96,7 +97,7 @@ gene_bed = function(
             values     = rsids_v,
             mart       = hg38_snp) %>% unique
         snps_merge = merge(snps_,snps_bio1,
-                        by.x='rsid',by.y='refsnp_id',all.x=T)
+                        by.x='Rsid',by.y='refsnp_id',all.x=T)
         which_na = is.na(snps_merge$chr_name) %>% which
 
         if(length(which_na)>0) {
@@ -110,7 +111,7 @@ gene_bed = function(
             colnames(snps_bio2)[1] = "refsnp_id"
             snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
         } else snps_bio = snps_bio1
-        colnames(snps_bio) = c('rsid','chr','start','end')
+        colnames(snps_bio) = c('Rsid','chr','start','end')
         snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
         snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
         #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
@@ -141,7 +142,7 @@ gene_bed = function(
     paste0('done\n') %>% cat
 
     # Write a TSV file
-    snp_n = snps_merge$rsid %>% unique %>% length
+    snp_n = snps_merge$Rsid %>% unique %>% length
     f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
     write.table(snps_merge,f_name1,row.names=F,quote=F,sep='\t')
@@ -149,12 +150,7 @@ gene_bed = function(
 
     # Write a BED file
     f_name2 = paste0(out,'/gwas_biomart_',snp_n,'.bed')
-    snps_bed = data.frame(
-        chr   = snps_merge$chr,
-        start = snps_merge$start,
-        end   = snps_merge$end,
-        rsid  = snps_merge$rsid
-    )
+    snps_bed = snps_merge %>% dplyr::select('chr','start','end','Rsid')
     write.table(snps_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write BED file: ',f_name2,'\n') %>% cat
 }
@@ -436,5 +432,5 @@ db_download = function(
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$dbdown,collapse=', '),'\n') %>% cat
     }
-    paste0(pdtime(t0,1),'\n') %>% cat
+    paste0(pdtime(t0,1),'\n\n') %>% cat
 }
