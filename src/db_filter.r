@@ -382,7 +382,7 @@ distance_filt = function(
             snp_n   = unique(snp_bed$rsid) %>% length
             f_name2 = paste0(out,'/snp_',infotype,'_',tag_level[i],'_',snp_n,'.bed')
             write.table(snp_bed,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-            paste0('..\tSave at: ',f_name2,'\n') %>% cat
+            paste0('.. Save at: ',f_name2,'\n') %>% cat
         })
     } else {
         # Save as a BED file
@@ -408,6 +408,7 @@ distance_filt_multi = function(
 ) {
     # Preparing...
     paste0('\n** Run function: db_filter.r/distance_filt_multi...\n') %>% cat
+    paste0('Input file/folder N\t= ') %>% cat; length(f_paths) %>% print
     # If the base path is folder, get the file list
     if(length(f_paths)==1) {
         paths = list.files(f_paths,full.name=T)
@@ -463,7 +464,7 @@ gtex_overlap = function(
     ifelse(!dir.exists(out), dir.create(out),'')
     out_gtex_eqtl = paste0(out,'/gtex_eqtl')
     ifelse(!dir.exists(out_gtex_eqtl), dir.create(out_gtex_eqtl),'')
-    'Ready\n' %>% cat
+    'ready\n' %>% cat
 
     # Read SNP file
     snp = read.delim(f_path,header=F)
@@ -472,6 +473,7 @@ gtex_overlap = function(
     paste0('Input GWAS SNPs N = ',length(rsids),'\n') %>% cat
 
     # Load filtered GTEx RDS file
+    paste0('Read, ',basename(f_gtex),' = ') %>% cat
     f_ext = tools::file_ext(f_gtex)
     if(f_ext=='gz') {
         gtex = read.delim(gzfile(f_gtex),header=T)
@@ -482,7 +484,6 @@ gtex_overlap = function(
         quit
     }
     colnames(gtex)[9] = 'rsid'
-    paste0('  ',basename(f_gtex),', dim = ') %>% cat
     dim(gtex) %>% print
 
     # Overlapping eQTLs
@@ -516,8 +517,8 @@ gtex_overlap = function(
     snp_rsid = data.frame(snp,rsid=rsids)
     tissue_names = unique(eqtls$tissue)
     tissue_n = length(tissue_names)
-    paste0('\nGenerating BED files at ',out_gtex_eqtl,
-        ' for ',tissue_n,' tissues.. ') %>% cat
+    paste0('Generating BED files at "',out_gtex_eqtl,
+        '" for ',tissue_n,' tissues.. ') %>% cat
     o = lapply(c(1:tissue_n),function(i) {
         # Filter by tissue
         tissue_name  = tissue_names[i]
@@ -692,7 +693,6 @@ db_filter = function(
     } else if(args$dbfilt == 'gtex_ovl') {
         gtex_overlap(b_path,gtex,out,tissue,debug)
     } else if(args$dbfilt == 'dist') {
-        paste0('Input file/folder N\t= ') %>% cat; length(b_path) %>% print
         distance_filt_multi(b_path,out,meta,infotype,debug)
     } else if(args$dbfilt == 'regulome') {
         regulome_filt(b_path,reg_path,out)
@@ -703,5 +703,5 @@ db_filter = function(
     } else {
         paste0('[Error] There is no such function "',args$dbfilt,'" in db_filte.\n') %>% cat
     }
-    paste0(pdtime(t0,1),'\n') %>% cat
+    paste0(pdtime(t0,1),'\n\n') %>% cat
 }
