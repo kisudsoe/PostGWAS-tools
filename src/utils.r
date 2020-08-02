@@ -5,7 +5,7 @@ This is a function call for utils such as generating bedtools command.
 Usage:
     Rscript postgwas-exe.r --utils genetraits --gwas <gwas file> --phewas <phewas file> --out <out folder>
     Rscript postgwas-exe.r --utils gene --base <base file> --trait <trait file> --out <out folder>
-    Rscript postgwas-exe.r --utils bash --base <base file> --out <out folder>
+    Rscript postgwas-exe.r --utils bash --base <base file> --ann <anntation folder> --out <out folder>
 
 
 Function:
@@ -20,6 +20,8 @@ Global arguments:
                 Mendatory. For bash function.
 
 Required arguments:
+    --ann       <Functional annotation folder path>
+                Mendatory. For bash function.
     --gwas      <GWAS file path>
                 Mendatory. For genetraits function.
     --phewas    <PheWAS file path>
@@ -37,9 +39,10 @@ suppressMessages(library(dplyr))
 
 ## Functions Start ##
 bash_script = function(
-    b_path = NULL,
-    out    = NULL,
-    debug  = FALSE
+    b_path   = NULL, # Input SNP TSV file
+    ann_path = NULL, # Folder path for storing functional annotation data
+    out      = NULL, # Output folder path 
+    debug    = FALSE
 ) {
     # Preparing...
     paste0('\n** Run function: utils.r/bash_script... ') %>% cat
@@ -57,15 +60,15 @@ bash_script = function(
 
     # gene_dist files
     genome_dist_f = c(
-        'db_gwas/ensembl_gene_hg19.bed',
-        'db_gwas/wgEncodeRegTfbsClusteredV3.bed',
-        'db_gwas/ucsc_annot.bed'
+        paste0(ann_path,'/ensembl_gene_hg19.bed'),
+        paste0(ann_path,'/wgEncodeRegTfbsClusteredV3.bed'),
+        paste0(ann_path,'/ucsc_annot.bed')
     )
 
     # roadmap files
-    roadmap_f1 = list.files('db_gwas/roadmap_enh',full.names=F)
-    roadmap_f = list.files('db_gwas/roadmap_enh',full.names=T)
-    roadmap_f = c(roadmap_f,'db_gwas/roadmap_enh_merge.bed') # Add roadmap merge file
+    roadmap_f1 = list.files(paste0(ann_path,'/roadmap_enh'),full.names=F)
+    roadmap_f = list.files(paste0(ann_path,'/roadmap_enh'),full.names=T)
+    roadmap_f = c(roadmap_f,paste0(ann_path,'/roadmap_enh_merge.bed')) # Add roadmap merge file
 
     # Generate genome_dist bash script
     genome_dist_out = c(
@@ -95,7 +98,8 @@ bash_script = function(
 
     # Combine and save the bash scripts
     bash = c(bash1,bash2)
-    f_name = paste0(out,'/',out,'.sh')
+    out_base = tools::file_path_sans_ext(basename(out))
+    f_name = paste0('dist_',out_base,'.sh')
     out_f = file(f_name,"wb") # Set file as Unix type
     write.table(bash,file=out_f,row.names=F,col.names=F,quote=F,sep='')
     paste0('Write bash file: ',f_name,'\n') %>% cat
@@ -313,6 +317,7 @@ utils = function(
     } else                        debug    = FALSE
 
     # Required arguments
+    if(length(args$ann)>0)        f_ann    = args$ann
     if(length(args$gwas)>0)       f_gwas   = args$gwas
     if(length(args$phewas)>0)     f_phewas = args$phewas
     if(length(args$trait)>0) {      f_trait    = args$trait
@@ -325,9 +330,9 @@ utils = function(
     } else if(args$utils=='gene') {
         gene(b_path,out,f_trait,debug)
     } else if(args$utils=='bash') {
-        bash_script(b_path,out,debug)
+        bash_script(b_path,f_ann,out,debug)
     } else {
         paste0('[Error] There is no such function "',args$utils,'" in utils.\n') %>% cat
     }
-    paste0(pdtime(t0,1),'\n') %>% cat
+    paste0(pdtime(t0,1),'\n\n') %>% cat
 }
