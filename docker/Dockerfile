@@ -13,10 +13,14 @@ RUN apt -y -qq install \
 		openjdk-11-jre-headless \
 		r-base \
 		wget \
-		bedtools
+		bedtools \
+		libcurl4-openssl-dev libxml2-dev \
+		libssl-dev
 
 # Install R packages
 RUN R -e "install.packages(c('dplyr','data.table','eulerr'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
 	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
-    R -e "BiocManager::install('biomaRt')" && \
+	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
+    R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')"
+	R -e "BiocManager::install('biomaRt')" && \
     R -e "BiocManager::install('limma')"
