@@ -204,9 +204,11 @@ $ docker push kisudsoe/postgwas-env:1
 
 
 
-## Update Docker image with source codes
+# 2. Update Docker image with source codes
 
-### Pull latest postgwas-env image
+
+
+## (Optional) Pull latest postgwas-env image
 
 ```bash
 #docker rmi -f 67febf44105e
@@ -232,43 +234,58 @@ In Oracle VM Virtual Box Manager -> Settings (default machine) -> Shared Folders
 
 Transient Folders: `C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3` path named as `Postgwas_v3`
 
-```bash
-$ docker-machine restart # Run rirst time only
-$ docker run -it -v \
-	"/Postgwas_v3:/postgwas/data" \
-	kisudsoe/postgwas-env:latest \
-	/bin/bash
+```CMD
+docker-machine restart # Run first time only
+
+# option 1: Run postgwas-env image
+docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data" ^
+  kisudsoe/postgwas-env:latest ^
+  /bin/bash
+
+# option 2: Run postgwas image
+docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data" ^
+  kisudsoe/postgwas:latest ^
+  /bin/bash
 ```
 
 
 
-### Update source codes
+## Update source codes
 
-```bash
-container$ cp -r /postgwas/data/src /postgwas/data/postgwas-exe.r /postgwas/
+Run image with interactive mode:
+
+```CMD
+docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data" ^
+  kisudsoe/postgwas:latest /bin/bash
 ```
 
-Save image, Ref: https://galid1.tistory.com/323
+In the container, copy the updated source to image
 
-```bash
-$ docker ps
+```CMD
+cp -r /postgwas/data/src /postgwas/data/postgwas-exe.r /postgwas/
+```
+
+From another CMD, save image using Container ID, Ref: https://galid1.tistory.com/323
+
+```CMD
+docker ps
 ```
 
 > CONTAINER ID        IMAGE                      COMMAND             CREATED             STATUS              PORTS               NAMES
 > ae9fe688d36d        kisudsoe/postgwas:latest   "/bin/bash"         18 minutes ago      Up 18 minutes                           silly_kowalevski
 
-```bash
-$ docker stop 44e419bd0f11
-$ docker commit -a "jjy" 44e419bd0f11 kisudsoe/postgwas:latest
+```CMD
+docker stop 01af5ea77cf2
+docker commit -a "jjy" 01af5ea77cf2 kisudsoe/postgwas:latest
 ```
 
 
 
 ### Test the Docker image
 
-```bash
-(optional)$ docker pull kisudsoe/postgwas
-$ docker run -it kisudsoe/postgwas:latest
+```CMD
+docker pull kisudsoe/postgwas # This is optional
+docker run -it kisudsoe/postgwas:latest
 ```
 
 ```bash
@@ -309,23 +326,24 @@ container$ Rscript postgwas-exe.r --help
 
 
 
-### Upload new Docker image to Docker Hub
+## Upload new Docker image to Docker Hub
 
-```bash
-$ docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:2
+```CMD
+# v3-2020-08-10
+docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:3
 
-$ docker login
-$ docker push kisudsoe/postgwas:latest
-$ docker push kisudsoe/postgwas:2
+docker login
+docker push kisudsoe/postgwas:latest
+docker push kisudsoe/postgwas:3
 ```
 
 Ref Docker: mirnylab/distiller_env
 
 
 
-# 2. Run PostGWAS pipeline
+# 3. Run PostGWAS pipeline
 
-### Start up the Postgwas image
+## Start up the Postgwas image
 
 Download Docker image `Postgwas:latest`.
 
@@ -346,7 +364,7 @@ Source code located in `/postgwas` directory and local directory mounted as `/so
 
 
 
-### Run Postgwas pipeline
+## Run Postgwas pipeline
 
 This process run in the image: `root@106653e2d631:/#`
 

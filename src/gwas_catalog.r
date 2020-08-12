@@ -1,11 +1,12 @@
 help_message = '
-gwas_catalog, v2020-06-26
+gwas_catalog, v2020-08-10
 This is a function for GWAS Catalog data.
 
 Usage:
     Rscript postgwas-exe.r --gwas trait --base <base TSV file> --out <out folder>
     Rscript postgwas-exe.r --gwas gene --base <base TSV file> --out <out folder>
     Rscript postgwas-exe.r --gwas study --base <base TSV file> --out <out folder>
+    Rscript postgwas-exe.r --gwas trait gene study --base <base TSV file> --out <out folder>
     Rscript postgwas-exe.r --filter trait --base <base TSV file> --out <out folder> --p.criteria 5e-8
 
 
@@ -39,12 +40,12 @@ gwas_filt = function(
 ) {
     # Read GWAS Catalog file
     snp = gdata
-    paste0('  gwas dim\t\t= ') %>% cat
+    paste0('  gwas dim = ') %>% cat
     dim(snp) %>% print
     
     # Filtering by p-value criteria
     p_criteria = p_criteria %>% as.character %>% as.numeric
-    paste0('  gwas (',p_criteria,')\t\t= ') %>% cat
+    paste0('  gwas (',p_criteria,') = ') %>% cat
     snp_ = subset(snp,`P.VALUE`<p_criteria)
     dim(snp_) %>% print
     
@@ -58,7 +59,7 @@ gwas_filt = function(
     
     f_name = paste0(out,'/gwas_',p_criteria,'_',snp_n,'.tsv')
     write.table(snp_df,f_name,sep='\t',quote=F,row.names=F)
-    paste0('Write gwas filter:\t',f_name,'\n') %>% cat
+    paste0('Write gwas filter: ',f_name,'\n') %>% cat
 }
 
 study_pivot = function(
@@ -70,7 +71,7 @@ study_pivot = function(
     # Generate AUTHORS
     AUTHORS = paste0(gdata$FIRST.AUTHOR,' (',gdata$PUBMEDID,')')
     if(debug) {
-        paste0('  AUTHORS length\t= ') %>% cat
+        paste0('  AUTHORS length = ') %>% cat
         print(length(AUTHORS))
     }
     
@@ -89,7 +90,7 @@ study_pivot = function(
         Pvalue  = gdata$P.VALUE
     ) %>% unique
     if(debug) {
-        paste0('  studies dim\t\t= ') %>% cat
+        paste0('  studies dim = ') %>% cat
         dim(studies) %>% print
     }
     
@@ -100,7 +101,7 @@ study_pivot = function(
         #summarize(SNP_n = count(SNPS)) #%>%
         #spread('TRAITS','SNP_n')
     if(debug) {
-        paste0('  pivot (<1e-5) dim\t= ') %>% cat
+        paste0('  pivot (<1e-5) dim = ') %>% cat
         dim(pivot_1e5) %>% print
     }
     
@@ -112,7 +113,7 @@ study_pivot = function(
         #summarize(SNP_n = count(SNPS)) #%>%
         #spread('TRAITS','SNP_n')
     if(debug) {
-        paste0('  pivot (<5e-8) dim\t= ') %>% cat
+        paste0('  pivot (<5e-8) dim = ') %>% cat
         dim(pivot_5e8) %>% print
     }
     
@@ -125,12 +126,12 @@ study_pivot = function(
     ))
     colnames(pivot)[5:6] = c('SNP_1e-5','SNP_5e-8')
     if(debug) {
-        paste0('  pivot merge dim\t= ') %>% cat
+        paste0('  pivot merge dim = ') %>% cat
         dim(pivot_5e8) %>% print
     }
     f_name = paste0(out,'/',file_nm,'_studies.tsv')
     write.table(pivot,f_name,sep='\t',quote=F)
-    paste0('Write study pivot:\t',f_name,'\n') %>% cat
+    paste0('Write study pivot: ',f_name,'\n') %>% cat
 }
 
 gene_pivot = function(
@@ -146,16 +147,18 @@ gene_pivot = function(
         P.VALUE     = gdata$P.VALUE
     ) %>% unique
     if(debug) {
-        paste0('  gdata2 dim\t= ') %>% cat
+        paste0('  gdata2 dim = ') %>% cat
         dim(gdata2) %>% print
     }
     
     # Reshape data 2: Min_P
+    gdata2$MAPPED_GENE[gdata2$MAPPED_GENE==""] = NA # debug 2020-08-10
+    print(gdata2)
     pivot1 = gdata2 %>%
         group_by(SNPS,MAPPED_GENE) %>%
         summarize(Min_P = min(P.VALUE))
     if(debug) {
-        paste0('  pivot1 dim\t= ') %>% cat
+        paste0('  pivot1 dim = ') %>% cat
         dim(pivot1) %>% print
     }
     
@@ -173,14 +176,14 @@ gene_pivot = function(
     })
     pivot = data.table::rbindlist(pivot_li)
     if(debug) {
-        paste0('  pivot dim\t= ') %>% cat
+        paste0('  pivot dim = ') %>% cat
         dim(pivot) %>% print
     }
     
     # Save: Pivot table
     f_name = paste0(out,'/',file_nm,'_genes.tsv')
     write.table(pivot,f_name,sep='\t',quote=F,row.names=F)
-    paste0('Write gene pivot:\t',f_name,'\n') %>% cat
+    paste0('Write gene pivot: ',f_name,'\n') %>% cat
 }
 
 trait_pivot = function(
@@ -192,7 +195,7 @@ trait_pivot = function(
     # Generate unique TRAITS
     TRAITS = paste0(gdata$DISEASE.TRAIT,"_",gdata$PUBMEDID)
     if(debug) {
-        paste0('  TRAITS length\t= ') %>% cat
+        paste0('  TRAITS length = ') %>% cat
         print(length(TRAITS))
     }
     
@@ -204,7 +207,7 @@ trait_pivot = function(
         P.VALUE     = gdata$P.VALUE
     ) %>% unique
     if(debug) {
-        paste0('  gdata2 dim\t= ') %>% cat
+        paste0('  gdata2 dim = ') %>% cat
         dim(gdata2) %>% print
     }
     
@@ -214,7 +217,7 @@ trait_pivot = function(
         summarize(Min_P = min(P.VALUE)) %>%
         spread('TRAITS','Min_P')
     if(debug) {
-        paste0('  pivot1 dim\t= ') %>% cat
+        paste0('  pivot1 dim = ') %>% cat
         dim(pivot1) %>% print
     }
     
@@ -223,7 +226,7 @@ trait_pivot = function(
         group_by(SNPS,MAPPED_GENE) %>%
         summarize(Min_P = min(P.VALUE))
     if(debug) {
-        paste0('  pivot2 dim\t= ') %>% cat
+        paste0('  pivot2 dim = ') %>% cat
         dim(pivot2) %>% print
     }
     
@@ -234,7 +237,7 @@ trait_pivot = function(
         ncols - sum(is.na(row))
     })
     if(debug) {
-        paste0('  P_num length\t= ') %>% cat
+        paste0('  P_num length = ') %>% cat
         length(P_num) %>% print
     }
     
@@ -246,7 +249,7 @@ trait_pivot = function(
     )
     f_name = paste0(out,'/',file_nm,'_snps.tsv')
     write.table(pivot,f_name,sep='\t',quote=F,row.names=F)
-    paste0('Write TRAITS pivot:\t',f_name,'\n') %>% cat
+    paste0('Write TRAITS pivot: ',f_name,'\n') %>% cat
 }
 ## Functions End ##
 
@@ -270,21 +273,24 @@ gwas_catalog = function(
     # Read GWAS Catalog file
     gdata = read.delim(gwas,stringsAsFactors=F)
     file_nm = tools::file_path_sans_ext(gwas %>% basename)
+    if(debug=="TRUE"|debug=="T") debug=TRUE
     if(debug) {
-        paste0('Read file, ',basename(gwas),'\t= ') %>% cat
+        paste0('Read file, ',basename(gwas),' = ') %>% cat
         dim(gdata) %>% print
     }
 
     source('src/pdtime.r'); t0=Sys.time()
-    if(args$gwas == 'trait') {
+    if('trait' %in% args$gwas) {
         # Generate TRAITS pivot table
         paste0('\n** Run function trait_pivot:\n') %>% cat
         trait_pivot(gdata, out, file_nm, debug)
-    } else if(args$gwas == 'gene') {
+    }
+    if('gene' %in% args$gwas) {
         # Generate SNP-Gene-Min_P table
         paste0('\n** Run function gene_pivot:\n') %>% cat
         gene_pivot(gdata, out, file_nm, debug)
-    } else if(args$gwas == 'study') {
+    }
+    if('study' %in% args$gwas) {
         # Generate Study summary table
         paste0('\n** Run function study_pivot:\n') %>% cat
         study_pivot(gdata, out, file_nm, debug)
