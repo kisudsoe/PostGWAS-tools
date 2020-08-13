@@ -6,30 +6,34 @@ Usage:
     Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
     Rscript postgwas-exe.r --ldlink filter --base <base file> --ldlink <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
     Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
+    Rscript postgwas-exe.r --ldlink chkbiomart --out <out folder>
 
 
 Functions:
-    down     This is a function for LDlink data download.
-    filter   This is a function for LDlink data filter.
-    bed      This is a function for generating two BED files (hg19 and hg38).
+    down        This is a function for LDlink data download.
+    filter      This is a function for LDlink data filter.
+    bed         This is a function for generating two BED files (hg19 and hg38).
+    chkbiomart  Check biomart lists.
 
 Global arguments:
-    --base   <EFO0001359.tsv>
-             One base TSV file is mendatory.
-             A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
-             A TSV file processed from "filter" function for "bed" function.
-    --out    <default: data>
-             Out folder path is mendatory. Default is "data" folder.
+    --base      <EFO0001359.tsv>
+                One base TSV file is mendatory.
+                A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
+                A TSV file processed from "filter" function for "bed" function.
+    --out       <default: data>
+                Out folder path is mendatory. Default is "data" folder.
 
 Required arguments:
-    --popul  <CEU TSI FIN GBR IBS ...>
-             An argument for the "--ldlink ddown". One or more population option have to be included.
-    --r2     An argument for the "--ldlink filter". Set a criteria for r2 over.
-    --dprime An argument for the "--ldlink filter". Set a criteria for dprime over.
+    --popul     <CEU TSI FIN GBR IBS ...>
+                An argument for the "--ldlink ddown". One or more population option have to be included.
+    --r2        An argument for the "--ldlink filter". Set a criteria for r2 over.
+    --dprime    An argument for the "--ldlink filter". Set a criteria for dprime over.
 '
+
 
 ## Load global libraries ##
 suppressMessages(library(dplyr))
+
 
 ## Functions Start ##
 ldlink_bed = function(
@@ -103,6 +107,7 @@ ldlink_bed = function(
     write.table(snp_bed_hg38,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write file:\t',f_name2,'\n') %>% cat
 }
+
 
 ldlink_filter = function(
     snp_path = NULL,   # GWAS file path
@@ -296,7 +301,8 @@ ldlink_filter = function(
 
     # Search biomart hg38 to get coordinates
     paste0('  Hg38 result table\t= ') %>% cat
-    hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",dataset="hsapiens_snp")
+    hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host='uswest.ensembl.org',
+                       dataset="hsapiens_snp") # debug 20.08.11
     snps_bio1 = getBM(
         attributes = snp_attr1,
         filters    = "snp_filter",
@@ -388,6 +394,7 @@ ldlink_filter = function(
     f_name1 = paste0(out,'/gwas_biomart_ld_r2_',snp_n,'.bed')
 }
 
+
 ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
@@ -416,6 +423,40 @@ ldlink_down = function(
     paste0('  Files are moved to target folder:\t',out,'\n') %>% cat
 }
 
+
+check_biomart = function(
+    out   = NULL,
+    debug = F
+) {
+    # Function specific library
+    suppressMessages(library(biomaRt))
+    paste0('\n** Run function check_biomart...\n') %>% cat
+
+    # hg38
+    marts    = listMarts()
+    f_name1 = paste0(out,'_hg19_biomart_marts.tsv')
+    write.table(marts,f_name1,sep='\t',row.names=F,quote=F)
+    paste0('\nWrite TSV files: ',f_name1,'\n') %>% cat
+
+    ensembl  = useMart('ENSEMBL_MART_SNP', host='uswest.ensembl.org')
+    datasets = listDatasets(ensembl)
+    f_name2 = paste0(out,'_hg19_biomart_datasets.tsv')
+    write.table(datasets,f_name2,sep='\t',row.names=F,quote=F)
+    paste0('Write TSV files: ',f_name2,'\n') %>% cat
+
+    ensembl  = useMart('ENSEMBL_MART_SNP', dataset='hsapiens_snp', host='uswest.ensembl.org')
+    filters  = listFilters(ensembl)
+    f_name3 = paste0(out,'_hg19_biomart_SNP_filters.tsv')
+    write.table(filters,f_name3,sep='\t',row.names=F,quote=F)
+    paste0('Write TSV files: ',f_name3,'\n') %>% cat
+
+    attribs  = listAttributes(ensembl)
+    f_name4 = paste0(out,'_hg19_biomart_SNP_attributes.tsv')
+    write.table(attribs,f_name4,sep='\t',row.names=F,quote=F)
+    paste0('Write TSV files: ',f_name4,'\n') %>% cat
+}
+
+
 gwas_ldlink = function(
     args = NULL
 ) {
@@ -442,6 +483,8 @@ gwas_ldlink = function(
         ldlink_filter(b_path,ld_path,out,r2,dprime,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
+    } else if(args$ldlink == 'chkbiomart') {
+        check_biomart(out, debug)
     } else {
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
