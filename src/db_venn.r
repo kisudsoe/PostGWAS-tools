@@ -1,8 +1,9 @@
 help_message = '
-db_venn, v2020-07-22
+db_venn, v2020-08-13
 This is a function call for venn analysis of filtered DB data.
 
-Usage: Rscript postgwas-exe.r --dbvenn <function> --base <base files> --out <out folder> --fig <figure out folder>
+Usage:
+	Rscript postgwas-exe.r --dbvenn summ --base <base files> --out <out folder> --fig <figure out folder> --subdir TRUE --uni_save TRUE
 
 Functions:
 	venn        Venn analysis of rsids.
@@ -52,6 +53,35 @@ Required arguments:
 suppressMessages(library(dplyr))
 
 ## Functions Start ##
+ensgid_biomaRt = function(
+	genes = NULL # Ensgids
+) {
+	suppressMessages(library(biomaRt))
+	paste0('  Search biomaRt... ') %>% cat
+	genes = genes %>% unique
+	paste0(length(genes),'.. ') %>% cat
+
+	# biomaRt query
+	ensembl   = useMart('ensembl',host='uswest.ensembl.org',dataset='hsapiens_gene_ensembl')
+	gene_attr = c('ensembl_gene_id','hgnc_symbol','description')
+	gene_ens  = getBM(
+		attributes = gene_attr,
+		filters    = 'ensembl_gene_id',
+		values     = genes,
+		mart       = ensembl
+	) %>% unique
+
+	# Parsing gene names
+	paste0('parsing.. ') %>% cat
+	gene_name = lapply(gene_ens$description,function(x) {
+		strsplit(x,'\\ \\[')[[1]][1]
+	}) %>% unlist
+	gene_ens$name = gene_name
+	paste0(length(gene_ens$ensembl_gene_id %>% unique),'.. done\n') %>% cat
+	return(gene_ens)
+}
+
+
 summ_ann = function(
 	f_paths  = NULL,   # Input BED file paths
 	sub_dir  = FALSE,  # Getting file paths only in the subfolder
@@ -65,7 +95,8 @@ summ_ann = function(
 	ann_lnc  = NULL    # Optional, add lncRNA TSV file path                 -> CSV file 5
 ) {
 	# Load function-specific library
-	suppressMessages(library(biomaRt))
+	paste0('sub_dir = ') %>% cat
+	print(sub_dir)
 
 	# Prepare...
 	paste0('\n** Run function: db_venn.r/summ_ann... ') %>% cat
@@ -103,6 +134,7 @@ summ_ann = function(
 	}
 	paste0('Total ',length(paths),' file(s) is/are input.\n') %>% cat
 
+	## --sub_dir & --uni_save
 	# Run venn_bed function to get union table
 	if(sub_dir =='TRUE') { sub_dir  = TRUE
 	} else                 sub_dir  = FALSE
@@ -132,7 +164,7 @@ summ_ann = function(
 		return(NULL)
 	}
 
-	# Write union BED file
+	# --uni_save: Write union BED file
 	dir_name = dir_name[1] # debug 2020-03-17
 	if(uni_save) {
 		if(!is.null(dir_name)) {
@@ -140,29 +172,10 @@ summ_ann = function(
 		} else f_name1 = paste0(out,'/snp_union_',unique(union_df)%>%nrow,'.bed')
 		write.table(union_df[,c(2:4,1)] %>% unique,f_name1,col.names=F,row.names=F,quote=F,sep='\t')
 		paste0('  Write a BED file: ',f_name1,'\n') %>% cat
-	} else paste0('\n  [PASS] uni_save = ',uni_save,'\n') %>% cat
+	} else paste0('  [PASS] uni_save = ',uni_save,'\n') %>% cat
 
-	# Generate GWAS summary
-	if(!is.null(ann_gwas)) {
-		## Read GWAS annotation TSV file
-		paste0('\n  GWAS dim = ') %>% cat
-		gwas = read.delim(ann_gwas,stringsAsFactors=F)
-		dim(gwas) %>% print
 
-		## Merge union data and GWAS annotation
-		paste0('  Merge dim = ') %>% cat
-		if(ncol(gwas)>=8) { gwas_ann = gwas[,1:8]
-		} else {            gwas_ann = gwas }
-		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
-		dim(gwas_merge) %>% print
-
-		## Write a summary CSV file
-		f_name2 = paste0(out,'/',dir_name,'_gwas.csv')
-		write.csv(gwas_merge,f_name2,row.names=F)
-		paste0('  Write a CSV file: ',f_name2,'\n') %>% cat
-	} else paste0('\n  [PASS] GWAS summary.\n')
-
-	# Generate ENCODE summary
+	## --ann_encd: Generate ENCODE summary ##
 	if(!is.null(ann_encd)) {
 		## Read ENCODE Tfbs distance file
 		paste0('\n  ENCODE dim = ') %>% cat
@@ -183,13 +196,27 @@ summ_ann = function(
 		enc_merge = merge(enc_ann,union_summ,by='rsid',all.x=T) %>% unique
 		dim(enc_merge) %>% print
 
+		## Extract snp-tfbs pairs
+		paste0('  Extract snp-tfbs pair = ') %>% cat
+		enc_merge_1 = enc_merge %>% dplyr::select('rsid','tfbs') %>% unique
+		tfbs_rsid = enc_merge_1$rsid %>% unique
+		snp_tfbs_li = lapply(tfbs_rsid,function(x) {
+			snp_df = subset(enc_merge_1,rsid=x)
+			if(nrow(snp_df)>0) {
+				data.frame(rsid=x,encode_tfbs=paste0(snp_df$tfbs,collapse=', '))
+			} else return(NULL)
+		})
+		snp_tfbs_df = data.table::rbindlist(snp_tfbs_li)
+		dim(snp_tfbs_df) %>% print
+
 		## Write a summary CSV file
 		f_name3 = paste0(out,'/',dir_name,'_encode.csv')
 		write.csv(enc_merge,f_name3,row.names=F)
 		paste0('  Write a CSV file: ',f_name3,'\n') %>% cat
-	} else paste0('\n  [PASS] ENCODE summary.\n')
+	} else paste0('  [PASS] ENCODE summary.\n')
 
-	# Generate nearest gene summary
+
+	## --ann_near: Generate nearest gene summary ##
 	if(!is.null(ann_near)) {
 		## Read nearest gene distance file
 		paste0('\n  Nearest gene dim = ') %>% cat
@@ -197,32 +224,32 @@ summ_ann = function(
 		dim(near) %>% print
 
 		## Extract data to prepare merge
-		near_ann   = near[,c(4,8:9)]
-		colnames(near_ann) = c('rsid','nearest','dist')
+		near_ann = near[,c(4,8:9)]
+		colnames(near_ann) = c('rsid','Ensgid','dist')
 
-		# Search biomaRt for gene symbol and name
-		paste0('  Search biomaRt... ') %>% cat
-		genes = near_ann$nearest %>% unique
-		paste0(length(genes),'.. ') %>% cat
-		ensembl   = useMart("ensembl",dataset="hsapiens_gene_ensembl")
-		gene_attr = c("ensembl_gene_id","hgnc_symbol","description")
-		gene_ens  = getBM(
-    		attributes = gene_attr,
-    		filters = "ensembl_gene_id",
-    		values = genes,
-    		mart = ensembl
-		) %>% unique
-
-		# Parsing biomaRt gene name
-		gene_name = lapply(gene_ens$description,function(desc) {
-    		g_name = strsplit(desc,"\\ \\[") %>% unlist
-    		return(g_name[1])
-		}) %>% unlist
-		gene_ens$name = gene_name
-		paste0(length(gene_ens$ensembl_gene_id %>% unique),'.. ') %>% cat
+		## Search biomaRt for gene symbol and name
+		gene_ens = ensgid_biomaRt(genes=near_ann$Ensgid)
+		paste0('  Sub-merge = ') %>% cat
 		gene_ann = merge(near_ann,gene_ens[,c(1:2,4)],
-    		by.x='nearest',by.y='ensembl_gene_id',all.x=T)
+    		by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
+		gene_names = gene_ann$hgnc_symbol
+		which_i = which(gene_names %in% c('',NA,NULL))
+		gene_names[which_i] = gene_ann$Ensgid[which_i] %>% as.character
+		gene_ann$hgnc_symbol = gene_names
 		dim(gene_ann) %>% print
+
+		## Extract snp-nearest genes pair
+		paste0('  Extract snp-gene pair = ') %>% cat
+		gene_ann_1 = gene_ann %>% dplyr::select('rsid','hgnc_symbol') %>% unique
+		near_rsid = gene_ann_1$rsid %>% unique
+		snp_near_li = lapply(near_rsid,function(x) {
+			snp_df = subset(gene_ann_1,rsid==x) %>% unique
+			if(nrow(snp_df)>0) {
+				data.frame(rsid=x,nearest_genes=paste0(snp_df$hgnc_symbol,collapse=', '))
+			} else return(NULL)
+		})
+		snp_near_df = data.table::rbindlist(snp_near_li)
+		dim(snp_near_df) %>% print
 
 		## Read CDS distance file
 		if(!is.null(ann_cds)) {
@@ -268,26 +295,50 @@ summ_ann = function(
 		} else paste0('  [PASS] Nearest gene summary.\n') %>% cat
 	}
 
-	# Generate GTEx eQTL summary
+
+	## --ann_gtex: Generate GTEx eQTL summary ##
 	if(!is.null(ann_gtex)) {
 		## Read GTEx eQTL annotation TSV file
 		paste0('\n  GTEx dim = ') %>% cat
 		gtex = read.delim(ann_gtex)
 		dim(gtex) %>% print
 
+		## Search biomaRt for gene symbol and name
+		gene_ens = ensgid_biomaRt(genes=gtex$Ensgid)
+
 		## Merge union data and the GTEx annotation
 		paste0('  Merge dim = ') %>% cat
-		gtex_ann   = gtex[,c(-7,-8)]
+		gtex_ann = merge(gtex,gene_ens[,c(1:2,4)],
+			by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
+		colnames(gtex_ann)[2] = 'rsid'
 		gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
+		gene_names2 = gtex_merge$hgnc_symbol
+		which_i = which(gene_names2 %in% c('',NA,NULL))
+		gene_names2[which_i] = gtex_merge$Ensgid[which_i] %>% as.character
+		gtex_merge$hgnc_symbol = gene_names2
 		dim(gtex_merge) %>% print
+
+		## Extract snp-eQTL gene pairs
+		paste0('  Extract snp-eGene pair = ') %>% cat
+		gtex_merge_1 = gtex_merge %>% dplyr::select('rsid','hgnc_symbol') %>% unique
+		eqtl_rsid = gtex_merge_1$rsid %>% unique
+		snp_egene_li = lapply(eqtl_rsid,function(x) {
+			snp_df = subset(gtex_merge_1,rsid==x)
+			if(nrow(snp_df)>0) {
+				data.frame(rsid=x,eqtl_genes=paste0(snp_df$hgnc_symbol,collapse=', '))
+			} else return(NULL)
+		})
+		snp_egene_df = data.table::rbindlist(snp_egene_li)
+		dim(snp_egene_df) %>% print
 
 		## Write a summary CSV file
 		f_name5 = paste0(out,'/',dir_name,'_gtex.csv')
 		write.csv(gtex_merge,f_name5,row.names=F)
 		paste0('  Write a CSV file: ',f_name5,'\n') %>% cat
-	} else paste0('\n  [PASS] GTEx summary.\n')
+	} else paste0('  [PASS] GTEx summary.\n')
 
-	# Generate lncRNA summary
+
+	## --ann_lnc: Generate lncRNA summary ##
 	if(!is.null(ann_lnc)) {
 		## Read lncRNA annotation TSV file
 		paste0('\n  lncRNA dim = ') %>% cat
@@ -304,8 +355,34 @@ summ_ann = function(
 		f_name6 = paste0(out,'/',dir_name,'_lncRNA.csv')
 		write.csv(lnc_merge,f_name6,row.names=F)
 		paste0('  Write a CSV file: ',f_name6,'\n') %>% cat
-	} else paste0('\n  [PASS] lncRNA summary.\n')
+	} else paste0('  [PASS] lncRNA summary.\n')
 	'\n' %>% cat
+
+
+	## --ann_gwas: Generate GWAS summary ##
+	if(!is.null(ann_gwas)) {
+		## Read GWAS annotation TSV file
+		paste0('  GWAS dim = ') %>% cat
+		gwas = read.delim(ann_gwas,stringsAsFactors=F)
+		dim(gwas) %>% print
+
+		## Merge union data and GWAS annotation
+		paste0('  Merge dim = ') %>% cat
+		if(ncol(gwas)>=8) { gwas_ann = gwas[,1:8]
+		} else {            gwas_ann = gwas }
+
+		if(!is.null(ann_near)) { gwas_ann = merge(gwas_ann,snp_near_df, by='rsid',all.x=T) %>% unique }
+		if(!is.null(ann_encd)) { gwas_ann = merge(gwas_ann,snp_tfbs_df, by='rsid',all.x=T) %>% unique }
+		if(!is.null(ann_gtex)) { gwas_ann = merge(gwas_ann,snp_egene_df,by='rsid',all.x=T) %>% unique }
+
+		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
+		dim(gwas_merge) %>% print
+
+		## Write a summary CSV file
+		f_name2 = paste0(out,'/',dir_name,'_gwas.csv')
+		write.csv(gwas_merge,f_name2,row.names=F)
+		paste0('  Write a CSV file: ',f_name2,'\n') %>% cat
+	} else paste0('  [PASS] GWAS summary.\n')
 }
 
 venn_bed = function(
@@ -503,5 +580,5 @@ db_venn = function(
 		paste0('[Error] There is no such function "',args$dbfilt,'" in db_filter: ',
             paste0(args$ldlink,collapse=', '),'\n\n') %>% cat
 	}
-	paste0(pdtime(t0,1),'\n') %>% cat
+	paste0('\n',pdtime(t0,1),'\n') %>% cat
 }
