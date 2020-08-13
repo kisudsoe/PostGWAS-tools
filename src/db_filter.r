@@ -452,6 +452,7 @@ distance_filt_multi = function(
     })
 }
 
+
 gtex_overlap = function(
     f_path = NULL,   # Inpust GWAS SNPs file path
     f_gtex    = NULL,   # Filtered GTEx RDS file path
@@ -459,8 +460,12 @@ gtex_overlap = function(
     tissue_nm = NULL,   # Optional tissue name
     debug
 ) {
+    suppressMessages(library(data.table))
+
     # Preparing...
     paste0('\n** Run function: db_filter.r/gtex_overlap... ') %>% cat
+    paste0('  Your memory size = ') %>% cat
+    memory.limit() %>% print
     ifelse(!dir.exists(out), dir.create(out),'')
     out_gtex_eqtl = paste0(out,'/gtex_eqtl')
     ifelse(!dir.exists(out_gtex_eqtl), dir.create(out_gtex_eqtl),'')
@@ -476,31 +481,31 @@ gtex_overlap = function(
     paste0('Read, ',basename(f_gtex),' = ') %>% cat
     f_ext = tools::file_ext(f_gtex)
     if(f_ext=='gz') {
-        gtex = read.delim(gzfile(f_gtex),header=T)
+        gtex = fread(gzfile(f_gtex),header=T)
     } else if(f_ext=='rds') {
         gtex = readRDS(f_gtex)
     } else {
         paste0('[ERROR] Unknown GTEx file format. gz/rds file format is required.')
         quit
     }
-    colnames(gtex)[9] = 'rsid'
     dim(gtex) %>% print
 
     # Overlapping eQTLs
-    eqtls = subset(gtex, rsid %in% rsids)
+    eqtls = subset(gtex, Rsid %in% rsids)
     paste0('  Overlapped eQTL-gene pairs = ') %>% cat
     nrow(eqtls) %>% print
+    rm(gtex)
 
     # Filter by tissue (optional)
     if(!is.null(tissue_nm)) {
         paste0('\n[Option] ',tissue_nm) %>% cat
         eqtls = subset(eqtls,tissue == tissue_nm)
-        f_name1 = paste0(out,'/gtex_signif_',tissue_nm,'_',unique(eqtls$rsid)%>%length,'.tsv')
+        f_name1 = paste0(out,'/gtex_signif_',tissue_nm,'_',unique(eqtls$Rsid)%>%length,'.tsv')
         paste0(', dim = ') %>% cat; dim(eqtls) %>% print
     } else {
-        f_name1 = paste0(out,'/gtex_signif_',unique(eqtls$rsid)%>%length,'.tsv')
+        f_name1 = paste0(out,'/gtex_signif_',unique(eqtls$Rsid)%>%length,'.tsv')
     }
-    paste0('  eQTLs N = ') %>% cat; unique(eqtls$rsid) %>% length %>% print
+    paste0('  eQTLs N = ') %>% cat; unique(eqtls$Rsid) %>% length %>% print
     paste0('  Associated eGenes = ') %>% cat; unique(eqtls$gene_id) %>% length %>% print
 
     # Save as a TSV file
@@ -523,7 +528,7 @@ gtex_overlap = function(
         # Filter by tissue
         tissue_name  = tissue_names[i]
         eqtls_tissue = subset(eqtls,tissue==tissue_name)
-        snp_bed = subset(snp_rsid,rsid %in% eqtls_tissue$rsid)[,1:4] %>% unique
+        snp_bed = subset(snp_rsid,rsid %in% eqtls_tissue$Rsid)[,1:4] %>% unique
         if(debug) {
             paste0('\n',tissue_name,'\n  eQTL BED, dim = ') %>% cat
             dim(snp_bed) %>% print
