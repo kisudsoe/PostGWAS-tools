@@ -1,5 +1,5 @@
 help_message = '
-gwas_catalog, v2020-08-10
+gwas_catalog, v2020-08-11
 This is a function for GWAS Catalog data.
 
 Usage:
@@ -7,24 +7,24 @@ Usage:
     Rscript postgwas-exe.r --gwas gene --base <base TSV file> --out <out folder>
     Rscript postgwas-exe.r --gwas study --base <base TSV file> --out <out folder>
     Rscript postgwas-exe.r --gwas trait gene study --base <base TSV file> --out <out folder>
-    Rscript postgwas-exe.r --filter trait --base <base TSV file> --out <out folder> --p.criteria 5e-8
+    Rscript postgwas-exe.r --gwas filter --base <base TSV file> --out <out folder> --p.criteria 5e-8
 
 
 Functions:
-    trait   Generating pivot table for traits.
-    gene    Generating pivot table for genes.
-    study   Generating summary table for studies.
-    filter  Filtering SNPs by P-values.
+    trait       Generating pivot table for traits.
+    gene        Generating pivot table for genes.
+    study       Generating summary table for studies.
+    filter      Filtering SNPs by P-values.
 
 Global arguments:
-    --base  <EFO0001359.tsv>
-            An input base TSV file downloaded from GWAS Catalog is mendatory.
-    --out   <Default:data folder>
-            Out files target directory path that is mendatory. Default is "data" folder.
+    --base      <EFO0001359.tsv>
+                An input base TSV file downloaded from GWAS Catalog is mendatory.
+    --out       <Default:data folder>
+                Out files target directory path that is mendatory. Default is "data" folder.
 
 Required arguments:
     --p.criteria <5e-8>
-            An argument for "--pivot filt". Default is 5e-8.
+                An argument for "--pivot filt". Default is 5e-8.
 '
 
 ## Load libraries ##
@@ -153,7 +153,6 @@ gene_pivot = function(
     
     # Reshape data 2: Min_P
     gdata2$MAPPED_GENE[gdata2$MAPPED_GENE==""] = NA # debug 2020-08-10
-    print(gdata2)
     pivot1 = gdata2 %>%
         group_by(SNPS,MAPPED_GENE) %>%
         summarize(Min_P = min(P.VALUE))
