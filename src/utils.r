@@ -67,6 +67,7 @@ bash_script = function(
 
     # roadmap files
     roadmap_f1 = list.files(paste0(ann_path,'/roadmap_enh'),full.names=F)
+    roadmap_f1 = c(roadmap_f1,'roadmap_enh_merge.bed') # Add roadmap merge file
     roadmap_f = list.files(paste0(ann_path,'/roadmap_enh'),full.names=T)
     roadmap_f = c(roadmap_f,paste0(ann_path,'/roadmap_enh_merge.bed')) # Add roadmap merge file
 

@@ -255,17 +255,17 @@ docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data"
 Run image with interactive mode:
 
 ```CMD
-docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data" ^
+docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/data" ^
   kisudsoe/postgwas:latest /bin/bash
 ```
 
 In the container, copy the updated source to image
 
 ```CMD
-cp -r /postgwas/data/src /postgwas/data/postgwas-exe.r /postgwas/
+cp -r /data/src /data/postgwas-exe.r /
 ```
 
-From another CMD, save image using Container ID, Ref: https://galid1.tistory.com/323
+From another CMD window, save image using Container ID, Ref: https://galid1.tistory.com/323
 
 ```CMD
 docker ps
@@ -275,8 +275,8 @@ docker ps
 > ae9fe688d36d        kisudsoe/postgwas:latest   "/bin/bash"         18 minutes ago      Up 18 minutes                           silly_kowalevski
 
 ```CMD
-docker stop 01af5ea77cf2
-docker commit -a "jjy" 01af5ea77cf2 kisudsoe/postgwas:latest
+docker stop 3956737172ce
+docker commit -a "jjy" 3956737172ce kisudsoe/postgwas:latest
 ```
 
 
@@ -326,18 +326,54 @@ container$ Rscript postgwas-exe.r --help
 
 
 
-## Upload new Docker image to Docker Hub
+### Upload new Docker image to Docker Hub
 
 ```CMD
-# v3-2020-08-10
-docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:3
-
+# v4-2020-08-15
+docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:6
 docker login
 docker push kisudsoe/postgwas:latest
-docker push kisudsoe/postgwas:3
+docker push kisudsoe/postgwas:6
 ```
 
 Ref Docker: mirnylab/distiller_env
+
+
+
+## * Incorporating SNPsea in Docker image
+
+Install SNPsea requirements, Ref: https://snpsea.readthedocs.io/en/latest/installation.html
+
+Run image:
+
+```CMD
+docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/data" ^
+  kisudsoe/postgwas:latest /bin/bash
+```
+
+Save updated image
+
+```CMD
+docker ps
+```
+
+> CONTAINER ID        IMAGE                      COMMAND             CREATED             STATUS              PORTS               NAMES
+> 8fbcde8f38d8        kisudsoe/postgwas:latest   "/bin/bash"         3 hours ago         Up 3 hours                              festive_black
+
+```CMD
+docker stop 88530ebe5cfb
+docker commit -a "jjy" 88530ebe5cfb kisudsoe/postgwas:latest
+```
+
+Upload image to Docker Hub server
+
+```CMD
+# v5-2020-08-14
+docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:5
+docker login
+docker push kisudsoe/postgwas:latest
+docker push kisudsoe/postgwas:5
+```
 
 
 

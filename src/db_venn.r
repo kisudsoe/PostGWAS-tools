@@ -310,7 +310,7 @@ summ_ann = function(
 		paste0('  Merge dim = ') %>% cat
 		gtex_ann = merge(gtex,gene_ens[,c(1:2,4)],
 			by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
-		colnames(gtex_ann)[2] = 'rsid'
+		colnames(gtex_ann)[3] = 'rsid'
 		gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
 		gene_names2 = gtex_merge$hgnc_symbol
 		which_i = which(gene_names2 %in% c('',NA,NULL))
@@ -372,8 +372,8 @@ summ_ann = function(
 		} else {            gwas_ann = gwas }
 
 		if(!is.null(ann_near)) { gwas_ann = merge(gwas_ann,snp_near_df, by='rsid',all.x=T) %>% unique }
-		if(!is.null(ann_encd)) { gwas_ann = merge(gwas_ann,snp_tfbs_df, by='rsid',all.x=T) %>% unique }
 		if(!is.null(ann_gtex)) { gwas_ann = merge(gwas_ann,snp_egene_df,by='rsid',all.x=T) %>% unique }
+		if(!is.null(ann_encd)) { gwas_ann = merge(gwas_ann,snp_tfbs_df, by='rsid',all.x=T) %>% unique }
 
 		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
 		dim(gwas_merge) %>% print
