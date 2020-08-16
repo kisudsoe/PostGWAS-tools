@@ -206,8 +206,6 @@ $ docker push kisudsoe/postgwas-env:1
 
 # 2. Update Docker image with source codes
 
-
-
 ## (Optional) Pull latest postgwas-env image
 
 ```bash
@@ -250,7 +248,7 @@ docker run -it -v "C:\Users\kisud\OneDrive\Suh's Lab\Postgwas_v3:/postgwas/data"
 
 
 
-## Update source codes
+## * Update source codes
 
 Run image with interactive mode:
 
@@ -275,13 +273,13 @@ docker ps
 > ae9fe688d36d        kisudsoe/postgwas:latest   "/bin/bash"         18 minutes ago      Up 18 minutes                           silly_kowalevski
 
 ```CMD
-docker stop 3956737172ce
-docker commit -a "jjy" 3956737172ce kisudsoe/postgwas:latest
+docker stop f99a1146e424
+docker commit -a "jjy" f99a1146e424 kisudsoe/postgwas:latest
 ```
 
 
 
-### Test the Docker image
+**(Optional) Test the Docker image**
 
 ```CMD
 docker pull kisudsoe/postgwas # This is optional
@@ -329,11 +327,11 @@ container$ Rscript postgwas-exe.r --help
 ### Upload new Docker image to Docker Hub
 
 ```CMD
-# v4-2020-08-15
-docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:6
+# v6a-2020-08-16
+docker tag kisudsoe/postgwas:latest kisudsoe/postgwas:6a
 docker login
 docker push kisudsoe/postgwas:latest
-docker push kisudsoe/postgwas:6
+docker push kisudsoe/postgwas:6a
 ```
 
 Ref Docker: mirnylab/distiller_env
