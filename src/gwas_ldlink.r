@@ -28,6 +28,10 @@ Required arguments:
                 An argument for the "--ldlink ddown". One or more population option have to be included.
     --r2        An argument for the "--ldlink filter". Set a criteria for r2 over.
     --dprime    An argument for the "--ldlink filter". Set a criteria for dprime over.
+
+Optional argument:
+    --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
+
 '
 
 
@@ -70,42 +74,48 @@ ldlink_bed = function(
         return(out)
     })
     snp_bed_hg19 = data.table::rbindlist(snp_bed_hg19_li) %>% unique
+
+    # Sort row
+    snp_bed_hg19 = snp_bed_hg19[order(
+        snp_bed_hg19$chr %>% as.character,
+        snp_bed_hg19$start %>% as.numeric),]
+
     if(debug) {
         hg19_snp_lenth = snp_bed_hg19$end - snp_bed_hg19$start
         table(hg19_snp_lenth) %>% print
     }
-    f_name1 = paste0(out,'/gwas_hg19_biomart_',nrow(snp_bed_hg19),'.bed')
+    f_name1 = paste0(out,'/gwas_biomart_',nrow(snp_bed_hg19),'.bed')
     write.table(snp_bed_hg19,f_name1,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write file:\t',f_name1,'\n') %>% cat
 
     # hg38: save as BED file
-    snps_ = na.omit(snps[,c(1,9:11)])
-    snps_length = snps_$end - snps_$start
-    snp_bed_hg38_li = lapply(c(1:nrow(snps_)),function(i) {
-        row = snps_[i,]
-        if(snps_length[i]<0) {
-            start = as.numeric(as.character(row$end))-1
-            end   = row$start
-        } else {
-            start = as.numeric(as.character(row$start))-1
-            end   = row$end
-        }
-        out = data.frame(
-            chr   = row$chr,
-            start = start,
-            end   = end,
-            rsid  = row$rsid
-        )
-        return(out)
-    })
-    snp_bed_hg38 = data.table::rbindlist(snp_bed_hg38_li) %>% unique
-    if(debug) {
-        hg38_snp_lenth = snp_bed_hg38$end - snp_bed_hg38$start
-        table(hg38_snp_lenth) %>% print
-    }
-    f_name2 = paste0(out,'/gwas_hg38_biomart_',nrow(snp_bed_hg38),'.bed')
-    write.table(snp_bed_hg38,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
-    paste0('Write file:\t',f_name2,'\n') %>% cat
+    #snps_ = na.omit(snps[,c(1,9:11)])
+    #snps_length = snps_$end - snps_$start
+    #snp_bed_hg38_li = lapply(c(1:nrow(snps_)),function(i) {
+    #    row = snps_[i,]
+    #    if(snps_length[i]<0) {
+    #        start = as.numeric(as.character(row$end))-1
+    #        end   = row$start
+    #    } else {
+    #        start = as.numeric(as.character(row$start))-1
+    #        end   = row$end
+    #    }
+    #    out = data.frame(
+    #        chr   = row$chr,
+    #        start = start,
+    #        end   = end,
+    #        rsid  = row$rsid
+    #    )
+    #    return(out)
+    #})
+    #snp_bed_hg38 = data.table::rbindlist(snp_bed_hg38_li) %>% unique
+    #if(debug) {
+    #    hg38_snp_lenth = snp_bed_hg38$end - snp_bed_hg38$start
+    #    table(hg38_snp_lenth) %>% print
+    #}
+    #f_name2 = paste0(out,'/gwas_hg38_biomart_',nrow(snp_bed_hg38),'.bed')
+    #write.table(snp_bed_hg38,f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    #paste0('Write file:\t',f_name2,'\n') %>% cat
 }
 
 
@@ -115,6 +125,8 @@ ldlink_filter = function(
     out      = 'data', # Out folder path
     r2       = NULL,   # LDlink filter R2 criteria
     dprime   = NULL,   # LDlink filter Dprime criteria
+    hg       = 'hg19',  # Set biomaRt human genome version
+    mirror_url = 'useast', # Set biomaRt host
     debug    = F
 ) {
     # Function specific library
@@ -268,66 +280,67 @@ ldlink_filter = function(
     # Search biomart hg19 to get coordinates
     paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
     paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
-    paste0('  Hg19 result table\t= ') %>% cat
-    hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
-                       dataset='hsapiens_snp',path='/biomart/martservice')
-    snp_attr1 = c("refsnp_id","chr_name","chrom_start","chrom_end")
-    snps_hg19_bio1 = getBM(
-        attributes = snp_attr1,
-        filters    = "snp_filter",
-        values     = snp_cand,
-        mart       = hg19_snp) %>% unique
-    snps_merge = merge(snps_,snps_hg19_bio1,
-                       by.x='rsid',by.y='refsnp_id',all.x=T)
-    which_na = is.na(snps_merge$chr_name) %>% which
-
-    if(length(which_na)>0) {
-        snps_na = snps_merge[which_na,1]
-        snp_attr2 = c("refsnp_id",'synonym_name',"chr_name","chrom_start","chrom_end")
-        snps_hg19_bio2 = getBM(
-            attributes = snp_attr2,
-            filters    = "snp_synonym_filter",
-            values     = snps_na,
+    if(hg=='hg19') {
+        paste0('  Hg19 result table\t= ') %>% cat
+        hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
+                           dataset='hsapiens_snp',path='/biomart/martservice')
+        snp_attr1 = c("refsnp_id","chr_name","chrom_start","chrom_end")
+        snps_hg19_bio1 = getBM(
+            attributes = snp_attr1,
+            filters    = "snp_filter",
+            values     = snp_cand,
             mart       = hg19_snp) %>% unique
-        snps_hg19_bio2 = snps_hg19_bio2[,c(2:5)]
-        colnames(snps_hg19_bio2)[1] = "refsnp_id"
-        snps_hg19_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
-    } else snps_hg19_bio = snps_hg19_bio1
-    colnames(snps_hg19_bio) = c('rsid','hg19_chr','hg19_start','hg19_end')
-    snps_hg19_bio_ = subset(snps_hg19_bio,hg19_chr %in% c(1:22,'X','Y'))
-    snps_hg19_bio_[,2] = paste0('chr',snps_hg19_bio_[,2])
-    #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
-    dim(snps_hg19_bio_) %>% print
+        snps_merge = merge(snps_,snps_hg19_bio1,
+                           by.x='rsid',by.y='refsnp_id',all.x=T)
+        which_na = is.na(snps_merge$chr_name) %>% which
 
-    # Search biomart hg38 to get coordinates
-    paste0('  Hg38 result table\t= ') %>% cat
-    hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host='uswest.ensembl.org',
-                       dataset="hsapiens_snp") # debug 20.08.11
-    snps_bio1 = getBM(
-        attributes = snp_attr1,
-        filters    = "snp_filter",
-        values     = snp_cand,
-        mart       = hg38_snp) %>% unique
-    snps_merge = merge(snps_,snps_bio1,
-                       by.x='rsid',by.y='refsnp_id',all.x=T)
-    which_na = is.na(snps_merge$chr_name) %>% which
-
-    if(length(which_na)>0) {
-        snps_na = snps_merge[which_na,1]
-        snps_bio2 = getBM(
-            attributes = snp_attr2,
-            filters    = "snp_synonym_filter",
-            values     = snps_na,
+        if(length(which_na)>0) {
+            snps_na = snps_merge[which_na,1]
+            snp_attr2 = c("refsnp_id",'synonym_name',"chr_name","chrom_start","chrom_end")
+            snps_hg19_bio2 = getBM(
+                attributes = snp_attr2,
+                filters    = "snp_synonym_filter",
+                values     = snps_na,
+                mart       = hg19_snp) %>% unique
+            snps_hg19_bio2 = snps_hg19_bio2[,c(2:5)]
+            colnames(snps_hg19_bio2)[1] = "refsnp_id"
+            snps_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
+        } else snps_bio = snps_hg19_bio1
+        colnames(snps_bio) = c('rsid','hg19_chr','hg19_start','hg19_end')
+        snps_bio_ = subset(snps_bio,hg19_chr %in% c(1:22,'X','Y'))
+        snps_bio_[,2] = paste0('chr',snps_bio_[,2])
+        #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
+        dim(snps_bio_) %>% print
+    } else if(hg=='hg38') { # Search biomart hg38 to get coordinates
+        paste0('  Hg38 result table\t= ') %>% cat
+        hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host=mirror_url,
+                        dataset="hsapiens_snp") # debug 20.08.11
+        snps_bio1 = getBM(
+            attributes = snp_attr1,
+            filters    = "snp_filter",
+            values     = snp_cand,
             mart       = hg38_snp) %>% unique
-        snps_bio2 = snps_bio2[,c(2:5)]
-        colnames(snps_bio2)[1] = "refsnp_id"
-        snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
-    } else snps_bio = snps_bio1
-    colnames(snps_bio) = c('rsid','chr','start','end')
-    snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
-    snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
-    #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
-    dim(snps_bio_) %>% print
+        snps_merge = merge(snps_,snps_bio1,
+                        by.x='rsid',by.y='refsnp_id',all.x=T)
+        which_na = is.na(snps_merge$chr_name) %>% which
+
+        if(length(which_na)>0) {
+            snps_na = snps_merge[which_na,1]
+            snps_bio2 = getBM(
+                attributes = snp_attr2,
+                filters    = "snp_synonym_filter",
+                values     = snps_na,
+                mart       = hg38_snp) %>% unique
+            snps_bio2 = snps_bio2[,c(2:5)]
+            colnames(snps_bio2)[1] = "refsnp_id"
+            snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
+        } else snps_bio = snps_bio1
+        colnames(snps_bio) = c('rsid','chr','start','end')
+        snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
+        snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
+        #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
+        dim(snps_bio_) %>% print
+    }
 
     # Merge the biomart result with the GWAS SNP list
     merge_multi = function(x,y) { merge(x,y,by='rsid',all.x=T) }
@@ -338,49 +351,51 @@ ldlink_filter = function(
         ldlink_[,2:3],
         ldblock,
         snp_src,
-        snps_hg19_bio_,
         snps_bio_
     )
     snps_merge1 = Reduce(merge_multi,snps_li) %>% unique
 
     # Add Cytoband annotation (hg19)
-    coord    = snps_merge1$ld_coord
-    hg19_chr = snps_merge1$hg19_chr
-    hg19_end = snps_merge1$hg19_end
+    if(hg=='hg19') {
+        coord    = snps_merge1$ld_coord
+        hg19_chr = snps_merge1$hg19_chr
+        hg19_end = snps_merge1$hg19_end
 
-    ## Download cytoband data from UCSC
-    paste0('  Cytoband annotation... ') %>% cat
-    cyto     = circlize::read.cytoband(species = 'hg19')$df
-    colnames(cyto) = c('chr','start','end','cytoband','tag')
+        ## Download cytoband data from UCSC
+        paste0('  Cytoband annotation... ') %>% cat
+        cyto     = circlize::read.cytoband(species = 'hg19')$df
+        colnames(cyto) = c('chr','start','end','cytoband','tag')
 
-    ## Split SNP coord to CHR and POS
-    coord_li = lapply(coord,function(c) {
-        split = strsplit(c %>% as.character,'\\:') %>% unlist
-        data.frame(
-            chr = split[1],
-            pos = split[2] %>% as.numeric
-        )
-    })
-    coord_df = data.table::rbindlist(coord_li)
-    
-    ## Extract and merge cytoband data
-    n = nrow(coord_df)
-    cytoband = lapply(c(1:n),function(i) {
-        CHR = coord_df[i,1] %>% unlist
-        POS = coord_df[i,2] %>% unlist
-        cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
-        if(length(cyto_sub)==0) {
-            CHR = hg19_chr[i]
-            POS = hg19_end[i]
+        ## Split SNP coord to CHR and POS
+        coord_li = lapply(coord,function(c) {
+            split = strsplit(c %>% as.character,'\\:') %>% unlist
+            data.frame(
+                chr = split[1],
+                pos = split[2] %>% as.numeric
+            )
+        })
+        coord_df = data.table::rbindlist(coord_li)
+        
+        ## Extract and merge cytoband data
+        n = nrow(coord_df)
+        cytoband = lapply(c(1:n),function(i) {
+            CHR = coord_df[i,1] %>% unlist
+            POS = coord_df[i,2] %>% unlist
             cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
-        }
-        chr = strsplit(CHR %>% as.character,'chr') %>% unlist
-        cytoband = paste0(chr[2],cyto_sub)
-        return(cytoband)
-    }) %>% unlist
-    paste0(length(cytoband),'.. ') %>% cat
-    snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,5:10])
-    paste0('done\n') %>% cat
+            if(length(cyto_sub)==0) {
+                CHR = hg19_chr[i]
+                POS = hg19_end[i]
+                cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
+            }
+            chr = strsplit(CHR %>% as.character,'chr') %>% unlist
+            cytoband = paste0(chr[2],cyto_sub)
+            return(cytoband)
+        }) %>% unlist
+        paste0(length(cytoband),'.. ') %>% cat
+        m = ncol(snps_merge1); col_rg = c(5:m)
+        snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,col_rg])
+        paste0('done\n') %>% cat
+    }
 
     # Write a TSV file
     snp_n = snps_merge$rsid %>% unique %>% length
@@ -475,12 +490,16 @@ gwas_ldlink = function(
     } else                      r2       = NULL
     if(length(args$dprime)>0) { dprime   = args$dprime
     } else                      dprime   = NULL
+    if(length(args$hg)>0) {     hg       = args$hg
+    } else                      hg       = 'hg19'
+    if(length(args$mirror)>0) { mirror_url = args$mirror
+    } else                      mirror_url = 'useast.ensembl.org'
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
         ldlink_down(b_path,out,popul,debug)
     } else if(args$ldlink == 'filter') {
-        ldlink_filter(b_path,ld_path,out,r2,dprime,debug)
+        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else if(args$ldlink == 'chkbiomart') {
