@@ -463,9 +463,9 @@ gtex_overlap = function(
     suppressMessages(library(data.table))
 
     # Preparing...
-    paste0('\n** Run function: db_filter.r/gtex_overlap... ') %>% cat
+    paste0('\n** Run function: db_filter.r/gtex_overlap...\n') %>% cat
     paste0('  Your memory size = ') %>% cat
-    memory.limit() %>% print
+    memory.size() %>% print
     ifelse(!dir.exists(out), dir.create(out),'')
     out_gtex_eqtl = paste0(out,'/gtex_eqtl')
     ifelse(!dir.exists(out_gtex_eqtl), dir.create(out_gtex_eqtl),'')

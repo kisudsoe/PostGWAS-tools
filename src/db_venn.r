@@ -62,7 +62,9 @@ ensgid_biomaRt = function(
 	paste0(length(genes),'.. ') %>% cat
 
 	# biomaRt query
-	ensembl   = useMart('ensembl',host='uswest.ensembl.org',dataset='hsapiens_gene_ensembl')
+	ensembl   = useMart(
+		biomart='ENSEMBL_MART_ENSEMBL',
+		dataset='hsapiens_gene_ensembl')
 	gene_attr = c('ensembl_gene_id','hgnc_symbol','description')
 	gene_ens  = getBM(
 		attributes = gene_attr,
