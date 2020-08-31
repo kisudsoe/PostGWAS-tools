@@ -1,3 +1,9 @@
+Postgwas-V3 update list
+
+[ ] Use 'argparser'
+[ ] Convert db_gwas data into SQL DB.
+
+
 # Post GWAS tools
 
 ```bash
