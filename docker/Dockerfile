@@ -26,8 +26,8 @@ RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR',
     R -e "BiocManager::install('limma')"
 
 # Install PostGWAS-tools
-RUN wget https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz
-RUN unzip 0.1.tar.gz
+RUN wget https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz && \
+	unzip 0.1.tar.gz
 
 # Version number contained in image
 ADD VERSION .
