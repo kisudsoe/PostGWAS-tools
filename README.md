@@ -1,10 +1,30 @@
+# Hello
+
+`NOTE` Please see details of this program in Wiki page.
+
+
+
+# Quick start
+
+This will be written soon.
+
+
+
+# Todo list to improve
+
 Postgwas-V3 update list
 
 [ ] Change to 'argparser' system?
 [ ] Convert db_gwas data into SQL DB.
 
 
-# Post GWAS tools
+
+# Help messages
+
+
+
+
+## Main: postgwas-exe.r
 
 ```bash
 Version: 2020-07-22
@@ -42,14 +62,6 @@ Running functions with "--help" argument prints [Function] usage information.
 ```
 
 
-
-# Quick start
-
-This function is not developed yet.
-
-
-
-# Step-specific tools
 
 ## --gwas: src/gwas_catalog.r
 
