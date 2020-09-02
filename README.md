@@ -1,6 +1,6 @@
 Postgwas-V3 update list
 
-[ ] Use 'argparser'
+[ ] Change to 'argparser' system?
 [ ] Convert db_gwas data into SQL DB.
 
 
