@@ -4,6 +4,9 @@ WORK_DIR="/data/20.08-PHD3"
 ANN_GWAS=$WORK_DIR"/gwas_biomart_fill_1569.tsv"
 ANN_GTEX=$WORK_DIR"/gtex_signif_1159.tsv"
 
+### RUN FUNCTIONS ###
+# DO NOT CHANGE BELLOW THIS CODE.
+
 # 3. Summary table
 Rscript postgwas-exe.r \
   --dbvenn summ \
@@ -16,3 +19,5 @@ Rscript postgwas-exe.r \
   --ann_encd $WORK_DIR"/genome_dist/encode_tfbs.tsv" \
   --ann_gtex $ANN_GTEX \
   > $WORK_DIR"/log_summary.txt"
+
+  ### END FUNCTION ###
