@@ -278,6 +278,9 @@ gwas_catalog = function(
         dim(gdata) %>% print
     }
 
+    # Generate out folder
+    ifelse(!dir.exists(out), dir.create(out),'')
+
     source('src/pdtime.r'); t0=Sys.time()
     if('trait' %in% args$gwas) {
         # Generate TRAITS pivot table
