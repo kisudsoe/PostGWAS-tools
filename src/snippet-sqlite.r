@@ -16,6 +16,7 @@ dbWriteTable(conn,"gtex",gtex)
 
 # Check db list
 dbListTables(conn)
+dbGetQuery(conn, "SELECT * FROM gtex LIMIT 10")
 
 # Close the database connection
 dbDisconnect(conn)
