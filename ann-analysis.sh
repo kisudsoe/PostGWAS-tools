@@ -13,9 +13,6 @@ REG_DIR=$ANN_PATH"/regulome"
 LNC_DIR=$ANN_PATH"/lncrna"
 GTEX_RDS=$ANN_PATH"/gtex_signif_5e-08_Ensgid_dt.rds"
 
-ANN_GWAS=$WORK_DIR"gwas_biomart_fill_1569.tsv"
-ANN_GTEX=$WORK_DIR"gtex_signif_1159.tsv"
-
 
 ### RUN FUNCTIONS ###
 # DO NOT CHANGE BELLOW THIS CODE.
