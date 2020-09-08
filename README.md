@@ -29,10 +29,10 @@ This is under development now.
 
 
 
-# Todo list to improve
+# Todo list for next version
 
 Postgwas-V3 update list
 
-* [ ] Change to 'argparser' system?
+* [ ] Change current args to 'argparser' function.
 * [ ] Convert db_gwas data into SQL DB.
 
