@@ -515,6 +515,7 @@ gtex_overlap = function(
     # Load filtered GTEx RDS file
     eqtls = readgtex(rsids,f_gtex)
 
+
     # Filter by tissue (optional)
     if(!is.null(tissue_nm)) {
         paste0('\n[Option] ',tissue_nm) %>% cat
@@ -525,7 +526,7 @@ gtex_overlap = function(
         f_name1 = paste0(out,'/gtex_signif_',unique(eqtls$Rsid)%>%length,'.tsv')
     }
     paste0('  eQTLs N = ') %>% cat; unique(eqtls$Rsid) %>% length %>% print
-    paste0('  Associated eGenes = ') %>% cat; unique(eqtls$gene_id) %>% length %>% print
+    paste0('  Associated eGenes = ') %>% cat; unique(eqtls$Ensgid) %>% length %>% print
 
     # Save as a TSV file
     if(nrow(eqtls)>0) {
