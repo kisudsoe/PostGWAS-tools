@@ -32,8 +32,8 @@ RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR',
 ADD VERSION .
 
 # Install PostGWAS-tools
-ADD https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz .
 RUN VER=`cat VERSION` && \
+	wget https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz && \
 	tar -xzf $VERSION.tar.gz && \
 	rm $VERSION.tar.gz && \
 	mv -r /PostGWAS-tools-$VER/postgwas-exe.r /PostGWAS-tools-$VER/src .
