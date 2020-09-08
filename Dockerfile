@@ -1,4 +1,5 @@
 FROM ubuntu:latest
+WORKDIR /
 
 MAINTAINER Suhlab-SKim
 
@@ -14,20 +15,25 @@ RUN apt -y -qq install \
 		r-base \
 		wget \
 		bedtools \
-		libcurl4-openssl-dev libxml2-dev \
-		libssl-dev
+		libcurl4-openssl-dev \
+		libxml2-dev \
+		libssl-dev \
+		vim
 
 # Install R packages
-RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR','RSQLite','reshape','ggplot2','plyr','RSQLite'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
+RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','plyr','RSQLite'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
 	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
 	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
     R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
 	R -e "BiocManager::install('biomaRt')" && \
     R -e "BiocManager::install('limma')"
 
-# Install PostGWAS-tools
-ADD https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz .
-	#tar -xzf 0.1.tar.gz
-
 # Version number contained in image
 ADD VERSION .
+
+# Install PostGWAS-tools
+ADD https://github.com/kisudsoe/PostGWAS-tools/archive/0.1.tar.gz .
+RUN VER=`cat VERSION` && \
+	tar -xzf $VERSION.tar.gz && \
+	rm $VERSION.tar.gz && \
+	mv -r /PostGWAS-tools-$VER/postgwas-exe.r /PostGWAS-tools-$VER/src .

@@ -69,11 +69,11 @@ Rscript postgwas-exe.r \
   > $WORK_DIR"/log_lncrnasnp.txt"
 
 ## 1-6. GTEx eQTL genes <- Short of RAM memory..
-#Rscript postgwas-exe.r \
-#  --dbfilt gtex_ovl \
-#  --base   $BASE_BED \
-#  --out    $WORK_DIR \
-#  --gtex   $GTEX_RDS
+Rscript postgwas-exe.r \
+  --dbfilt gtex_ovl \
+  --base   $BASE_BED \
+  --out    $WORK_DIR \
+  --gtex   $GTEX_RDS
 
 
 # 2. Union list to summary
@@ -102,12 +102,12 @@ Rscript postgwas-exe.r \
   > $WORK_DIR"/log_roadmap_summ_sub.txt"
 
 ## 2-3. GTEx eQTLs union
-#Rscript postgwas-exe.r \
-#  --dbvenn summ \
-#  --base   $WORK_DIR/gtex_eqtl \
-#  --out    $WORK_DIR/gtex_eqtl \
-#  --sub_dir FALSE \
-#  --uni_save TRUE \
-#  > $WORK_DIR"/log_gtex.txt"
+Rscript postgwas-exe.r \
+  --dbvenn summ \
+  --base   $WORK_DIR/gtex_eqtl \
+  --out    $WORK_DIR/gtex_eqtl \
+  --sub_dir FALSE \
+  --uni_save TRUE \
+  > $WORK_DIR"/log_gtex.txt"
 
 ### END FUNCTIONS ###

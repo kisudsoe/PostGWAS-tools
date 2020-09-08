@@ -3,16 +3,19 @@
 library(dplyr)
 library(RSQLite)
 
+f_rds = 'db_gwas/gtex_signif_5e-08_Ensgid_dt.rds'
+f_db = 'db_gwas/db_gwas.db'
+
 # Read gtex file
-gtex = readRDS('db_gwas/gtex_signif_5e-08_Ensgid_dt.rds')
+gtex = readRDS(f_rds) %>% as.data.frame
 dim(gtex) %>% print
 
-# Convert data.table to df
-gtex  = gtex %>% as.data.frame
-
 # Generate gtex.db file
-conn = dbConnect(RSQLite::SQLite(),'db_gwas/db_gwas.db')
+conn = dbConnect(SQLite(),f_db)
 dbWriteTable(conn,"gtex",gtex)
 
 # Check db list
 dbListTables(conn)
+
+# Disconnect DB
+dbDisconnect(conn)

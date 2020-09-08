@@ -7,6 +7,9 @@ Usage:
     Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE
     Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh FALSE
     Rscript postgwas-exe.r --dbfilt roadmap --base <base file(s)> --out <out folder> --enh TRUE --sep TRUE
+    ...
+    Rscript postgwas-exe.r --dbfilt gtex_ovl --base <base file> --gtex <GTEx RDS file> --out <out folder>
+    Rscript postgwas-exe.r --dbfilt gtex_ovl --base <base file> --gtex <GTEx RDS file> --out <out folder> --tissue <optional:GTEx tissue name>
 
 
 Functions:
@@ -48,7 +51,7 @@ Required arguments:
                 If input as "tags", This option allows to generate seperated output files by the tags.
     --pval      <p-value threshold>
                 A required argument for the "gtex" function to filter significant eQTLs.
-    --gtex      <Filtered GTEx RDS file path>
+    --gtex      <Filtered GTEx RDS or SQL DB file path>
                 A required argument for the "gtex_ovl" function to overlap GWAS SNPs with GTEx data.
     --tissue    <GTEx tissue name>
                 An optional argument for the "gtex_ovl" function to filter a specific tissue.
@@ -453,22 +456,54 @@ distance_filt_multi = function(
 }
 
 
+readgtex = function(
+    rsids  = NULL,
+    f_gtex = NULL
+) {
+    f_ext = tools::file_ext(f_gtex)
+    if(f_ext %in% c('gz','rds')) {
+        paste0('Read, ',basename(f_gtex),' = ') %>% cat
+        if(f_ext=='gz') {
+            gtex = fread(gzfile(f_gtex),header=T)
+        } else if(f_ext=='rds') {
+            gtex = readRDS(f_gtex)
+        } else {
+            paste0('[ERROR] Unknown GTEx file format. gz/rds file format is required.')
+            quit
+        }
+        dim(gtex) %>% print
+
+        # Overlapping eQTLs
+        paste0('  Overlapped eQTL-gene pairs = ') %>% cat
+        eqtls = subset(gtex, Rsid %in% rsids)
+        nrow(eqtls) %>% print
+    } else if(f_ext=='db') {
+        # Query SNPs from GTEx SQL DB file
+        paste0('SNP query to ',basename(f_gtex),' = ') %>% cat
+        conn = dbConnect(RSQLite::SQLite(),f_gtex)
+        rsids_query = sprintf("SELECT * FROM gtex WHERE Rsid IN (%s)", paste0("'",rsids,"'",collapse=","))
+        eqtls = dbGetQuery(conn,rsids_query)
+        dim(eqtls) %>% print 
+        dbDisconnect(conn)
+    }
+    return(eqtls)
+}
+
+
 gtex_overlap = function(
-    f_path = NULL,   # Inpust GWAS SNPs file path
+    f_path    = NULL,   # Input SNPs BED file path
     f_gtex    = NULL,   # Filtered GTEx RDS file path
     out       = 'data', # Out folder path. Will generate gtex_eqlt subfoler.
     tissue_nm = NULL,   # Optional tissue name
     debug
 ) {
     suppressMessages(library(data.table))
+    suppressMessages(library(RSQLite))
 
     # Preparing...
     paste0('\n** Run function: db_filter.r/gtex_overlap...\n') %>% cat
-    paste0('  Your memory size = ') %>% cat
-    memory.size() %>% print
     ifelse(!dir.exists(out), dir.create(out),'')
     out_gtex_eqtl = paste0(out,'/gtex_eqtl')
-    ifelse(!dir.exists(out_gtex_eqtl), dir.create(out_gtex_eqtl),'')
     'ready\n' %>% cat
 
     # Read SNP file
@@ -478,23 +513,7 @@ gtex_overlap = function(
     paste0('Input GWAS SNPs N = ',length(rsids),'\n') %>% cat
 
     # Load filtered GTEx RDS file
-    paste0('Read, ',basename(f_gtex),' = ') %>% cat
-    f_ext = tools::file_ext(f_gtex)
-    if(f_ext=='gz') {
-        gtex = fread(gzfile(f_gtex),header=T)
-    } else if(f_ext=='rds') {
-        gtex = readRDS(f_gtex)
-    } else {
-        paste0('[ERROR] Unknown GTEx file format. gz/rds file format is required.')
-        quit
-    }
-    dim(gtex) %>% print
-
-    # Overlapping eQTLs
-    eqtls = subset(gtex, Rsid %in% rsids)
-    paste0('  Overlapped eQTL-gene pairs = ') %>% cat
-    nrow(eqtls) %>% print
-    rm(gtex)
+    eqtls = readgtex(rsids,f_gtex)
 
     # Filter by tissue (optional)
     if(!is.null(tissue_nm)) {
@@ -688,7 +707,7 @@ db_filter = function(
     } else                        infotype = NULL
 
     # Run function
-    source('src/pdtime.r'); t0=Sys.time()
+    source('./src/pdtime.r'); t0=Sys.time()
     if(args$dbfilt == 'ucsc') {
         ucsc_compile(b_path,out)
     } else if(args$dbfilt == 'roadmap') {
