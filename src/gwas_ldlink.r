@@ -31,7 +31,6 @@ Required arguments:
 
 Optional argument:
     --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
-
 '
 
 

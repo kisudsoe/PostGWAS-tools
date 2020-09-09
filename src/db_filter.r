@@ -219,20 +219,20 @@ lncrna_overlap = function(
     paste0('3 lncRNASNP2 data load...\n') %>% cat
     paste0('  Read: ',slnc_path) %>% cat
     snplnc = readRDS(slnc_path)
-    paste0(', = ') %>% cat; dim(snplnc) %>% print
+    paste0(' = ') %>% cat; dim(snplnc) %>% print
 
     paste0('  Read: ',ann_path) %>% cat
     ann = readRDS(ann_path)
     colnames(ann)[1] = 'lncRNA'
-    paste0(', = ') %>% cat; dim(ann) %>% print
+    paste0(' = ') %>% cat; dim(ann) %>% print
 
     paste0('  Read: ',dis_path) %>% cat
     dis = readRDS(dis_path)
-    paste0(', = ') %>% cat; dim(dis) %>% print
+    paste0(' = ') %>% cat; dim(dis) %>% print
     
     # Overlapping lncRNA data with input GWAS SNPs
     snp_lnc = merge(snp_df,snplnc,by='dbsnp')
-    paste0('\nSummary =\n') %>% cat
+    paste0('\nSumm = ') %>% cat
     data.frame(
         lncRNA = unique(snp_lnc$lncRNA) %>% length,
         SNPs   = unique(snp_lnc$dbsnp) %>% length
@@ -252,6 +252,7 @@ lncrna_overlap = function(
     write.table(snp_lnc_ann_dis,f_name2,row.names=F,quote=F,sep='\t')
     paste0('  Write file: ',f_name2,'\n') %>% cat
 }
+
 
 regulome_filt = function(
     snp_path = NULL,  # Input GWAS SNP file path
@@ -316,6 +317,7 @@ regulome_filt = function(
     write.table(snp_bed[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('Write file: ',f_name2,'\n\n') %>% cat
 }
+
 
 distance_filt = function(
     f_path   = NULL,   # Bedtools closest result paths
@@ -401,6 +403,7 @@ distance_filt = function(
         }
     }
 }
+
 
 distance_filt_multi = function(
     f_paths  = NULL,   # Input file/folder paths
@@ -591,6 +594,7 @@ gtex_filt = function(
     paste0('\nWrite file: ',f_name,'\n') %>% cat
 }
 
+
 roadmap_filt = function(
     f_path = NULL,  # Download folder path
     out    = 'db',  # Out folder path
@@ -675,6 +679,7 @@ roadmap_filt = function(
         paste0('Write file: ',f_name,'\n') %>% cat
     }
 }
+
 
 db_filter = function(
     args = NULL
