@@ -197,6 +197,8 @@ lncrna_overlap = function(
     lnc_path = NULL,  # lncRNASNP2 data downloaded folder path
     out      = 'data' # Out folder path. Will generate 'summary' subfoleder.
 ) {
+    suppressMessages(library(RSQLite))
+
     # Preparing...
     paste0('\n** Run function: db_filter.r/lncrna_overlap... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),'')
@@ -211,28 +213,20 @@ lncrna_overlap = function(
     snp_df = cbind(snp,dbsnp)
     paste0('Input GWAS SNPs N = ',length(dbsnp),'\n') %>% cat
 
-    # Read the lncRNASNP2 data files
-    slnc_path = paste0(lnc_path,'/lncRNASNP2_snplist.txt.rds')
-    ann_path  = paste0(lnc_path,'/lncrnas.txt.rds')
-    dis_path  = paste0(lnc_path,'/lncrna-diseases_experiment.txt.rds')
-    
-    paste0('3 lncRNASNP2 data load...\n') %>% cat
-    paste0('  Read: ',slnc_path) %>% cat
-    snplnc = readRDS(slnc_path)
-    paste0(' = ') %>% cat; dim(snplnc) %>% print
-
-    paste0('  Read: ',ann_path) %>% cat
-    ann = readRDS(ann_path)
-    colnames(ann)[1] = 'lncRNA'
-    paste0(' = ') %>% cat; dim(ann) %>% print
-
-    paste0('  Read: ',dis_path) %>% cat
-    dis = readRDS(dis_path)
-    paste0(' = ') %>% cat; dim(dis) %>% print
+    # Query SQL db
+    f_ext = tools::file_ext(lnc_path)
+    if(f_ext=='db') {
+        paste0('  Query ',basename(lnc_path),' = ') %>% cat
+        conn = dbConnect(RSQLite::SQLite(),lnc_path)
+        str_snp = paste0("'",dbsnp,"'", collapse=',')
+        rsids_query = sprintf('SELECT * FROM lncrna WHERE dbsnp IN (%s)',str_snp)
+        lncsnp = dbGetQuery(conn,rsids_query)
+        dim(lncsnp) %>% print
+    } else paste0('\n[Error] Input lnc_path seems not SQL db file path. STOP.\n') %>% cat
     
     # Overlapping lncRNA data with input GWAS SNPs
-    snp_lnc = merge(snp_df,snplnc,by='dbsnp')
-    paste0('\nSumm = ') %>% cat
+    snp_lnc = merge(snp_df,lncsnp,by='dbsnp')
+    paste0('  Summ =\n') %>% cat
     data.frame(
         lncRNA = unique(snp_lnc$lncRNA) %>% length,
         SNPs   = unique(snp_lnc$dbsnp) %>% length
@@ -243,14 +237,11 @@ lncrna_overlap = function(
     write.table(snp_lnc[,2:5],f_name1,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('\n  Write file: ',f_name1,'\n') %>% cat
 
-    # Annotating GWAS SNPs with lncRNAs
-    snp_lnc_ann = merge(snp_lnc[,c(1,6)],ann,by='lncRNA') %>% unique
-    snp_lnc_ann_dis = merge(snp_lnc_ann,dis,by='lncRNA',all.x=T) %>% unique
-
     # Save as a TSV file
-    f_name2 = paste0(out,'/lncrnasnp_',unique(snp_lnc_ann_dis$dbsnp)%>%length,'.tsv')
-    write.table(snp_lnc_ann_dis,f_name2,row.names=F,quote=F,sep='\t')
+    f_name2 = paste0(out,'/lncrnasnp_',unique(snp_lnc$dbsnp)%>%length,'.tsv')
+    write.table(snp_lnc,f_name2,row.names=F,quote=F,sep='\t')
     paste0('  Write file: ',f_name2,'\n') %>% cat
+    dbDisconnect(conn)
 }
 
 
@@ -484,7 +475,8 @@ readgtex = function(
         # Query SNPs from GTEx SQL DB file
         paste0('SNP query to ',basename(f_gtex),' = ') %>% cat
         conn = dbConnect(RSQLite::SQLite(),f_gtex)
-        rsids_query = sprintf("SELECT * FROM gtex WHERE Rsid IN (%s)", paste0("'",rsids,"'",collapse=","))
+        str_snp = paste0("'",rsids,"'",collapse=",")
+        rsids_query = sprintf("SELECT * FROM gtex WHERE Rsid IN (%s)",str_snp)
         eqtls = dbGetQuery(conn,rsids_query)
         dim(eqtls) %>% print 
         dbDisconnect(conn)

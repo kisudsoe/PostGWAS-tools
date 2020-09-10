@@ -1,18 +1,19 @@
 #!/bin/bash
 
-# 9/2/2020 VERSION
+# 9/9/2020 VERSION
 # This file is generated and maintained by Seungsoo Kim.
 
 WORK_DIR="/data/20.08-PHD3"
 BASE_BED=$WORK_DIR"/gwas_biomart_1569.bed"
 SH_FILE="dist_20.08-PHD3.sh"
-
 ANN_PATH="/data/db_gwas"
+
 ROAD_FILE=$ANN_PATH"/roadmap_meta.tsv"
 REG_DIR=$ANN_PATH"/regulome"
-LNC_DIR=$ANN_PATH"/lncrna"
-GTEX_RDS=$ANN_PATH"/gtex_signif_5e-08_Ensgid_dt.rds"
 
+### Archive code ###
+#LNC_DIR=$ANN_PATH"/lncrna"
+#GTEX_RDS=$ANN_PATH"/gtex_signif_5e-08_Ensgid_dt.rds"
 
 ### RUN FUNCTIONS ###
 # DO NOT CHANGE BELLOW THIS CODE.
@@ -24,7 +25,7 @@ Rscript postgwas-exe.r \
   --base $BASE_BED \
   --out  $WORK_DIR \
   --ann  $ANN_PATH
-mv $SH_FILE data/$SH_FILE
+mv $SH_FILE /data/$SH_FILE
 bash /data/$SH_FILE
 
 ## 1-2. UCSC gene tags separation
@@ -54,7 +55,7 @@ Rscript postgwas-exe.r \
   --dbfilt regulome \
   --base   $BASE_BED \
   --out    $WORK_DIR \
-  --regulm "$REG_DIR" \
+  --regulm $REG_DIR \
   > $WORK_DIR"/log_regulome.txt"
 
 ## 1-5. lncRNASNP2
@@ -62,7 +63,7 @@ Rscript postgwas-exe.r \
   --dbfilt lnc_ovl \
   --base   $BASE_BED \
   --out    $WORK_DIR \
-  --lncrna $LNC_DIR \
+  --lncrna $ANN_PATH"/db_gwas.db" \
   > $WORK_DIR"/log_lncrnasnp.txt"
 
 ## 1-6. GTEx eQTL genes <- Short of RAM memory..
@@ -70,7 +71,8 @@ Rscript postgwas-exe.r \
   --dbfilt gtex_ovl \
   --base   $BASE_BED \
   --out    $WORK_DIR \
-  --gtex   $GTEX_RDS
+  --gtex   $ANN_PATH"/db_gwas.db" \
+  > $WORK_DIR"/log_gtex.txt"
 
 
 # 2. Union list to summary
@@ -105,6 +107,6 @@ Rscript postgwas-exe.r \
   --out    $WORK_DIR/gtex_eqtl \
   --sub_dir FALSE \
   --uni_save TRUE \
-  > $WORK_DIR"/log_gtex.txt"
+  > $WORK_DIR"/log_gtex_summ.txt"
 
 ### END FUNCTIONS ###
