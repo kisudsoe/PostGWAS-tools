@@ -35,4 +35,5 @@ Postgwas-V3 update list
 
 * [ ] Change current args to 'argparser' function.
 * [ ] Convert db_gwas data into SQL DB.
+* [ ] Generate example data
 

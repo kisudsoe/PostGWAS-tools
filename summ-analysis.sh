@@ -7,7 +7,7 @@ ANN_GTEX=$WORK_DIR"/gtex_signif_1159.tsv"
 ### RUN FUNCTIONS ###
 # DO NOT CHANGE BELLOW THIS CODE.
 
-# 3. Summary table
+printf "Summary table\.. "
 Rscript postgwas-exe.r \
   --dbvenn summ \
   --base   $WORK_DIR/summary $WORK_DIR/gtex_eqtl \
@@ -19,5 +19,6 @@ Rscript postgwas-exe.r \
   --ann_encd $WORK_DIR"/genome_dist/encode_tfbs.tsv" \
   --ann_gtex $ANN_GTEX \
   > $WORK_DIR"/log_summary.txt"
+printf "done\n"
 
   ### END FUNCTION ###
