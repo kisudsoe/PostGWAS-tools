@@ -21,18 +21,18 @@ db_name = 'lncrna'
 # Read rds files
 #gtex = readRDS(f_rds) %>% as.data.frame
 #dim(gtex) %>% print
-paste0('  Read: ',slnc_path) %>% cat
+paste0('  Read: ',slnc_path,' = ') %>% cat
 snplnc = readRDS(slnc_path)
-paste0(' = ') %>% cat; dim(snplnc) %>% print
+dim(snplnc) %>% print
 
-paste0('  Read: ',ann_path) %>% cat
+paste0('  Read: ',ann_path,' = ') %>% cat
 ann = readRDS(ann_path)
 colnames(ann)[1] = 'lncRNA'
-paste0(' = ') %>% cat; dim(ann) %>% print
+dim(ann) %>% print
 
-paste0('  Read: ',dis_path) %>% cat
+paste0('  Read: ',dis_path,' = ') %>% cat
 dis = readRDS(dis_path)
-paste0(' = ') %>% cat; dim(dis) %>% print
+dim(dis) %>% print
 
 snp_lnc_ann = merge(snplnc,ann,by='lncRNA') %>% unique
 data_in = merge(snp_lnc_ann,dis,by='lncRNA',all.x=T) %>% unique
