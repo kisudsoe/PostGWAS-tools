@@ -37,6 +37,7 @@ Global arguments:
 Running functions with "--help" argument prints [Function] usage information.
 '
 
+
 # Command Input ----------
 commandLine = commandArgs(trailingOnly=T)
 comm = paste(unlist(commandLine),collapse=' ')
@@ -51,6 +52,7 @@ args_names = sapply(listoptions,function(x) {
 })
 args_names = unlist(args_names)
 names(args) = args_names
+
 
 # Run Function ----------
 call = args_names[1]
