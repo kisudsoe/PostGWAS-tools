@@ -365,7 +365,15 @@ summ_ann = function(
 	if(!is.null(ann_gwas)) {
 		## Read GWAS annotation TSV file
 		paste0('  GWAS dim = ') %>% cat
-		gwas = read.delim(ann_gwas,stringsAsFactors=F)
+		f_ext = tools::file_ext(ann_gwas)
+		if(f_ext=='tsv') {
+			gwas = read.delim(ann_gwas,stringsAsFactors=F)
+		} else if(f_ext=='bed') {
+			gwas = read.delim(ann_gwas,header=F,stringsAsFactors=F)
+			colnames(gwas) = c('chr','start','end','rsid')
+		} else {
+			cat('\n[Error] \n\n'); quit()
+		}
 		dim(gwas) %>% print
 
 		## Merge union data and GWAS annotation
