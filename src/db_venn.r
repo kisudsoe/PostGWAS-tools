@@ -389,9 +389,9 @@ summ_ann = function(
 		dim(gwas_merge) %>% print
 
 		## Write a summary CSV file
-		f_name2 = paste0(out,'/',dir_name,'_gwas.csv')
-		write.csv(gwas_merge,f_name2,row.names=F)
-		paste0('  Write a CSV file: ',f_name2,'\n') %>% cat
+		f_name2 = paste0(out,'/',dir_name,'_gwas.tsv')
+		write.delim(gwas_merge,f_name2,row.names=F,sep='\t')
+		paste0('  Write a TSV file: ',f_name2,'\n') %>% cat
 	} else paste0('  [PASS] GWAS summary.\n')
 }
 
