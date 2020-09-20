@@ -211,10 +211,10 @@ summ_ann = function(
 		snp_tfbs_df = data.table::rbindlist(snp_tfbs_li)
 		dim(snp_tfbs_df) %>% print
 
-		## Write a summary CSV file
-		f_name3 = paste0(out,'/',dir_name,'_encode.csv')
-		write.csv(enc_merge,f_name3,row.names=F)
-		paste0('  Write a CSV file: ',f_name3,'\n') %>% cat
+		## Write a summary TSV file
+		f_name3 = paste0(out,'/',dir_name,'_encode.tsv')
+		write.table(enc_merge,f_name3,row.names=F,sep='\t')
+		paste0('  Write a TSV file: ',f_name3,'\n') %>% cat
 	} else paste0('  [PASS] ENCODE summary.\n')
 
 
@@ -287,10 +287,10 @@ summ_ann = function(
 		near_merge = Reduce(merge_allx,ann_li) %>% unique
 		dim(near_merge) %>% print
 
-		## Write a summary CSV file
-		f_name4 = paste0(out,'/',dir_name,'_nearest.csv')
-		write.csv(near_merge,f_name4,row.names=F)
-		paste0('  Write a CSV file: ',f_name4,'\n') %>% cat
+		## Write a summary TSV file
+		f_name4 = paste0(out,'/',dir_name,'_nearest.tsv')
+		write.table(near_merge,f_name4,row.names=F,sep='\t')
+		paste0('  Write a TSV file: ',f_name4,'\n') %>% cat
 	} else {
 		if(!is.null(ann_cds)) {
 			paste0('  [PASS] CDS have to be merged to nearest gene data.\n') %>% cat
@@ -333,10 +333,10 @@ summ_ann = function(
 		snp_egene_df = data.table::rbindlist(snp_egene_li)
 		dim(snp_egene_df) %>% print
 
-		## Write a summary CSV file
-		f_name5 = paste0(out,'/',dir_name,'_gtex.csv')
-		write.csv(gtex_merge,f_name5,row.names=F)
-		paste0('  Write a CSV file: ',f_name5,'\n') %>% cat
+		## Write a summary TSV file
+		f_name5 = paste0(out,'/',dir_name,'_gtex.tsv')
+		write.table(gtex_merge,f_name5,row.names=F,sep='\t')
+		paste0('  Write a TSV file: ',f_name5,'\n') %>% cat
 	} else paste0('  [PASS] GTEx summary.\n')
 
 
@@ -353,10 +353,10 @@ summ_ann = function(
 		lnc_merge = merge(lnc_ann,union_summ,by.x='dbsnp',by.y='rsid',all.x=T) %>% unique
 		dim(lnc_merge) %>% print
 
-		## Write a summary CSV file
-		f_name6 = paste0(out,'/',dir_name,'_lncRNA.csv')
-		write.csv(lnc_merge,f_name6,row.names=F)
-		paste0('  Write a CSV file: ',f_name6,'\n') %>% cat
+		## Write a summary TSV file
+		f_name6 = paste0(out,'/',dir_name,'_lncRNA.tsv')
+		write.table(lnc_merge,f_name6,row.names=F,sep='\t')
+		paste0('  Write a TSV file: ',f_name6,'\n') %>% cat
 	} else paste0('  [PASS] lncRNA summary.\n')
 	'\n' %>% cat
 
@@ -383,14 +383,14 @@ summ_ann = function(
 
 		if(!is.null(ann_near)) { gwas_ann = merge(gwas_ann,snp_near_df, by='rsid',all.x=T) %>% unique }
 		if(!is.null(ann_gtex)) { gwas_ann = merge(gwas_ann,snp_egene_df,by='rsid',all.x=T) %>% unique }
-		if(!is.null(ann_encd)) { gwas_ann = merge(gwas_ann,snp_tfbs_df, by='rsid',all.x=T) %>% unique }
+		#if(!is.null(ann_encd)) { gwas_ann = merge(gwas_ann,snp_tfbs_df, by='rsid',all.x=T) %>% unique }
 
 		gwas_merge = merge(gwas_ann,union_summ,by='rsid',all.x=T) %>% unique
 		dim(gwas_merge) %>% print
 
 		## Write a summary CSV file
 		f_name2 = paste0(out,'/',dir_name,'_gwas.tsv')
-		write.delim(gwas_merge,f_name2,row.names=F,sep='\t')
+		write.table(gwas_merge,f_name2,row.names=F,sep='\t')
 		paste0('  Write a TSV file: ',f_name2,'\n') %>% cat
 	} else paste0('  [PASS] GWAS summary.\n')
 }
@@ -592,4 +592,3 @@ db_venn = function(
 	}
 	paste0('\n',pdtime(t0,1),'\n') %>% cat
 }
-## END
