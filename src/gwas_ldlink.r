@@ -413,6 +413,7 @@ ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
     popul    = NULL,   # population filter option for LDlink
+    token    = '669e9dc0b428', # Seungsoo Kim's personal token
     debug    = F
 ) {
     # Function specific library
@@ -420,21 +421,31 @@ ldlink_down = function(
     paste0('\n** Run function ldlink_down... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
-    # Download from LDlink
+    # Get Rsid query
     paste0('Rsid query = ') %>% cat
     snps = read.delim(snp_path,stringsAsFactors=F)
     rsid = snps$Rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
 
-    token = '669e9dc0b428' # Seungsoo Kim's personal token
-    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token) #append=T
-    paste0('done\n') %>% cat
-    
-    # Rename downloaded file
-    f_name  = paste0(rsid,'.txt')
-    f_name1 = paste0(out,'/',f_name)
-    file.rename(f_name,f_name1)
-    paste0('  Files are moved to target folder:\t',out,'\n') %>% cat
+    # Split query by chunks
+    rsid_chunks = split(rsid, ceiling(seq_along(rsid)/10))
+    n = length(rsid_chunks)
+    paste0(n,' query chunks are generated.\n') %>% cat
+    for(i in 1:n) {
+        # Download from LDlink
+        paste0('  ',i,'/',n,' query chunk..') %>% cat
+        LDproxy_batch(snp=rsid_chunks[[i]], pop=popul, r2d='d', token=token) #append=T
+
+        # Rename downloaded file
+        #f_name  = paste0(rsid_chunks[[i]],'.txt')
+        #f_name1 = paste0(out,'/',f_name)
+        #file.rename(f_name,f_name1)
+        command = paste0('mv /*.txt /data/',out)
+        try(system(command))
+        m = length(rsid_chunks[[i]])
+        paste0(' ',i*m,' files are moved.\n') %>% cat
+    }
+    paste0('\nProcess done. Plase check your out folder: ',out,'\n') %>% cat
 }
 
 
@@ -484,7 +495,9 @@ gwas_ldlink = function(
     } else                      debug    = FALSE
     
     if(length(args$popul)>0)    popul    = args$popul
-    if(length(args$ldpath)>0)   ld_path = args$ldpath
+    if(length(args$token)>0) {  token    = args$token
+    } else                      token    = '669e9dc0b428'
+    if(length(args$ldpath)>0)   ld_path  = args$ldpath
     if(length(args$r2)>0) {     r2       = args$r2
     } else                      r2       = NULL
     if(length(args$dprime)>0) { dprime   = args$dprime
@@ -496,7 +509,7 @@ gwas_ldlink = function(
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
-        ldlink_down(b_path,out,popul,debug)
+        ldlink_down(b_path,out,popul,token,debug)
     } else if(args$ldlink == 'filter') {
         ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,debug)
     } else if(args$ldlink == 'bed') {
