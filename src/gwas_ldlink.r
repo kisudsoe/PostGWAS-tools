@@ -413,7 +413,7 @@ ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
     popul    = NULL,   # population filter option for LDlink
-    token    = '669e9dc0b428', # Seungsoo Kim's personal token
+    token    = '669e9dc0b428', # Seungsoo Kim's personal token; 4151ef4ec96b
     debug    = F
 ) {
     # Function specific library
