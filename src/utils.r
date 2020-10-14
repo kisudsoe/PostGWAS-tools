@@ -98,7 +98,10 @@ bash_script = function(
     )
 
     # Combine and save the bash scripts
-    bash = c(bash1,bash2)
+    tag1 = 'printf "\n  1) Genome_dist.. "'
+    tag2 = 'printf "done\n  2) Roadmap_dist.. \n"'
+    tag3 = 'printf "done\n"'
+    bash = c(tag1,bash1,tag2,bash2,tag3)
     out_base = tools::file_path_sans_ext(basename(out))
     f_name = paste0('dist_',out_base,'.sh')
     out_f = file(f_name,"wb") # Set file as Unix type

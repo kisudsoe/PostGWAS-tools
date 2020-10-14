@@ -33,4 +33,4 @@ ADD VERSION .
 
 # Install PostGWAS-tools
 COPY . .
-WORKDIR /PostGWAS-tools*
+WORKDIR /
