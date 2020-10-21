@@ -1,5 +1,5 @@
 help_message = '
-gwas_ldlink, v2020-06-26
+gwas_ldlink, v2020-10-16
 This is a function for LDlink data.
 
 Usage:
@@ -31,6 +31,8 @@ Required arguments:
 
 Optional argument:
     --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
+    --blk_idx   An argument for the "--ldlink filter". Add LD block calculation by TRUE.
+    --srch_bio  An argument for the "--ldlink filter". Add Ensembl biomaRt annotation by TRUE.
 '
 
 
@@ -53,7 +55,13 @@ ldlink_bed = function(
     dim(snps) %>% print
 
     # hg19: save as BED file
-    snps_ = na.omit(snps[,c(1,6:8)])
+    n = ncol(snps)
+    if(n==6) { col_rg = c(1,5:6)
+    } else if(n==7) { col_rg = c(1,6:7)
+    } else col_rg = c(1,6:8)
+    snps_ = na.omit(snps[,col_rg])
+    if(ncol(snps_)==3) snps_$end = snps_$pos
+    colnames(snps_) = c('rsid','hg19_chr','hg19_start','hg19_end')
     snps_hg19_length = snps_$hg19_end - snps_$hg19_start
     snp_bed_hg19_li = lapply(c(1:nrow(snps_)),function(i) {
         row = snps_[i,]
@@ -124,8 +132,10 @@ ldlink_filter = function(
     out      = 'data', # Out folder path
     r2       = NULL,   # LDlink filter R2 criteria
     dprime   = NULL,   # LDlink filter Dprime criteria
-    hg       = 'hg19',  # Set biomaRt human genome version
+    hg       = 'hg19', # Set biomaRt human genome version
     mirror_url = 'useast', # Set biomaRt host
+    blk_idx  = TRUE,   # Add LD block index to result
+    srch_bio = TRUE,   # Add biomart result
     debug    = F
 ) {
     # Function specific library
@@ -232,54 +242,58 @@ ldlink_filter = function(
     paste0('  SNP source annotation table\t= ') %>% cat; dim(snp_src) %>% print
 
     # Add LD block annotation
-    paste0('\nAdd annotations:\n') %>% cat
-    paste0('  Calculate LD block index... ') %>% cat
-    ldlink_2 = ldlink_
-    colnames(ldlink_2)[2] = 'rsid'
-    ldlink_3 = merge(snps_,ldlink_2,by='rsid',all.x=T)
+    if(blk_idx) {
+        paste0('\nAdd annotations:\n') %>% cat
+        paste0('  Calculate LD block index... ') %>% cat
+        ldlink_3 = ldlink_
+        colnames(ldlink_2)[2] = 'rsid'
+        ldlink_3 = merge(snps_,ldlink_3,by='rsid',all.x=T)
 
-    ## Make group1
-    gwas_snps = ldlink_3$gwasSNPs %>% as.character %>% na.omit %>% unique
-    n = length(gwas_snps)
-    group1 = list()
-    for(i in 1:n) {
-        ldsnps = subset(ldlink_3,gwasSNPs==gwas_snps[i])$rsid %>% as.character
-        block  = c(gwas_snps[i],ldsnps) %>% unique
-        if(i==1) group1[[1]] = block
-        m = length(group1)
-        for(j in 1:m) {
-            inter_N = intersect(group1[[j]],block) %>% length
-            if(inter_N>0) {
-                group1[[j]] = union(group1[[j]],block)
-                break
-            } else if(inter_N==0 & j==m) group1[[j+1]] = block
+        ## Make group1
+        gwas_snps = ldlink_3$gwasSNPs %>% as.character %>% na.omit %>% unique
+        n = length(gwas_snps)
+        group1 = list()
+        for(i in 1:n) {
+            ldsnps = subset(ldlink_3,gwasSNPs==gwas_snps[i])$rsid %>% as.character
+            block  = c(gwas_snps[i],ldsnps) %>% unique
+            if(i==1) group1[[1]] = block
+            m = length(group1)
+            for(j in 1:m) {
+                inter_N = intersect(group1[[j]],block) %>% length
+                if(inter_N>0) {
+                    group1[[j]] = union(group1[[j]],block)
+                    break
+                } else if(inter_N==0 & j==m) group1[[j+1]] = block
+            }
         }
-    }
 
-    ## Check duplicate in group1 to generate group2
-    n = length(group1)
-    group2 = list()
-    for(i in 1:n) {
-        if(i==1) group2[[1]] = group1[[i]]
-        m = length(group2)
-        for(j in 1:m) {
-            inter_N = intersect(group1[[i]],group2[[j]]) %>% length
-            if(inter_N>0) {
-                group2[[j]] = union(group1[[i]],group2[[j]])
-                break
-            } else if(inter_N==0 & j==m) group2[[j+1]] = group1[[i]]
+        ## Check duplicate in group1 to generate group2
+        n = length(group1)
+        group2 = list()
+        for(i in 1:n) {
+            if(i==1) group2[[1]] = group1[[i]]
+            m = length(group2)
+            for(j in 1:m) {
+                inter_N = intersect(group1[[i]],group2[[j]]) %>% length
+                if(inter_N>0) {
+                    group2[[j]] = union(group1[[i]],group2[[j]])
+                    break
+                } else if(inter_N==0 & j==m) group2[[j+1]] = group1[[i]]
+            }
         }
+        ld_bid = formatC(c(1:length(group2)),width=3,flag='0') %>% as.character # "001"
+        names(group2) = paste0('ld_block',ld_bid)
+        ldblock = stack(group2) %>% unique
+        colnames(ldblock) = c('rsid','ld_blocks')
+        group2 %>% length %>% print
     }
-    ld_bid = formatC(c(1:length(group2)),width=3,flag='0') %>% as.character # "001"
-    names(group2) = paste0('ld_block',ld_bid)
-    ldblock = stack(group2) %>% unique
-    colnames(ldblock) = c('rsid','ld_blocks')
-    group2 %>% length %>% print
 
     # Search biomart hg19 to get coordinates
-    paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
-    paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
-    if(hg=='hg19') {
+    if(srch_bio) {
+        paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
+        paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
+    }
+    if(srch_bio & hg=='hg19') {
         paste0('  Hg19 result table\t= ') %>% cat
         hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
                            dataset='hsapiens_snp',path='/biomart/martservice')
@@ -310,7 +324,7 @@ ldlink_filter = function(
         snps_bio_[,2] = paste0('chr',snps_bio_[,2])
         #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
         dim(snps_bio_) %>% print
-    } else if(hg=='hg38') { # Search biomart hg38 to get coordinates
+    } else if(srch_bio & hg=='hg38') { # Search biomart hg38 to get coordinates
         paste0('  Hg38 result table\t= ') %>% cat
         hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host=mirror_url,
                         dataset="hsapiens_snp") # debug 20.08.11
@@ -345,13 +359,13 @@ ldlink_filter = function(
     merge_multi = function(x,y) { merge(x,y,by='rsid',all.x=T) }
     #snps_merge = merge(snps_,snps_bio_,by='rsid',all.x=TRUE)
     colnames(ldlink_)[2] = 'rsid'
-    snps_li = list(
-        snps_,
-        ldlink_[,2:3],
-        ldblock,
-        snp_src,
-        snps_bio_
-    )
+    snps_li = list(snps_,ldlink_[,2:3])
+    n1 = length(snps_li)
+    if(blk_idx) snps_li[[n1+1]] = ldblock
+    n2 = length(snps_li)
+    snps_li[[n2+1]] = snp_src
+    n3 = length(snps_li)
+    if(srch_bio) snps_li[[n3+1]] = snps_bio_
     snps_merge1 = Reduce(merge_multi,snps_li) %>% unique
 
     # Add Cytoband annotation (hg19)
@@ -361,7 +375,7 @@ ldlink_filter = function(
         hg19_end = snps_merge1$hg19_end
 
         ## Download cytoband data from UCSC
-        paste0('  Cytoband annotation... ') %>% cat
+        paste0('Cytoband annotation... ') %>% cat
         cyto     = circlize::read.cytoband(species = 'hg19')$df
         colnames(cyto) = c('chr','start','end','cytoband','tag')
 
@@ -386,13 +400,18 @@ ldlink_filter = function(
                 POS = hg19_end[i]
                 cyto_sub = subset(cyto, chr==CHR & start<=POS & end>=POS)$cytoband
             }
+            if(length(cyto_sub)==0) cyto_sub = 'NA' # debug 20.10.16
             chr = strsplit(CHR %>% as.character,'chr') %>% unlist
             cytoband = paste0(chr[2],cyto_sub)
             return(cytoband)
         }) %>% unlist
         paste0(length(cytoband),'.. ') %>% cat
-        m = ncol(snps_merge1); col_rg = c(5:m)
-        snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,col_rg])
+        m = ncol(snps_merge1); col_rg1 = c(1:m); col_rg2 = c(5:m)
+        if(m>4) {
+            snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,col_rg2])
+        } else {
+            snps_merge = data.frame(snps_merge1[,col_rg1],cytoband,coord_df)
+        }
         paste0('done\n') %>% cat
     }
 
@@ -413,6 +432,7 @@ ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
     popul    = NULL,   # population filter option for LDlink
+    token    = '669e9dc0b428', # Seungsoo Kim's personal token; 4151ef4ec96b
     debug    = F
 ) {
     # Function specific library
@@ -420,21 +440,31 @@ ldlink_down = function(
     paste0('\n** Run function ldlink_down... ') %>% cat
     ifelse(!dir.exists(out), dir.create(out),''); 'ready\n' %>% cat
 
-    # Download from LDlink
+    # Get Rsid query
     paste0('Rsid query = ') %>% cat
     snps = read.delim(snp_path,stringsAsFactors=F)
     rsid = snps$Rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
 
-    token = '669e9dc0b428' # Seungsoo Kim's personal token
-    LDproxy_batch(snp=rsid, pop=popul, r2d='d', token=token) #append=T
-    paste0('done\n') %>% cat
-    
-    # Rename downloaded file
-    f_name  = paste0(rsid,'.txt')
-    f_name1 = paste0(out,'/',f_name)
-    file.rename(f_name,f_name1)
-    paste0('  Files are moved to target folder:\t',out,'\n') %>% cat
+    # Split query by chunks
+    rsid_chunks = split(rsid, ceiling(seq_along(rsid)/10))
+    n = length(rsid_chunks)
+    paste0(n,' query chunks are generated.\n') %>% cat
+    for(i in 1:n) {
+        # Download from LDlink
+        paste0('  ',i,'/',n,' query chunk..') %>% cat
+        LDproxy_batch(snp=rsid_chunks[[i]], pop=popul, r2d='d', token=token) #append=T
+
+        # Rename downloaded file
+        #f_name  = paste0(rsid_chunks[[i]],'.txt')
+        #f_name1 = paste0(out,'/',f_name)
+        #file.rename(f_name,f_name1)
+        command = paste0('mv /*.txt /data/',out)
+        try(system(command))
+        m = length(rsid_chunks[[i]])
+        paste0(' ',i*m,' files are moved.\n') %>% cat
+    }
+    paste0('\nProcess done. Plase check your out folder: ',out,'\n') %>% cat
 }
 
 
@@ -474,31 +504,41 @@ check_biomart = function(
 gwas_ldlink = function(
     args = NULL
 ) {
-    if(length(args$help)>0) {   help     = args$help
-    } else                      help     = FALSE
-    if(help) {                  cat(help_message); quit() }
+    if(length(args$help)>0) {    help     = args$help
+    } else                       help     = FALSE
+    if(help) {                   cat(help_message); quit() }
     
-    if(length(args$base)>0)     b_path   = args$base
-    if(length(args$out)>0)      out      = args$out
-    if(length(args$debug)>0) {  debug    = args$debug
-    } else                      debug    = FALSE
+    if(length(args$base)>0)      b_path   = args$base
+    if(length(args$out)>0)       out      = args$out
+    if(length(args$debug)>0) {   debug    = args$debug
+    } else                       debug    = FALSE
     
-    if(length(args$popul)>0)    popul    = args$popul
-    if(length(args$ldpath)>0)   ld_path = args$ldpath
-    if(length(args$r2)>0) {     r2       = args$r2
-    } else                      r2       = NULL
-    if(length(args$dprime)>0) { dprime   = args$dprime
-    } else                      dprime   = NULL
-    if(length(args$hg)>0) {     hg       = args$hg
-    } else                      hg       = 'hg19'
-    if(length(args$mirror)>0) { mirror_url = args$mirror
-    } else                      mirror_url = 'useast.ensembl.org'
+    if(length(args$popul)>0)     popul    = args$popul
+    if(length(args$token)>0) {   token    = args$token
+    } else                       token    = '669e9dc0b428'
+    if(length(args$ldpath)>0)    ld_path  = args$ldpath
+    if(length(args$r2)>0) {      r2       = args$r2
+    } else                       r2       = NULL
+    if(length(args$dprime)>0) {  dprime   = args$dprime
+    } else                       dprime   = NULL
+    if(length(args$hg)>0) {      hg       = args$hg
+    } else                       hg       = 'hg19'
+    if(length(args$mirror)>0) {  mirror_url = args$mirror
+    } else                       mirror_url = 'useast.ensembl.org'
+    if(length(args$blk_idx)>0) { blk_idx  = args$blk_idx
+    } else                       blk_idx  = TRUE
+    if(length(args$srch_bio)>0) {srch_bio = args$srch_bio
+    } else                       srch_bio = TRUE
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
-        ldlink_down(b_path,out,popul,debug)
+        ldlink_down(b_path,out,popul,token,debug)
     } else if(args$ldlink == 'filter') {
-        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,debug)
+        if(blk_idx=='FALSE') { blk_idx = FALSE
+        } else blk_idx = TRUE
+        if(srch_bio=='FALSE') { srch_bio = FALSE
+        } else srch_bio = TRUE
+        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else if(args$ldlink == 'chkbiomart') {

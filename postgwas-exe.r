@@ -59,28 +59,28 @@ call = args_names[1]
 if(call=='help') {
     cat(help_message); quit()
 } else if(call=='gwas') {
-    source('./src/gwas_catalog.r')
+    source('/src/gwas_catalog.r')
     gwas_catalog(args)
 } else if(call=='ldlink') {
-    source('./src/gwas_ldlink.r')
+    source('/src/gwas_ldlink.r')
     gwas_ldlink(args)
 } else if(call=='utils') {
-    source('./src/utils.r')
+    source('/src/utils.r')
     utils(args)
 } else if(call=='dbdown') {
-    source('./src/db_download.r')
+    source('/src/db_download.r')
     db_download(args)
 } else if(call=='dbfilt') {
-    source('./src/db_filter.r')
+    source('/src/db_filter.r')
     db_filter(args)
 } else if(call=='dbvenn') {
-    source('./src/db_venn.r')
+    source('/src/db_venn.r')
     db_venn(args)
 } else if(call=='dbgene') {
-    source('./src/db_gene.r')
+    source('/src/db_gene.r')
     db_gene(args)
 } else if(call=='dbcomp') {
-    source('./src/db_compare.r')
+    source('/src/db_compare.r')
     db_compare(args)
 } else {
     error_m = paste0('\n** [ERROR] There is no such function: "',commandLine[1],'". Try again.\n')
