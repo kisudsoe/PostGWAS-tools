@@ -157,7 +157,7 @@ ldlink_filter = function(
     ldlink_li = apply(snptb,1,function(row) {
         tb1 = try(
             read.table(as.character(row[2]),sep='\t',
-                header=F,skip=1,stringsAsFactors=F) ) #col.names=col_names
+                header=T,skip=1,stringsAsFactors=F) ) #col.names=col_names
         if('try-error' %in% class(tb1)) {
             paste0('  [ERROR] ',row[1],'\n') %>% cat
             return(NULL)
