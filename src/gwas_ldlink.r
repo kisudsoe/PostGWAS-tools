@@ -147,17 +147,17 @@ ldlink_filter = function(
     paste0('Read download files... ') %>% cat
     snpdf     = read.delim(snp_path,stringsAsFactors=F) %>% unique
     snpids    = snpdf$Rsid %>% unique
-    col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
-        'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
-    ldlink    = paste0(ld_path,'/',snpids,'.txt')
+    f_names   = snpdf$File %>% unique
+    #col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
+    #    'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
+    ldlink    = paste0(ld_path,'/',f_names,'.txt')
     snptb     = data.frame(snpids=snpids, ldlink=ldlink)
     paste0(nrow(snptb),'\n') %>% cat
     
     ldlink_li = apply(snptb,1,function(row) {
         tb1 = try(
             read.table(as.character(row[2]),sep='\t',
-                header=F,skip=1,stringsAsFactors=F,
-                col.names=col_names) )
+                header=F,skip=1,stringsAsFactors=F) ) #col.names=col_names
         if('try-error' %in% class(tb1)) {
             paste0('  [ERROR] ',row[1],'\n') %>% cat
             return(NULL)
@@ -446,25 +446,50 @@ ldlink_down = function(
     rsid = snps$Rsid %>% unique
     paste0(rsid%>%length,'.. ') %>% cat
 
-    # Split query by chunks
-    rsid_chunks = split(rsid, ceiling(seq_along(rsid)/10))
-    n = length(rsid_chunks)
-    paste0(n,' query chunks are generated.\n') %>% cat
+    # Get Population info.
+    colnm = colnames(snps)
+    n = which(colnm=='Pops')
+    pop_li = strsplit(snps$Pops, " ")
+
+    # Get file names
+    out_names = snps$File %>% unique
+
+    n = length(rsid)
     for(i in 1:n) {
         # Download from LDlink
-        paste0('  ',i,'/',n,' query chunk..') %>% cat
-        LDproxy_batch(snp=rsid_chunks[[i]], pop=popul, r2d='d', token=token) #append=T
-
-        # Rename downloaded file
-        #f_name  = paste0(rsid_chunks[[i]],'.txt')
-        #f_name1 = paste0(out,'/',f_name)
-        #file.rename(f_name,f_name1)
-        command = paste0('mv /*.txt /data/',out)
+        if(i%%10==0) paste0('  ',i,'/',n,' query..') %>% cat
+        if(length(n) > 0) {
+            pops_nm = paste0(pop_li[[i]],collapse=',')
+            LDproxy(snp=rsid[i], pop=pop_li[[i]], r2d='d', token=token, file=out_names[i])
+        }
+        
+        command = paste0('mv /*.txt ',out)
         try(system(command))
-        m = length(rsid_chunks[[i]])
-        paste0(' ',i*m,' files are moved.\n') %>% cat
+        if(i%%10==0) paste0(' ',i,' files are moved.\n') %>% cat
     }
     paste0('\nProcess done. Plase check your out folder: ',out,'\n') %>% cat
+
+    ## Code archieves ##
+
+    # Split query by chunks
+    #rsid_chunks = split(rsid, ceiling(seq_along(rsid)/10))
+    #if(length(n) > 0) pops_chunks = split(pops, ceiling(seq_along(pops)/10))
+    #n = length(rsid_chunks)
+    #paste0(n,' query chunks are generated.\n') %>% cat
+
+    # Download from LDlink
+    #paste0('  ',i,'/',n,' query chunk..') %>% cat
+    #print(pops_chunks[[i]])
+    #if(length(n) > 0) {
+    #    LDproxy_batch(snp=rsid_chunks[[i]], pop=pops_chunks[[i]], r2d='d', token=token)
+    #} else {
+    #    LDproxy_batch(snp=rsid_chunks[[i]], pop=popul, r2d='d', token=token) #append=T
+    #}
+
+    # Rename downloaded file
+    #f_name  = paste0(rsid_chunks[[i]],'.txt')
+    #f_name1 = paste0(out,'/',f_name)
+    #file.rename(f_name,f_name1)
 }
 
 
