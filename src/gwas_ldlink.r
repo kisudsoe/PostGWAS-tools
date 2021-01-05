@@ -150,7 +150,7 @@ ldlink_filter = function(
     f_names   = snpdf$File %>% unique
     #col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
     #    'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
-    ldlink    = paste0(ld_path,'/',f_names,'.txt')
+    ldlink    = paste0(ld_path,'/',f_names)
     snptb     = data.frame(snpids=snpids, ldlink=ldlink)
     paste0(nrow(snptb),'\n') %>% cat
     
