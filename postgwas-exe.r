@@ -62,7 +62,7 @@ if(call=='help') {
     source('/src/gwas_catalog.r')
     gwas_catalog(args)
 } else if(call=='ldlink') {
-    source('/src/gwas_ldlink.r')
+    source('src/gwas_ldlink.r')
     gwas_ldlink(args)
 } else if(call=='utils') {
     source('/src/utils.r')

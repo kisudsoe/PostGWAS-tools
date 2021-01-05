@@ -31,7 +31,7 @@ Required arguments:
 
 Optional argument:
     --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
-    --blk_idx   An argument for the "--ldlink filter". Add LD block calculation by TRUE.
+    --blk_idx   An argument for the "--ldlink filter". Add LD block calculation by TRUE. Default value is FALSE.
     --srch_bio  An argument for the "--ldlink filter". Add Ensembl biomaRt annotation by TRUE.
 '
 
@@ -134,7 +134,7 @@ ldlink_filter = function(
     dprime   = NULL,   # LDlink filter Dprime criteria
     hg       = 'hg19', # Set biomaRt human genome version
     mirror_url = 'useast', # Set biomaRt host
-    blk_idx  = TRUE,   # Add LD block index to result
+    blk_idx  = FALSE,   # Add LD block index to result
     srch_bio = TRUE,   # Add biomart result
     debug    = F
 ) {
@@ -156,8 +156,8 @@ ldlink_filter = function(
     
     ldlink_li = apply(snptb,1,function(row) {
         tb1 = try(
-            read.table(as.character(row[2]),sep='\t',
-                header=T,skip=1,stringsAsFactors=F) ) #col.names=col_names
+            read.delim(as.character(row[2]),
+                header=T,stringsAsFactors=F) ) #col.names=col_names
         if('try-error' %in% class(tb1)) {
             paste0('  [ERROR] ',row[1],'\n') %>% cat
             return(NULL)
@@ -551,7 +551,7 @@ gwas_ldlink = function(
     if(length(args$mirror)>0) {  mirror_url = args$mirror
     } else                       mirror_url = 'useast.ensembl.org'
     if(length(args$blk_idx)>0) { blk_idx  = args$blk_idx
-    } else                       blk_idx  = TRUE
+    } else                       blk_idx  = FALSE
     if(length(args$srch_bio)>0) {srch_bio = args$srch_bio
     } else                       srch_bio = TRUE
     
@@ -559,10 +559,8 @@ gwas_ldlink = function(
     if(args$ldlink == 'down') {
         ldlink_down(b_path,out,popul,token,debug)
     } else if(args$ldlink == 'filter') {
-        if(blk_idx=='FALSE') { blk_idx = FALSE
-        } else blk_idx = TRUE
-        if(srch_bio=='FALSE') { srch_bio = FALSE
-        } else srch_bio = TRUE
+        if(blk_idx=='TRUE') blk_idx = TRUE
+        if(srch_bio=='FALSE') srch_bio = FALSE
         ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
