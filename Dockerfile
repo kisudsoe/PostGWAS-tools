@@ -27,7 +27,8 @@ RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR',
     R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
 	R -e "BiocManager::install('biomaRt')" && \
     R -e "BiocManager::install('limma')" && \
-	R -e "BiocManager::install("regioneR")"
+	R -e "BiocManager::install("regioneR")" && \
+	R -e "BiocManager::install("ComplexHeatmap")"
 
 # Add Version number
 ADD VERSION .
