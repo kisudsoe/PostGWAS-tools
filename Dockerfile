@@ -28,7 +28,8 @@ RUN R -e "install.packages(c('dplyr','data.table','eulerr','circlize','LDlinkR',
 	R -e "BiocManager::install('biomaRt')" && \
 	R -e "BiocManager::install('limma')" && \
 	R -e "BiocManager::install('regioneR')" && \
-	R -e "BiocManager::install('ComplexHeatmap')"
+	R -e "BiocManager::install('ComplexHeatmap')" && \
+	R -e "BiocManager::install('piano')"
 
 # Add Version number
 ADD VERSION .
