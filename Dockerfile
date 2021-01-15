@@ -20,7 +20,7 @@ RUN apt -y -qq install \
 	vim \
 	software-properties-common
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
-	apt install r-base
+	apt -y -qq install r-base
 
 # Install R packages
 RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
