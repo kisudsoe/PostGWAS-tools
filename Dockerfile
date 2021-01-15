@@ -6,8 +6,9 @@ MAINTAINER Suhlab-SKim
 RUN apt -y -qq update && \
 	apt -y -qq upgrade
 
-# Set locale
+# Set locale & R v4.0 repository
 RUN DEBIAN_FRONTEND=noninteractive apt -y install tzdata
+RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/'
 
 # Install dependencies
 RUN apt -y -qq install \
