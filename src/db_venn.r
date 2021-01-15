@@ -62,16 +62,23 @@ ensgid_biomaRt = function(
 	paste0(length(genes),'.. ') %>% cat
 
 	# biomaRt query
-	ensembl   = useMart(
-		biomart='ENSEMBL_MART_ENSEMBL',
-		dataset='hsapiens_gene_ensembl')
-	gene_attr = c('ensembl_gene_id','hgnc_symbol','description')
-	gene_ens  = getBM(
-		attributes = gene_attr,
-		filters    = 'ensembl_gene_id',
-		values     = genes,
-		mart       = ensembl
-	) %>% unique
+	gene_ens = tryCatch({
+		ensembl   = useMart(
+			biomart='ENSEMBL_MART_ENSEMBL',
+			dataset='hsapiens_gene_ensembl',
+			host   ="useast.ensembl.org")
+		gene_attr = c('ensembl_gene_id','hgnc_symbol','description')
+		getBM(
+			attributes = gene_attr,
+			filters    = 'ensembl_gene_id',
+			values     = genes,
+			mart       = ensembl
+		) %>% unique
+	},
+	error=function(cond) {
+		'\n[Error] Ensembl biomaRt server error.\n' %>% cat
+		return(NULL)
+	})
 
 	# Parsing gene names
 	paste0('parsing.. ') %>% cat
@@ -231,27 +238,36 @@ summ_ann = function(
 
 		## Search biomaRt for gene symbol and name
 		gene_ens = ensgid_biomaRt(genes=near_ann$Ensgid)
-		paste0('  Sub-merge = ') %>% cat
-		gene_ann = merge(near_ann,gene_ens[,c(1:2,4)],
-    		by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
-		gene_names = gene_ann$hgnc_symbol
-		which_i = which(gene_names %in% c('',NA,NULL))
-		gene_names[which_i] = gene_ann$Ensgid[which_i] %>% as.character
-		gene_ann$hgnc_symbol = gene_names
-		dim(gene_ann) %>% print
+		if(!is.null(gene_ens)) {
+			paste0('  Sub-merge = ') %>% cat
+			gene_ann = merge(near_ann,gene_ens[,c(1:2,4)],
+				by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
+			gene_names = gene_ann$hgnc_symbol
+			which_i = which(gene_names %in% c('',NA,NULL))
+			gene_names[which_i] = gene_ann$Ensgid[which_i] %>% as.character
+			gene_ann$hgnc_symbol = gene_names
+			dim(gene_ann) %>% print
+		} else {
+			gene_ann = near_ann
+		}
+		
 
 		## Extract snp-nearest genes pair
-		paste0('  Extract snp-gene pair = ') %>% cat
-		gene_ann_1 = gene_ann %>% dplyr::select('rsid','hgnc_symbol') %>% unique
-		near_rsid = gene_ann_1$rsid %>% unique
-		snp_near_li = lapply(near_rsid,function(x) {
-			snp_df = subset(gene_ann_1,rsid==x) %>% unique
-			if(nrow(snp_df)>0) {
-				data.frame(rsid=x,nearest_genes=paste0(snp_df$hgnc_symbol,collapse=', '))
-			} else return(NULL)
-		})
-		snp_near_df = data.table::rbindlist(snp_near_li)
-		dim(snp_near_df) %>% print
+		if(!is.null(gene_ens)) {
+			paste0('  Extract snp-gene pair = ') %>% cat
+			gene_ann_1 = gene_ann %>% dplyr::select('rsid','hgnc_symbol') %>% unique
+			near_rsid = gene_ann_1$rsid %>% unique
+			snp_near_li = lapply(near_rsid,function(x) {
+				snp_df = subset(gene_ann_1,rsid==x) %>% unique
+				if(nrow(snp_df)>0) {
+					data.frame(rsid=x,nearest_genes=paste0(snp_df$hgnc_symbol,collapse=', '))
+				} else return(NULL)
+			})
+			snp_near_df = data.table::rbindlist(snp_near_li)
+			dim(snp_near_df) %>% print
+		} else {
+			snp_near_df = NULL
+		}
 
 		## Read CDS distance file
 		if(!is.null(ann_cds)) {
@@ -309,16 +325,20 @@ summ_ann = function(
 		gene_ens = ensgid_biomaRt(genes=gtex$Ensgid)
 
 		## Merge union data and the GTEx annotation
-		paste0('  Merge dim = ') %>% cat
-		gtex_ann = merge(gtex,gene_ens[,c(1:2,4)],
-			by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
-		colnames(gtex_ann)[3] = 'rsid'
-		gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
-		gene_names2 = gtex_merge$hgnc_symbol
-		which_i = which(gene_names2 %in% c('',NA,NULL))
-		gene_names2[which_i] = gtex_merge$Ensgid[which_i] %>% as.character
-		gtex_merge$hgnc_symbol = gene_names2
-		dim(gtex_merge) %>% print
+		if(!is.null(gene_ens)) {
+			paste0('  Merge dim = ') %>% cat
+			gtex_ann = merge(gtex,gene_ens[,c(1:2,4)],
+				by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
+			colnames(gtex_ann)[3] = 'rsid'
+			gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
+			gene_names2 = gtex_merge$hgnc_symbol
+			which_i = which(gene_names2 %in% c('',NA,NULL))
+			gene_names2[which_i] = gtex_merge$Ensgid[which_i] %>% as.character
+			gtex_merge$hgnc_symbol = gene_names2
+			dim(gtex_merge) %>% print
+		} else {
+			gtex_ann = gtex
+		}
 
 		## Extract snp-eQTL gene pairs
 		paste0('  Extract snp-eGene pair = ') %>% cat
