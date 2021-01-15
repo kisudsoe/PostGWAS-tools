@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 WORKDIR /
 
-MAINTAINER Suhlab-SKim
+MAINTAINER Suhlab-Seungsoo_Kim
 
 RUN apt -y -qq update && \
 	apt -y -qq upgrade
@@ -20,7 +20,7 @@ RUN apt -y -qq install \
 	libssl-dev \
 	vim
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
-	r-base
+	apt install r-base
 
 # Install R packages
 RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
