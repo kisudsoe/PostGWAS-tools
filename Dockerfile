@@ -33,7 +33,8 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "BiocManager::install('limma')" && \
 	R -e "BiocManager::install('regioneR')" && \
 	R -e "BiocManager::install('ComplexHeatmap')" && \
-	R -e "BiocManager::install('fgsea')"
+	R -e "BiocManager::install('fgsea')" && \
+	R -e "BiocManager::install('clusterProfiler')"
 
 # Add Version number
 ADD VERSION .
