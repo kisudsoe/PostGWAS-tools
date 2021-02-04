@@ -39,6 +39,9 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "BiocManager::install('fgsea')" && \
 	R -e "BiocManager::install('hypeR')"
 
+RUN R -e "library(devtools)" && \
+	R -e "install_bitbucket("ibi_group/disgenet2r")"
+
 # Add Version number
 ADD VERSION .
 
