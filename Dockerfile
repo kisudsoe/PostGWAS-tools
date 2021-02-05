@@ -37,7 +37,8 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "BiocManager::install('regioneR')" && \
 	R -e "BiocManager::install('ComplexHeatmap')" && \
 	R -e "BiocManager::install('fgsea')" && \
-	R -e "BiocManager::install('hypeR')"
+	R -e "BiocManager::install('hypeR')" && \
+	R -e "BiocManager::install('clusterProfiler')"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
 
