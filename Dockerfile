@@ -27,7 +27,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD5
 	libxt-dev
 
 # Install R packages
-RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
+RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser','future.apply'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
 	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
 	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
 	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
