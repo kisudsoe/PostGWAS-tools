@@ -19,8 +19,6 @@ RUN apt -y -qq install \
 	libssl-dev \
 	vim \
 	software-properties-common
-# Install zsh: https://github.com/deluan/zsh-in-docker
-RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.1/zsh-in-docker.sh)"
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
@@ -44,6 +42,15 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "BiocManager::install('clusterProfiler')"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
+
+# Install zsh: https://github.com/deluan/zsh-in-docker
+#RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.1/zsh-in-docker.sh)"
+# terminal colors with xterm
+ENV TERM xterm
+# set the zsh theme 
+ENV ZSH_THEME agnoster
+# run the installation script  
+RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
 # Add Version number
 ADD VERSION .
