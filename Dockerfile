@@ -28,7 +28,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD5
 	libxt-dev
 
 # Install R packages
-RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser','future.apply'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
+RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser','future.apply','corrplot'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
 	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
 	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
 	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
@@ -45,10 +45,11 @@ RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
 
 # Install zsh: https://github.com/deluan/zsh-in-docker
 #RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.1/zsh-in-docker.sh)"
-# terminal colors with xterm
+## terminal colors with xterm
+## set the zsh theme 
 ENV TERM xterm
-# set the zsh theme 
 ENV ZSH_THEME agnoster
+
 # run the installation script  
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
