@@ -3,14 +3,13 @@
 # 9/11/2020 VERSION
 # This file is generated and maintained by Seungsoo Kim.
 
-WORK_DIR="data"
-BASE_BED=$WORK_DIR"/input_bed/gwas_biomart_5892.bed"
-SH_FILE="dist_data.sh"
-ANN_PATH="db"
+WORK_DIR="/data/20.08-PHD3"
+BASE_BED=$WORK_DIR"/gwas_biomart_1569.bed"
+SH_FILE="dist_20.08-PHD3.sh"
+ANN_PATH="/data/db_gwas"
 
 ROAD_FILE=$ANN_PATH"/roadmap_meta.tsv"
 REG_DIR=$ANN_PATH"/regulome"
-ENCODE_FILE=$ANN_PATH"/wgEncodeRegTfbsClusteredWithCellsV3.bed"
 
 ### Archive code ###
 #LNC_DIR=$ANN_PATH"/lncrna"
@@ -20,18 +19,18 @@ ENCODE_FILE=$ANN_PATH"/wgEncodeRegTfbsClusteredWithCellsV3.bed"
 # DO NOT CHANGE BELLOW THIS CODE.
 
 printf "\n1. Overlapping the functional annotations\n"
-printf "1-1. Measuring distance by bedtools\n"
+printf "1-1. Measuring distance by bedtools..\n"
 Rscript postgwas-exe.r \
   --utils bash \
   --base $BASE_BED \
   --out  $WORK_DIR \
   --ann  $ANN_PATH
-mv $SH_FILE data/$SH_FILE
-printf "  Run bedtools commands. This step is taking a while. "
-bash data/$SH_FILE
+mv $SH_FILE /data/$SH_FILE
+printf "  Run bedtools commands. This process takes a while.. "
+bash /data/$SH_FILE
 printf "done\n"
 
-printf "1-2. UCSC gene tags separation "
+printf "1-2. UCSC gene tags separation.. "
 Rscript postgwas-exe.r \
   --dbfilt dist \
   --base   $WORK_DIR/genome_dist/ucsc_annot.tsv \
@@ -40,37 +39,23 @@ Rscript postgwas-exe.r \
   > $WORK_DIR"/log_ucsc.txt"
 printf "done\n"
 
-printf "1-3. Roadmap merge & cell type, 1/2 "
+printf "1-3. Roadmap merge & cell type.. "
 Rscript postgwas-exe.r \
   --dbfilt dist \
   --base   $WORK_DIR/roadmap_dist/roadmap_enh_merge.tsv \
   --out    $WORK_DIR/summary \
-  > $WORK_DIR"/log_roadmap_1_merge.txt"
+  > $WORK_DIR"/log_roadmap_merge.txt"
+printf "1.. "
 
-printf "2/2 "
 Rscript postgwas-exe.r \
   --dbfilt dist \
   --base   $WORK_DIR/roadmap_dist \
   --out    $WORK_DIR/roadmap_over \
   --meta   $ROAD_FILE \
-  > $WORK_DIR"/log_roadmap_2_sub.txt"
-printf "done\n"
+  > $WORK_DIR"/log_roadmap_sub.txt"
+printf "2.. done\n"
 
-printf "1-4. ENCODE Tfbs 1/2 "
-Rscript src/enrich.r --split_tfbs \
-  --tfbs   $WORK_DIR/encode_tfbs.tsv \
-  --type   tsv \
-  --out    $WORK_DIR/encode_dist \
-  > $WORK_DIR"/log_encode_dist.txt"
-
-printf "2/2 "
-Rscript src/enrich.r --tfbs2bed \
-  --tfbs   $WORK_DIR/encode_dist \
-  --out    $WORK_DIR/encode_over \
-  > $WORK_DIR"/log_encode_over.txt"
-printf "done\n"
-
-printf "1-5. RegulomeDB "
+printf "1-4. RegulomeDB.. "
 Rscript postgwas-exe.r \
   --dbfilt regulome \
   --base   $BASE_BED \
@@ -79,7 +64,7 @@ Rscript postgwas-exe.r \
   > $WORK_DIR"/log_regulome.txt"
 printf "done\n"
 
-printf "1-6. lncRNASNP2 "
+printf "1-5. lncRNASNP2.. "
 Rscript postgwas-exe.r \
   --dbfilt lnc_ovl \
   --base   $BASE_BED \
@@ -88,7 +73,7 @@ Rscript postgwas-exe.r \
   > $WORK_DIR"/log_lncrnasnp.txt"
 printf "done\n"
 
-printf "1-7. GTEx eQTL genes "
+printf "1-6. GTEx eQTL genes.. "
 Rscript postgwas-exe.r \
   --dbfilt gtex_ovl \
   --base   $BASE_BED \
@@ -98,32 +83,32 @@ Rscript postgwas-exe.r \
 printf "done\n\n"
 
 printf "2. Union list to summary\n"
-printf "2-1. ENCODE Tfbs "
+printf "2-1. ENCODE Tfbs.. "
 Rscript postgwas-exe.r \
   --dbfilt dist \
   --base   $WORK_DIR/genome_dist/encode_tfbs.tsv \
-  --out    $WORK_DIR/encode_dist \
+  --out    $WORK_DIR/summary \
   > $WORK_DIR"/log_encode.txt"
 printf "done\n"
 
-printf "2-2. Roadmap Enhancers, 1/2 "
+printf "2-2. Roadmap Enhancers.. "
 Rscript postgwas-exe.r \
   --dbvenn summ \
   --base   $WORK_DIR/roadmap_over \
   --out    $WORK_DIR/summary \
   --sub_dir FALSE \
   --uni_save TRUE \
-  > $WORK_DIR"/log_roadmap_3_summ.txt"
+  > $WORK_DIR"/log_roadmap_summ.txt"
+printf "1.. "
 
-printf "2/2 "
 Rscript postgwas-exe.r \
   --dbvenn summ \
   --base   $WORK_DIR/roadmap_over \
   --out    $WORK_DIR/summary \
   --sub_dir TRUE \
   --uni_save TRUE \
-  > $WORK_DIR"/log_roadmap_4_summ_sub.txt"
-printf "done\n"
+  > $WORK_DIR"/log_roadmap_summ_sub.txt"
+printf "2.. done\n"
 
 printf "2-3. GTEx eQTLs union"
 Rscript postgwas-exe.r \
