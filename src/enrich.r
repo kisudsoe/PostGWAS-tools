@@ -1,23 +1,39 @@
 ## Change log ##
 # Written by Seungsoo Kim, PhD
-# debug01 21.01.26
+# 01/26/2021-debug
+# 
 
 ## Parsing Arguments ##
 suppressMessages(library(argparser))
 p = arg_parser("Function for enrichment analysis (Fisher/Permutation)")
 
-### Examples
+### Command examples
 p = add_argument(p, '--example',flag=T,
     help="See command examples by functions.")
 example_msg = '
-Rscript src/enrich.r --splittfbs \
+# Split ENCODE TFBS BED file by cell types
+Rscript src/enrich.r --split_tfbs \
     --tfbs db/wgEncodeRegTfbsClusteredWithCellsV3.bed \
+    --type bed \
     --out db/tfbs_cell
 
+# Split ENCODE dist TSV file by cell types
+Rscript src/enrich.r --split_tfbs \
+    --tfbs data/genome_dist/encode_tfbs.tsv \
+    --type tsv \
+    --out data/encode_dist
+
+# Convert ENCODE dist TSV files to BED format
+Rscript src/enrich.r --tfbs2bed \
+  --tfbs   data/encode_dist \
+  --out    data/encode_over
+
+# Split GTEx eQTL table by tissues
 Rscript src/enrich.r --splitgtex \
     --gtex db/gtex_signif_5e-8.tsv.rds \
     --out db/gtex_tsv
 
+# Permutation test for Roadmap chromatin status
 Rscript src/enrich.r --roadmap_perm \
     --gwas_snp data/seedSNP_1817_bm.bed \
     --f_roadmap db/roadmap_bed \
@@ -25,6 +41,7 @@ Rscript src/enrich.r --roadmap_perm \
     --perm_n 1000 \
     --out enrich/roadmap_enh
 
+# Permutation test for ENCODE TF binding sites
 Rscript src/enrich.r --roadmap_perm \
     --gwas_snp data/gwas_5e-08_129_hg19.bed \
     --f_roadmap db/encode_bed \
@@ -32,6 +49,27 @@ Rscript src/enrich.r --roadmap_perm \
     --perm_n 100 \
     --out enrich/encode_tfbs
 
+# Draw heatmap for the permutation test result (z-score)
+Rscript src/enrich.r --heatmap \
+    --pmdata enrich/roadmap_bed-snp_484_roadmap_dist-permn_100-zscore.tsv \
+    --meta db/roadmap_meta.tsv \
+    --out enrich \
+    --range -3,3 \
+    --annot BLOOD,PANCREAS,THYMUS \
+    --file_ext png
+
+# Transform encode permutation result from wide to long
+Rscript src/enrich.r --encode_tf_summ \
+    --encode_perm_results data/enrich \
+    --out data
+
+# Draw boxplot from the transformed permutation result table
+Rscript src/enrich.r --encode_tf_boxplot \
+    --encode_summ data/encode_tf_enrich_tissue.tsv \
+    --out fig \
+    --file_ext png
+
+# GSEA for GTEx eQTL pairs by considering tissue-specific gene expression levels
 Rscript src/enrich.r --gtex_perm \
     --gwas_snp data/seedSNP_1817_bm.bed \
     --gtex_base db/gtex_signif_5e-8.db \
@@ -39,14 +77,7 @@ Rscript src/enrich.r --gtex_perm \
     --permn 1000 \
     --out enrich
 
-Rscript src/enrich.r --heatmap \
-    --pmdata enrich/roadmap_bed-snp_484_roadmap_dist-permn_100-zscore.tsv \
-    --meta db/roadmap_meta.tsv \
-    --out enrich \
-    --range -3,3 \
-    --annot BLOOD,PANCREAS,THYMUS \
-    --fileext png
-
+# Preparing Dice eQTL data for hypergeometric test
 Rscript src/enrich.r --conv_dicevcf2db \
     --dice_vcf "db/Schmiedel-DICE" \
     --pval 5e-8 \
@@ -70,6 +101,14 @@ Rscript src/enrich.r --eqtl_hyper kstest \
     --eqtl_db db/dice_eqtl_5e-08.db \
     --gene_median_tpm db/dice-mean_tpm_merged.rds \
     --out enrich
+
+# Hypergenometric test to rank nearest genes by SNP enrichment
+# Not working yet
+Rscript src/enrich.r --snp_score \
+    --gwas_snp data/input_bed/gwas_biomart_5892.bed \
+    --evidence_set data/enrich/snp_score \
+    --snp_gene_pair data/genome_dist/nearest_gene.tsv \
+    --out data/enrich
 '
 
 ### Shared Arguments
@@ -109,6 +148,12 @@ p = add_argument(p,'--split_tfbs',flag=T,
     help="[Function] Split ENCODE TFBS BED file by cell types.")
 p = add_argument(p,'--tfbs',
     help="[Path] ENCODE TFBS BED file.")
+p = add_argument(p,'--type',
+    help="[bed/tsv] ENCODE file type.")
+
+### Arguments for tfbs2bed function
+p = add_argument(p,'--tfbs2bed',flag=T,
+    help="[Function] Convert ENCODE dist TSV files to BED format.")
 
 ### Arguments for split_gtex function
 p = add_argument(p,'--split_gtex',flag=T,
@@ -129,6 +174,18 @@ p = add_argument(p,'--gtex_pm_plot',flag=T,
     help="[Function] Draw plot for GTEx permutation test result.")
 p = add_argument(p,'--fgsea_rds',
     help="[Path] RDS file for GTEx permutation test result.")
+
+### Arguments for encode_tf_summ
+p = add_argument(p,'--encode_tf_summ',flag=T,
+    help="[Function] Summarize ENCODE permutation test results.")
+p = add_argument(p, '--encode_perm_results',
+    help="[Path] Directory including ENCODE permutation results.")
+
+### Arguments for encode_tf_boxplot
+p = add_argument(p,'--encode_tf_boxplot',flag=T,
+    help="[Function] Draw box plot from the ENCODE permutation result summary.")
+p = add_argument(p,'--encode_summ',
+    help="[Path] ENCODE permutation result summary TSV file.")
 
 ### Arguments for conv_Dicevcf2db function
 p = add_argument(p,'--conv_dicevcf2db',flag=T,
@@ -156,6 +213,109 @@ suppressMessages(library(tidyr))
 
 
 ## Functions ##
+encode_tf_summ = function(
+    f_encode_perm_results = NULL,
+    out = NULL
+) {
+    paste0('\n** Run conv_dicevcf2db function in enrich.r **\n\n') %>% cat
+    ifelse(!dir.exists(out), dir.create(out), "")
+
+    # Get file list
+    paste0('* In ',f_encode_perm_results,', ') %>% cat
+    f_list = list.files(f_encode_perm_results,full.name=T)
+    f_encode = f_list[grep('/encode_bed-',f_list)]
+    paste0(length(f_encode),' encode_bed files found.\n') %>% cat
+
+    # Parsing files
+    f_encode_li = lapply(f_encode,function(x) {
+        f_base  = tools::file_path_sans_ext(x)
+        f_split = strsplit(f_base,'\\-')[[1]]
+        n = length(f_split); n1=n-1; n2=n-2
+        f_root = paste0(f_split[2:n2],collapse='-')
+        perm_n = strsplit(f_split[n1],'\\_')[[1]][2] %>% as.numeric
+        data.frame(path=x,f_base=f_root,perm_n=perm_n,type=f_split[n])
+    })
+    f_encode_df = data.table::rbindlist(f_encode_li)
+    #print(f_encode_df)
+
+    # Convert files from wide to long
+    f_base_uq = f_encode_df$f_base %>% unique
+    paste0('\n* Convert [') %>% cat
+    n = length(f_base_uq)
+    m = n%/%5
+    summ_li = lapply(c(1:n),function(i) {
+        # Progress bar
+        if(m==0) { '.' %>% cat }
+        else if(i%%m==0) { '.' %>% cat }
+
+        f_encode_df_sub  = subset(f_encode_df,f_base==f_base_uq[i])
+        types = c('overlap','pval','zscore')
+        column_nms = c("SNP_n","Perm_P_val","Z-score")
+        column_nms = paste0(column_nms,' - ',f_base_uq[i])
+
+        dat_li = list()
+        for(j in 1:length(types)) {
+            f_encode_df_type = subset(f_encode_df_sub,type==types[j])
+            dat_type = read.delim(f_encode_df_type$path,stringsAsFactors=F)
+            dat_type_trans = dat_type %>% gather(key="Cell",value="Value",-1,na.rm=T) %>% mutate(ID=paste0(Cell,'-',Status))
+            colnames(dat_type_trans) = c('TF','Cell',column_nms[j],'ID')
+            if(j==1) { dat_li[[j]] = dat_type_trans }
+            else dat_li[[j]] = dat_type_trans[,c(3:4)]
+        }
+        dat_merge = Reduce(function(x,y) merge(x=x,y=y,by='ID',all=T),dat_li)
+        if(i==1) { dat_merge }
+        else dat_merge[,c(-2,-3)]
+    })
+    paste0('] merge = ') %>% cat
+    summ_merge = Reduce(function(x,y) merge(x=x,y=y,by='ID',all=T),summ_li)
+    dim(summ_merge) %>% print
+    
+    # Save as file
+    f_name = paste0(out,'/encode_tf_enrich.tsv')
+    write.table(summ_merge,f_name,sep='\t',row.names=F,quote=F)
+    paste0('* Write file: ',f_name,'\n') %>% cat
+}
+
+
+encode_tf_boxplot = function(
+    f_encode_summ = NULL,
+    out     = NULL,
+    fileext = NULL
+) {
+    paste0('\n** Run encode_tf_boxplot function in enrich.r **\n\n') %>% cat
+    suppressMessages(library(ggplot2))
+    ifelse(!dir.exists(out), dir.create(out), "")
+
+    # Read file
+    paste0('* ',f_encode_summ,' = ') %>% cat
+    dat = read.delim(f_encode_summ,stringsAsFactors=F)
+    dim(dat) %>% print
+
+    if(ncol(dat)>4) {
+        # Configurations
+        col_nms = colnames(dat)[c(-1,-2,-3,-4)]
+        n = length(col_nms)
+
+        # Draw plots
+        for(i in 1:n) {
+            f_name = paste0(out,'/',col_nms[i],'.',fileext)
+            wh = c(6,4)
+            dat_sub = dat[,c(1:4,i+4)]
+            colnames(dat_sub) = c('ID','TF','Cell','Tissue','Value')
+            p = ggplot(dat_sub,aes(x=Tissue,y=Value))+
+                geom_boxplot()+
+                scale_x_discrete(guide=guide_axis(angle=45))+
+                ylab(col_nms[i])
+            ggsave(f_name,p, width=wh[1],height=wh[2],units='in')
+            paste0('  Draw plot',i,': ', f_name,'\n') %>% cat
+        }
+    } else {
+        paste0('\n[ERROR] Not enough column numbers. Plot will drawn from 5th column.\n') %>% cat
+        stop()
+    }
+}
+
+
 read_dicevcf = function(
     f_dicevcf = NULL,
     pval      = 5e-8
@@ -263,8 +423,35 @@ split_gtex = function(
 }
 
 
+tfbs2bed = function(
+    f_tfbs = NULL,
+    out    = NULL
+) {
+    paste0('\n** Run tfbs2bed function in enrich.r **\n\n') %>% cat
+    ifelse(!dir.exists(out), dir.create(out), "")
+
+    # Read files
+    tfbs_paths = list.files(f_tfbs,full.name=T)
+    n = length(tfbs_paths)
+    paste0('* In encode_dist, ',n,' files found: write encode_over [') %>% cat
+    m = n%/%10
+    o=lapply(c(1:n),function(i) {
+        if(m==0) { '.' %>% cat }
+        else if(i%%m==0) '.' %>% cat
+
+        dat = read.delim(tfbs_paths[i],header=F)
+        bed = dat[,1:4] %>% unique
+        f_base = tools::file_path_sans_ext(tfbs_paths[i] %>% basename)
+        f_name = paste0(out,'/snp_encode_',f_base,'.bed')
+        write.table(bed,f_name,sep='\t',row.names=F,col.names=F,quote=F)
+    })
+    paste0('] done\n') %>% cat
+}
+
+
 split_tfbs = function(
     f_tfbs = NULL,
+    type   = NULL,
     out    = NULL
 ) {
     paste0('\n** Run split_tfbs function in enrich.r **\n\n') %>% cat
@@ -272,8 +459,14 @@ split_tfbs = function(
 
     # Read file
     paste0('* ENCODE TFBS table = ') %>% cat
-    tfbs = read.delim(f_tfbs, stringsAsFactors=F)
-    colnames(tfbs) = c('Chr','Start','End','TF','ids','Cells')
+    if(type=='bed') {
+        tfbs = read.delim(f_tfbs, stringsAsFactors=F)
+        colnames(tfbs) = c('Chr','Start','End','TF','ids','Cells')
+    } else if(type=='tsv') {
+        tfbs = read.delim(f_tfbs, header=F, stringsAsFactors=F)
+        colnames(tfbs) = c('Chr1','Start1','End1','Rsid','Chr2','Start2','End2','TF','Signal','Cells','Dist')
+        tfbs = subset(tfbs,Dist==0)
+    }
     dim(tfbs) %>% print
 
     # Get unique cell types
@@ -295,9 +488,11 @@ split_tfbs = function(
 
         # Split file by unique cell types
         tfbs_filt_li = lapply(c(1:m), function(j) {
-            if(j%%progress==0) { '.' %>% cat }
+            if(progress==0) { '.' %>% cat
+            } else if(j%%progress==0) { '.' %>% cat }
 
-            tfbs_sub_j = tfbs_sub[j,1:4]
+            if(type=='bed') { tfbs_sub_j = tfbs_sub[j,1:4]
+            } else if(type=='tsv') { tfbs_sub_j = tfbs_sub[j,1:8] }
             tfbs_cell = tfbs_sub[j,]$Cells
             cells = strsplit(tfbs_cell,',')[[1]]
             which_cells = which(cells==cell_types[i])
@@ -312,8 +507,14 @@ split_tfbs = function(
         paste0(nrow(tfbs_filt_df),', TFs = ',tf_len,'. ') %>% cat
 
         # Save file as BED format
-        f_name = paste0(out,'/',cell_types[i],'.bed')
-        write.table(tfbs_filt_df[,1:4],f_name,sep='\t',row.names=F,col.names=F,quote=F)
+        if(type=='bed') {
+            tfbs_filt_df = tfbs_filt_df[,1:4]
+            f_name = paste0(out,'/',cell_types[i],'.bed')
+        } else if(type=='tsv') {
+            tfbs_filt_df = tfbs_filt_df
+            f_name = paste0(out,'/',cell_types[i],'.tsv')
+        }
+        write.table(tfbs_filt_df,f_name,sep='\t',row.names=F,col.names=F,quote=F)
         paste0('Save: ',f_name,'; ',pdtime(t1,2),'\n') %>% cat
         return(NULL)
     })
@@ -895,6 +1096,23 @@ if(argv$example) {
     )
 } else if(argv$split_tfbs) {
     split_tfbs(
+        f_tfbs = argv$tfbs,
+        type   = argv$type,
+        out    = argv$out
+    )
+} else if(argv$encode_tf_summ) {
+    encode_tf_summ(
+        f_encode_perm_results = argv$encode_perm_results,
+        out    = argv$out
+    )
+} else if(argv$encode_tf_boxplot) {
+    encode_tf_boxplot(
+        f_encode_summ = argv$encode_summ,
+        out     = argv$out,
+        fileext = argv$file_ext
+    )
+} else if(argv$tfbs2bed) {
+    tfbs2bed(
         f_tfbs = argv$tfbs,
         out    = argv$out
     )
