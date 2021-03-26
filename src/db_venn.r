@@ -154,7 +154,7 @@ summ_ann = function(
 		for(k in 1:j) {
 			union_df = venn_bed(paths_li[[k]],out,fig=NULL,uni_list=TRUE,debug=FALSE)
 			if(is.null(union_df)) { nrow_union_df = 0
-			} else                  nrow_union_df = unique(union_df)%>% nrow
+			} else nrow_union_df = unique(union_df)%>% nrow
 			f_name1 = paste0(out,'/snp_union_',dir_name,'_',dir_nm_li[[k]],'_',
 				nrow_union_df,'.bed')
 			write.table(union_df[,c(2:4,1)] %>% unique,f_name1,
@@ -251,7 +251,6 @@ summ_ann = function(
 			gene_ann = near_ann
 		}
 		
-
 		## Extract snp-nearest genes pair
 		if(!is.null(gene_ens)) {
 			paste0('  Extract snp-gene pair = ') %>% cat
@@ -330,7 +329,8 @@ summ_ann = function(
 			gtex_ann = merge(gtex,gene_ens[,c(1:2,4)],
 				by.x='Ensgid',by.y='ensembl_gene_id',all.x=T)
 			colnames(gtex_ann)[3] = 'rsid'
-			gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
+			#gtex_merge = merge(gtex_ann,union_summ,by='rsid',all.x=T) %>% unique
+			gtex_merge = gtex_ann
 			gene_names2 = gtex_merge$hgnc_symbol
 			which_i = which(gene_names2 %in% c('',NA,NULL))
 			gene_names2[which_i] = gtex_merge$Ensgid[which_i] %>% as.character
@@ -388,6 +388,7 @@ summ_ann = function(
 		f_ext = tools::file_ext(ann_gwas)
 		if(f_ext=='tsv' | f_ext=='txt') {
 			gwas = read.delim(ann_gwas,stringsAsFactors=F)
+			colnames(gwas)[colnames(gwas)=='Rsid'] = 'rsid'
 		} else if(f_ext=='bed') {
 			gwas = read.delim(ann_gwas,header=F,stringsAsFactors=F)
 			colnames(gwas) = c('chr','start','end','rsid')

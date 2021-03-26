@@ -66,10 +66,10 @@ ldlink_bed = function(
     snp_bed_hg19_li = lapply(c(1:nrow(snps_)),function(i) {
         row = snps_[i,]
         if(snps_hg19_length[i]<0) {
-            start = as.numeric(as.character(row$hg19_end))-1
+            start = as.numeric(as.character(row$hg19_start))-1
             end   = row$hg19_start
         } else {
-            start = as.numeric(as.character(row$hg19_start))-1
+            start = as.numeric(as.character(row$hg19_end))-1
             end   = row$hg19_end
         }
         out = data.frame(
@@ -145,13 +145,13 @@ ldlink_filter = function(
     # Read downloaded files
     paste0('\n** Run function ldlink_filter...\n') %>% cat
     paste0('Read download files... ') %>% cat
-    snpdf     = read.delim(snp_path,stringsAsFactors=F) %>% unique
-    snpids    = snpdf$Rsid %>% unique
-    f_names   = snpdf$File %>% unique
+    snpdf   = read.delim(snp_path,stringsAsFactors=F) %>% unique
+    snpids  = snpdf$Rsid %>% unique
+    f_names = snpdf$File %>% unique
     #col_names = c('No','RS_Number','Coord','Alleles','MAF','Distance',
     #    'Dprime','R2','Correlated_Alleles','RegulomeDB','Function')
-    ldlink    = paste0(ld_path,'/',f_names)
-    snptb     = data.frame(snpids=snpids, ldlink=ldlink)
+    ldlink  = paste0(ld_path,'/',f_names)
+    snptb   = data.frame(snpids=snpids, ldlink=ldlink)
     paste0(nrow(snptb),'\n') %>% cat
     
     ldlink_li = apply(snptb,1,function(row) {
@@ -186,8 +186,8 @@ ldlink_filter = function(
     if(!is.null(dprime)) {
         dprimt = as.numeric(dprime)
         if(dprime<1) {
-            ldlink_df = subset(ldlink_df,Dprime<dprime)
-            paste0('    Filtering by "Dprime > ',r2,'": ') %>% cat
+            ldlink_df = subset(ldlink_df,Dprime>dprime)
+            paste0('    Filtering by "Dprime > ',dprime,'": ') %>% cat
         } else if(dprime==1) {
             ldlink_df = subset(ldlink_df,Dprime==dprime)
             paste0('    Filtering by "Dprime = ',dprime,'": ') %>% cat
@@ -225,18 +225,18 @@ ldlink_filter = function(
     snp_t2 = setdiff(ldlink_$ldSNPs,snpids) %>% unique
     paste0('  SNP Tier 2\t\t\t= ',length(snp_t2),'\n') %>% cat
     snp_cand = union(ldlink_$ldSNPs,snpids) %>% unique
-    snps_ = data.frame(rsid=snp_cand)
+    snps_ = data.frame(Rsid=snp_cand)
     #write.table(snp_cand,'snp_cand.tsv',row.names=F,quote=F,sep='\t') # For debug
     paste0('  SNP candidates\t\t= ',length(snp_cand),'\n') %>% cat
 
     # Prepare SNP source annotation table
     snp_src1 = data.frame(
-        rsid   = snpids,
-        source = rep('GWAS',length(snpids))
+        Rsid   = snpids,
+        Source = rep('GWAS',length(snpids))
     )
     snp_src2 = data.frame(
-        rsid   = snp_t2,
-        source = rep('Ldlink',length(snp_t2))
+        Rsid   = snp_t2,
+        Source = rep('Ldlink',length(snp_t2))
     )
     snp_src = rbind(snp_src1,snp_src2)
     paste0('  SNP source annotation table\t= ') %>% cat; dim(snp_src) %>% print
@@ -244,17 +244,18 @@ ldlink_filter = function(
     # Add LD block annotation
     if(blk_idx) {
         paste0('\nAdd annotations:\n') %>% cat
-        paste0('  Calculate LD block index... ') %>% cat
+        paste0('  Calculate LD block index ') %>% cat
         ldlink_3 = ldlink_
-        colnames(ldlink_2)[2] = 'rsid'
-        ldlink_3 = merge(snps_,ldlink_3,by='rsid',all.x=T)
+        colnames(ldlink_3)[2] = 'Rsid'
+        ldlink_3 = merge(snps_,ldlink_3,by='Rsid',all.x=T)
 
         ## Make group1
+        paste0('-> group1 ') %>% cat
         gwas_snps = ldlink_3$gwasSNPs %>% as.character %>% na.omit %>% unique
         n = length(gwas_snps)
         group1 = list()
         for(i in 1:n) {
-            ldsnps = subset(ldlink_3,gwasSNPs==gwas_snps[i])$rsid %>% as.character
+            ldsnps = subset(ldlink_3,gwasSNPs==gwas_snps[i])$Rsid %>% as.character
             block  = c(gwas_snps[i],ldsnps) %>% unique
             if(i==1) group1[[1]] = block
             m = length(group1)
@@ -268,6 +269,7 @@ ldlink_filter = function(
         }
 
         ## Check duplicate in group1 to generate group2
+        paste0('-> group2 = ') %>% cat
         n = length(group1)
         group2 = list()
         for(i in 1:n) {
@@ -284,16 +286,17 @@ ldlink_filter = function(
         ld_bid = formatC(c(1:length(group2)),width=3,flag='0') %>% as.character # "001"
         names(group2) = paste0('ld_block',ld_bid)
         ldblock = stack(group2) %>% unique
-        colnames(ldblock) = c('rsid','ld_blocks')
+        colnames(ldblock) = c('Rsid','ld_blocks')
         group2 %>% length %>% print
-    }
+    } else ldblock = NULL
 
     # Search biomart hg19 to get coordinates
     if(srch_bio) {
         paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
         paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
-    }
-    if(srch_bio & hg=='hg19') {
+        hg_chk = hg
+    } else hg_chk = NULL
+    if(hg_chk=='hg19') {
         paste0('  Hg19 result table\t= ') %>% cat
         hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
                            dataset='hsapiens_snp',path='/biomart/martservice')
@@ -304,7 +307,7 @@ ldlink_filter = function(
             values     = snp_cand,
             mart       = hg19_snp) %>% unique
         snps_merge = merge(snps_,snps_hg19_bio1,
-                           by.x='rsid',by.y='refsnp_id',all.x=T)
+                           by.x='Rsid',by.y='refsnp_id',all.x=T)
         which_na = is.na(snps_merge$chr_name) %>% which
 
         if(length(which_na)>0) {
@@ -319,12 +322,12 @@ ldlink_filter = function(
             colnames(snps_hg19_bio2)[1] = "refsnp_id"
             snps_bio = rbind(snps_hg19_bio1,snps_hg19_bio2) %>% unique
         } else snps_bio = snps_hg19_bio1
-        colnames(snps_bio) = c('rsid','hg19_chr','hg19_start','hg19_end')
-        snps_bio_ = subset(snps_bio,hg19_chr %in% c(1:22,'X','Y'))
+        colnames(snps_bio) = c('Rsid','hg19_Chr','hg19_Start','hg19_End')
+        snps_bio_ = subset(snps_bio,hg19_Chr %in% c(1:22,'X','Y'))
         snps_bio_[,2] = paste0('chr',snps_bio_[,2])
         #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
         dim(snps_bio_) %>% print
-    } else if(srch_bio & hg=='hg38') { # Search biomart hg38 to get coordinates
+    } else if(hg_chk=='hg38') { # Search biomart hg38 to get coordinates
         paste0('  Hg38 result table\t= ') %>% cat
         hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host=mirror_url,
                         dataset="hsapiens_snp") # debug 20.08.11
@@ -334,7 +337,7 @@ ldlink_filter = function(
             values     = snp_cand,
             mart       = hg38_snp) %>% unique
         snps_merge = merge(snps_,snps_bio1,
-                        by.x='rsid',by.y='refsnp_id',all.x=T)
+                        by.x='Rsid',by.y='refsnp_id',all.x=T)
         which_na = is.na(snps_merge$chr_name) %>% which
 
         if(length(which_na)>0) {
@@ -348,25 +351,21 @@ ldlink_filter = function(
             colnames(snps_bio2)[1] = "refsnp_id"
             snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
         } else snps_bio = snps_bio1
-        colnames(snps_bio) = c('rsid','chr','start','end')
-        snps_bio_       = subset(snps_bio,chr %in% c(1:22,'X','Y'))
+        colnames(snps_bio) = c('Rsid','Chr','Start','End')
+        snps_bio_       = subset(snps_bio,Chr %in% c(1:22,'X','Y'))
         snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
         #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
         dim(snps_bio_) %>% print
-    }
+    } else snps_bio_ = NULL
 
     # Merge the biomart result with the GWAS SNP list
-    merge_multi = function(x,y) { merge(x,y,by='rsid',all.x=T) }
+    paste0('  Merge data\t\t= ') %>% cat
     #snps_merge = merge(snps_,snps_bio_,by='rsid',all.x=TRUE)
-    colnames(ldlink_)[2] = 'rsid'
-    snps_li = list(snps_,ldlink_[,2:3])
-    n1 = length(snps_li)
-    if(blk_idx) snps_li[[n1+1]] = ldblock
-    n2 = length(snps_li)
-    snps_li[[n2+1]] = snp_src
-    n3 = length(snps_li)
-    if(srch_bio) snps_li[[n3+1]] = snps_bio_
-    snps_merge1 = Reduce(merge_multi,snps_li) %>% unique
+    colnames(ldlink_)[2] = 'Rsid'
+    snps_li_tmp = list(snps_,ldlink_[,2:3],ldblock,snp_src,snps_bio_)
+    snps_li = lapply(snps_li_tmp, na.omit)
+    snps_merge1 = Reduce(function(x,y) merge(x=x,y=y,by='Rsid',all.x=T), snps_li) %>% unique
+    dim(snps_merge1) %>% print
 
     # Add Cytoband annotation (hg19)
     if(hg=='hg19') {
@@ -376,7 +375,7 @@ ldlink_filter = function(
 
         ## Download cytoband data from UCSC
         paste0('Cytoband annotation... ') %>% cat
-        cyto     = circlize::read.cytoband(species = 'hg19')$df
+        cyto = circlize::read.cytoband(species = 'hg19')$df
         colnames(cyto) = c('chr','start','end','cytoband','tag')
 
         ## Split SNP coord to CHR and POS
@@ -406,17 +405,13 @@ ldlink_filter = function(
             return(cytoband)
         }) %>% unlist
         paste0(length(cytoband),'.. ') %>% cat
-        m = ncol(snps_merge1); col_rg1 = c(1:m); col_rg2 = c(5:m)
-        if(m>4) {
-            snps_merge = data.frame(snps_merge1[,1:4],cytoband,snps_merge1[,col_rg2])
-        } else {
-            snps_merge = data.frame(snps_merge1[,col_rg1],cytoband,coord_df)
-        }
+        m = ncol(snps_merge1)
+        snps_merge = data.frame(snps_merge1[,1:2],cytoband,snps_merge1[,c(3:m)])
         paste0('done\n') %>% cat
     }
 
     # Write a TSV file
-    snp_n = snps_merge$rsid %>% unique %>% length
+    snp_n = snps_merge$Rsid %>% unique %>% length
     ifelse(!dir.exists(out), dir.create(out),'') # mkdir
     f_name1 = paste0(out,'/gwas_biomart_',snp_n,'.tsv')
     paste0('  Merged table\t\t= ') %>% cat; dim(snps_merge) %>% print
@@ -463,33 +458,11 @@ ldlink_down = function(
             LDproxy(snp=rsid[i], pop=pop_li[[i]], r2d='d', token=token, file=out_names[i])
         }
         
-        command = paste0('mv /*.txt ',out)
+        command = paste0('mv *.txt ',out)
         try(system(command))
         if(i%%10==0) paste0(' ',i,' files are moved.\n') %>% cat
     }
-    paste0('\nProcess done. Plase check your out folder: ',out,'\n') %>% cat
-
-    ## Code archieves ##
-
-    # Split query by chunks
-    #rsid_chunks = split(rsid, ceiling(seq_along(rsid)/10))
-    #if(length(n) > 0) pops_chunks = split(pops, ceiling(seq_along(pops)/10))
-    #n = length(rsid_chunks)
-    #paste0(n,' query chunks are generated.\n') %>% cat
-
-    # Download from LDlink
-    #paste0('  ',i,'/',n,' query chunk..') %>% cat
-    #print(pops_chunks[[i]])
-    #if(length(n) > 0) {
-    #    LDproxy_batch(snp=rsid_chunks[[i]], pop=pops_chunks[[i]], r2d='d', token=token)
-    #} else {
-    #    LDproxy_batch(snp=rsid_chunks[[i]], pop=popul, r2d='d', token=token) #append=T
-    #}
-
-    # Rename downloaded file
-    #f_name  = paste0(rsid_chunks[[i]],'.txt')
-    #f_name1 = paste0(out,'/',f_name)
-    #file.rename(f_name,f_name1)
+    paste0('\nProcess done. Please check your out folder: ',out,'\n') %>% cat
 }
 
 
@@ -561,7 +534,7 @@ gwas_ldlink = function(
     } else if(args$ldlink == 'filter') {
         if(blk_idx=='TRUE') blk_idx = TRUE
         if(srch_bio=='FALSE') srch_bio = FALSE
-        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,debug)
+        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,srch_bio,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else if(args$ldlink == 'chkbiomart') {

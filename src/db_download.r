@@ -235,7 +235,7 @@ encode_down = function(
     paste0('\n** Run function: db_download.r/encode_down...\n') %>% cat
     mkdir_out(out)
 
-    url = paste0('http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeRegTfbsClustered/wgEncodeRegTfbsClusteredV3.bed.gz')
+    url = paste0('http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeRegTfbsClustered/wgEncodeRegTfbsClusteredWithCellsV3.bed.gz')
     f_name = paste0(out,'/',basename(url))
     tb = try(download.file(url,destfile=f_name)) # debug no file error
     if("try-error" %in% class(tb)) tb=NULL
