@@ -64,6 +64,7 @@ pivot = function(
     out = NULL
 ) {
     paste0('\n** Run pivot function in roadmap_summary.r **\n\n') %>% cat
+    ifelse(!dir.exists(out), dir.create(out), "")
     # Get file list from a directory
     f_roadmap_dists = list.files(f_roadmap_dist, full.names=T)
     n = length(f_roadmap_dists)
@@ -145,6 +146,7 @@ heatmap = function(
     suppressMessages(library(ComplexHeatmap))
 
     # Read file
+    ifelse(!dir.exists(out), dir.create(out), "")
     paste0('* Read file: ',f_roadmap_summ,' = ') %>% cat
     summ = read.delim(f_roadmap_summ,stringsAsFactors=F)
     dim(summ) %>% print
@@ -159,9 +161,9 @@ heatmap = function(
         # Set file name
         f_base = basename(f_snp_filt)
         file_base = tools::file_path_sans_ext(f_base)
-        f_name = paste0('fig/roadmap_summ_',file_base,'.',file_ext)
+        f_name = paste0(out,'/roadmap_summ_',file_base,'.',file_ext)
     } else {
-        f_name = paste0('fig/roadmap_summ','.',file_ext)
+        f_name = paste0(out,'/roadmap_summ','.',file_ext)
     }
 
     # Read meta-info. file
