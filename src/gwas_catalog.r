@@ -129,9 +129,7 @@ study_pivot = function(
         paste0('  pivot merge dim = ') %>% cat
         dim(pivot_5e8) %>% print
     }
-    f_name = paste0(out,'/',file_nm,'_studies.tsv')
-    write.table(pivot,f_name,sep='\t',quote=F)
-    paste0('Write study pivot: ',f_name,'\n') %>% cat
+    return(pivot)
 }
 
 gene_pivot = function(
@@ -179,10 +177,7 @@ gene_pivot = function(
         dim(pivot) %>% print
     }
     
-    # Save: Pivot table
-    f_name = paste0(out,'/',file_nm,'_genes.tsv')
-    write.table(pivot,f_name,sep='\t',quote=F,row.names=F)
-    paste0('Write gene pivot: ',f_name,'\n') %>% cat
+    return(pivot)
 }
 
 trait_pivot = function(
@@ -246,11 +241,66 @@ trait_pivot = function(
         P_num,
         pivot1_val
     )
-    f_name = paste0(out,'/',file_nm,'_snps.tsv')
-    write.table(pivot,f_name,sep='\t',quote=F,row.names=F)
-    paste0('Write TRAITS pivot: ',f_name,'\n') %>% cat
+
+    return(pivot)
+}
+
+
+generate_pivot = function(
+    gwas = NULL,
+    out = NULL,
+    pivot = NULL,
+    debug = FALSE
+) {
+    paste0('\n** Run function generate_pivot in gwas_catalog.r:\n') %>% cat
+    f_gwas = list.files(gwas, full.names=T)
+    f_n = length(f_gwas)
+    if(f_n==1) { f_gwas = gwas
+    } else {
+        paste0(f_n,' files input -> [') %>% cat
+    }
+    gwas_li=list()
+    for(i in 1:f_n) {
+        paste0('.') %>% cat
+        # Read GWAS Catalog file
+        gwas_li[[i]] = read.delim(f_gwas[i],stringsAsFactors=F)
+        file_nm = tools::file_path_sans_ext(f_gwas[i] %>% basename)
+        if(debug=="TRUE"|debug=="T") debug=TRUE
+        if(debug) {
+            paste0('Read file, ',basename(f_gwas[i]),' = ') %>% cat
+            dim(gdata) %>% print
+        }
+    }
+    paste0('] = ') %>% cat
+    gwas_merged  = data.table::rbindlist(gwas_li)
+    dim(gwas_merged) %>% print
+
+    # Generate TRAITS pivot table
+    dir_nm = tools::file_path_sans_ext(gwas %>% basename)
+    f_name = paste0(out,'/',dir_nm,c('_studies','_genes','_snps'),'.tsv')
+    if('trait' %in% pivot) {
+        #paste0('\n** Run trait_pivot:\n') %>% cat
+        trait_pivot = trait_pivot(gwas_merged, out, file_nm, debug)
+        write.table(trait_pivot, f_name[1],sep='\t',quote=F)
+        paste0('Write study pivot: ',f_name[1],'\n') %>% cat
+    }
+    # Generate SNP-Gene-Min_P table
+    if('gene' %in% pivot) {
+        #paste0('\n** Run gene_pivot:\n') %>% cat
+        gene_pivot = gene_pivot(gwas_merged, out, file_nm, debug)
+        write.table(gene_pivot,  f_name[2],sep='\t',quote=F,row.names=F)
+        paste0('Write gene pivot: ',f_name[2],'\n') %>% cat
+    }
+    # Generate Study summary table
+    if('study' %in% pivot) {
+        #paste0('\n** Run study_pivot:\n') %>% cat
+        study_pivot = study_pivot(gwas_merged, out, file_nm, debug)
+        write.table(study_pivot,f_name[3],sep='\t',quote=F,row.names=F)
+        paste0('Write traits pivot: ',f_name[3],'\n') %>% cat
+    }
 }
 ## Functions End ##
+
 
 ## __INITE__ function
 gwas_catalog = function(
@@ -269,36 +319,16 @@ gwas_catalog = function(
     if(length(args$p.criteria)>0) { p_criteria = args$p.criteria
     } else                          p_criteria = 5e-8
     
-    # Read GWAS Catalog file
-    gdata = read.delim(gwas,stringsAsFactors=F)
-    file_nm = tools::file_path_sans_ext(gwas %>% basename)
-    if(debug=="TRUE"|debug=="T") debug=TRUE
-    if(debug) {
-        paste0('Read file, ',basename(gwas),' = ') %>% cat
-        dim(gdata) %>% print
-    }
-
     # Generate out folder
-    ifelse(!dir.exists(out), dir.create(out),'')
-
     source('src/pdtime.r'); t0=Sys.time()
-    if('trait' %in% args$gwas) {
-        # Generate TRAITS pivot table
-        paste0('\n** Run function trait_pivot:\n') %>% cat
-        trait_pivot(gdata, out, file_nm, debug)
-    }
-    if('gene' %in% args$gwas) {
-        # Generate SNP-Gene-Min_P table
-        paste0('\n** Run function gene_pivot:\n') %>% cat
-        gene_pivot(gdata, out, file_nm, debug)
-    }
-    if('study' %in% args$gwas) {
-        # Generate Study summary table
-        paste0('\n** Run function study_pivot:\n') %>% cat
-        study_pivot(gdata, out, file_nm, debug)
+    ifelse(!dir.exists(out), dir.create(out),'')
+    if(args$gwas %in% c('trait','gene','study')) {
+        # Generate pivot tables
+        generate_pivot(gwas, out, pivot, debug)
     } else if(args$gwas == 'filter') {
         # Generate filtered SNP table
         paste0('\n** Run function gwas_filt:\n') %>% cat
+        gdata = read.delim(gwas,stringsAsFactors=F)
         gwas_filt(gdata, out, p_criteria, debug)
     }
     paste0(pdtime(t0,1),'\n\n') %>% cat

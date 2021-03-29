@@ -2,7 +2,7 @@
 
 # Help Messages ----------
 help_message = '
-Version: 2020-07-22
+Version: 2021-03-27
 
 Usage:
     Rscript postgwas-exe.r --gene   <Function>
