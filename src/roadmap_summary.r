@@ -184,9 +184,11 @@ heatmap = function(
 
     paste0('-> extract ha2 ') %>% cat
     anatomy = meta$ANATOMY
-    annots  = strsplit(annot,',')[[1]]
-    `%notin%` = Negate(`%in%`) # define %notin% operator
-    anatomy[meta$ANATOMY %notin% annots] = 'Other'
+    if(length(annot)>0) {
+        annots  = strsplit(annot,',')[[1]]
+        `%notin%` = Negate(`%in%`) # define %notin% operator
+        anatomy[meta$ANATOMY %notin% annots] = 'Other'
+    }
     anatomy_uq = anatomy %>% unique %>% sort
     ana_num = length(anatomy_uq)
 
