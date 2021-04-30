@@ -18,7 +18,8 @@ RUN apt -y -qq install \
 	libxml2-dev \
 	libssl-dev \
 	vim \
-	software-properties-common
+	software-properties-common \
+	sqlite3
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
