@@ -58,7 +58,7 @@ printf "done\n"
 
 printf "1-4. ENCODE Tfbs 1/2 "
 Rscript src/enrich.r --split_tfbs \
-  --tfbs   $WORK_DIR/encode_tfbs.tsv \
+  --tfbs   $WORK_DIR/genome_dist/encode_tfbs.tsv \
   --type   tsv \
   --out    $WORK_DIR/encode_dist \
   > $WORK_DIR"/log_encode_dist.txt"
