@@ -178,16 +178,17 @@ heatmap = function(
     meta = meta[match(summ_col_names,meta$EID),]
     
     paste0('-> extract ha1 ') %>% cat
-    summ_col = paste0(meta$EDACC_NAME," (",meta$EID,")")
-    ha1 = HeatmapAnnotation(Name=anno_text(summ_col))
+    summ_col = paste0("(",meta$EID,") ",meta$EDACC_NAME)
+    ha1 = HeatmapAnnotation(Name=anno_text(summ_col, rot=270, just="left"))
     show_column_names = FALSE
 
     paste0('-> extract ha2 ') %>% cat
     anatomy = meta$ANATOMY
-    if(length(annot)>0) {
+    if(!is.na(annot)) { # debug 21.05.07
         annots  = strsplit(annot,',')[[1]]
         `%notin%` = Negate(`%in%`) # define %notin% operator
         anatomy[meta$ANATOMY %notin% annots] = 'Other'
+        paste0('[filtered] ') %>% cat
     }
     anatomy_uq = anatomy %>% unique %>% sort
     ana_num = length(anatomy_uq)
@@ -242,30 +243,35 @@ heatmap = function(
 
     # Read snps files
     paste0('* Read SNPs BED files ')  %>% cat
-    f_snps_multi = strsplit(f_snps,'\\,')[[1]]
-    n = length(f_snps_multi)
-    ' [' %>% cat
-    snps_li = lapply(c(1:n),function(i) {
-        '.' %>% cat
-        f_base = basename(f_snps_multi[i])
-        file_base = tools::file_path_sans_ext(f_base)
-        file_split = strsplit(file_base,'\\_')[[1]][1:3]
-        snps_df = read.delim(f_snps_multi[i],header=F,stringsAsFactors=F)
-        annot = paste0(file_split,collapse='_')
-        Res = data.frame(Rsid=snps_df[,4],annot)
-        colnames(Res) = c('Rsid',annot)
-        return(Res)
-    })
-    paste0('] Annotation merge ') %>% cat
-    snps_df = Reduce(function(x,y) merge(x=x,y=y,by='Rsid',all=T), snps_li)
-    snps_merge = merge(data.frame(Rsid=summ[,1]),snps_df,by='Rsid',all=T) %>% unique
-    if(!is.na(f_snp_filt)) {
-        paste0('-> [Option] Filt by ',length(rsids),' snps ') %>% cat
-        snps_merge = subset(snps_merge,Rsid %in% rsids)
+    if(!is.na(f_snps)) {
+		f_snps_multi = strsplit(f_snps,'\\,')[[1]]
+		n = length(f_snps_multi)
+		' [' %>% cat
+		snps_li = lapply(c(1:n),function(i) {
+			'.' %>% cat
+			f_base = basename(f_snps_multi[i])
+			file_base = tools::file_path_sans_ext(f_base)
+			file_split = strsplit(file_base,'\\_')[[1]][1:3]
+			snps_df = read.delim(f_snps_multi[i],header=F,stringsAsFactors=F)
+			annot = paste0(file_split,collapse='_')
+			Res = data.frame(Rsid=snps_df[,4],annot)
+			colnames(Res) = c('Rsid',annot)
+			return(Res)
+		})
+		paste0('] Annotation merge ') %>% cat
+		snps_df = Reduce(function(x,y) merge(x=x,y=y,by='Rsid',all=T), snps_li)
+		snps_merge = merge(data.frame(Rsid=summ[,1]),snps_df,by='Rsid',all=T) %>% unique
+		if(!is.na(f_snp_filt)) {
+			paste0('-> [Option] Filt by ',length(rsids),' snps ') %>% cat
+			snps_merge = subset(snps_merge,Rsid %in% rsids)
+		}
+		snps_mat = as.matrix(snps_merge[,c(-1)])
+		colnames(snps_mat) = colnames(snps_merge)[-1] # debug 21.05.07
+		rownames(snps_mat) = snps_merge[,1] # debug 21.05.07
+        paste0('-> done\n') %>% cat
+	} else {
+        paste0('-> Found no input [skip]\n') %>% cat # debug 21.05.07
     }
-    rownames(snps_merge) = snps_merge[,1]
-    snps_mat = as.matrix(snps_merge[,c(-1)])
-    paste0('-> done\n') %>% cat
 
     # Preparing heatmap
     paste0('* Draw heatmap ') %>% cat
@@ -279,6 +285,7 @@ heatmap = function(
     } else if(file_ext=='svg') { svg(f_name, width=wh[1], height=wh[2]) }
 
     summ_mat = as.matrix(summ_mat)
+    ht_opt$message = FALSE
     ht1=Heatmap(
         summ_mat,
         name = 'Chr.\nstatus',
@@ -294,16 +301,21 @@ heatmap = function(
         cluster_rows       = TRUE,
         cluster_columns    = TRUE
     )
-
-    k = ncol(snps_mat)+1
-    mycol2 = structure(2:k, names=colnames(snps_mat))
-    ht2=Heatmap(
-        snps_mat,
-        name = 'SNPs',
-        col  = mycol2,
-        show_row_names = show_row_names
-    )
-    print(ht1+ht2)
+    
+    if(!is.na(f_snps)) {
+        k = ncol(snps_mat)+1
+        mycol2 = structure(2:k, names=colnames(snps_mat))
+        ha3 = HeatmapAnnotation(Name=anno_text(colnames(snps_mat), rot=270, just="left"))
+        ht2=Heatmap(
+            snps_mat,
+            name = 'SNPs',
+            col  = mycol2,
+            show_row_names = show_row_names,
+            show_column_names = FALSE,
+            bottom_annotation = ha3
+        )
+        print(ht1+ht2)
+    } else print(ht1) # debug 21.05.07
     dev.off()
     paste0('-> done\n') %>% cat
     paste0('\nSave as ',f_name,'\n') %>% cat
