@@ -580,26 +580,25 @@ draw_heatmap = function(
 
         # [Optional] Add column annotation to heatmap by ANATOMY
         paste0('-> extract ha2 ') %>% cat
-        if(length(f_meta)>0 & length(annot)>0) {
-            if(meta_db=='roadmap_meta') { anatomy = meta$ANATOMY
-            } else if(meta_db=='encode_meta') { anatomy = meta$Tissue }
+        if(meta_db=='roadmap_meta') { anatomy = meta$ANATOMY
+        } else if(meta_db=='encode_meta') { anatomy = meta$Tissue }
+        if(!is.na(annot)) {
             annots = strsplit(annot,',')[[1]]
             `%notin%` = Negate(`%in%`) # define %notin% operator
             anatomy[meta$ANATOMY %notin% annots] = 'Other' # A bug to change as NA
             anatomy_uq = anatomy %>% unique %>% sort
             ana_num = length(anatomy_uq)
+        }
+        if(ana_num<5) { ann_cols = terrain.colors(length(anatomy_uq))
+        } else ann_cols = rainbow(length(anatomy_uq))
 
-            if(ana_num<5) { ann_cols = terrain.colors(length(anatomy_uq))
-            } else ann_cols = rainbow(length(anatomy_uq))
-
-            ## Set column annotation color
-            names(ann_cols) = anatomy_uq
-            ha2 = HeatmapAnnotation(
-                Anatomy=anatomy,
-                col=list(Anatomy=ann_cols),
-                gp=gpar(col="black", lwd=.5)
-            )
-        } else { ha2 = NULL }
+        ## Set column annotation color
+        names(ann_cols) = anatomy_uq
+        ha2 = HeatmapAnnotation(
+            Anatomy=anatomy,
+            col=list(Anatomy=ann_cols),
+            gp=gpar(col="black", lwd=.5)
+        )
         paste0('-> done\n') %>% cat
     } else {
         paste0('* [Notice] Meta-info table is not found.') %>% cat
@@ -613,7 +612,7 @@ draw_heatmap = function(
     my_col = colorRamp2(c(z_range[1],0,z_range[2]),c("#2E86C1","#FEF9E7","#C0392B"))
     if(meta_db=='roadmap_meta') {
         cluster_row_col = c(FALSE,TRUE)
-        wh = c(20,5*n+5)
+        wh = c(20,8*n+3)
     } else if(meta_db=='encode_meta') {
         cluster_row_col = c(FALSE,FALSE)
         wh = c(22,25)
