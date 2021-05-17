@@ -193,12 +193,13 @@ biomart_gene = function(
     genes_sub = subset(genes,chromosome_name %in% c(1:22,'X','Y'))
     chr_ = paste0('chr',genes_sub[,1])
     genes_ = data.frame(chr_,genes_sub[,2:5])
+    genes_$name = paste0(genes_$ENSGid,'-',genes_$Symbol)
     colnames(genes_) = c('chr','start','end','ENSGid','Symbol')
     paste0('\n  Filtered table, dim\t= ') %>% cat; dim(genes_) %>% print
 
     # Save as a BED file
     f_name2 = paste0(out,'/ensembl_gene_',hg,'.bed')
-    write.table(genes_[,1:4],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
+    write.table(genes_[,c(1:3,5)],f_name2,row.names=F,col.names=F,quote=F,sep='\t')
     paste0('  File write: ',f_name2,'\n\n') %>% cat
 }
 
