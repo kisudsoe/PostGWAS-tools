@@ -33,6 +33,7 @@ Optional argument:
     --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
     --blk_idx   An argument for the "--ldlink filter". Add LD block calculation by TRUE. Default value is FALSE.
     --srch_bio  An argument for the "--ldlink filter". Add Ensembl biomaRt annotation by TRUE.
+    --srch_db   An argument for the "--ldlink filter". Add dbSNP151 hg19 coordinates with db PATH.
 '
 
 
@@ -135,11 +136,13 @@ ldlink_filter = function(
     hg       = 'hg19', # Set biomaRt human genome version
     mirror_url = 'useast', # Set biomaRt host
     blk_idx  = FALSE,   # Add LD block index to result
-    srch_bio = TRUE,   # Add biomart result
+    srch_bio = FALSE,   # Add biomart result
+    srch_db  = NULL,    # Add snp151 hg19 result
     debug    = F
 ) {
     # Function specific library
     suppressMessages(library(biomaRt))  # download SNP coordiantes (hg19/hg38)
+    suppressMessages(library(RSQLite))
     #suppressMessages(library(circlize)) # download cytoband data (hg19)
 
     # Read downloaded files
@@ -295,8 +298,8 @@ ldlink_filter = function(
         paste0('\nSearch biomart for SNP coordinates:\n') %>% cat
         paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
         hg_chk = hg
-    } else hg_chk = NULL
-    if(hg_chk=='hg19') {
+    } else hg_chk = NA
+    if(!is.na(hg_chk)&hg_chk=='hg19') {
         paste0('  Hg19 result table\t= ') %>% cat
         hg19_snp = useMart(biomart="ENSEMBL_MART_SNP",host="grch37.ensembl.org",
                            dataset='hsapiens_snp',path='/biomart/martservice')
@@ -327,7 +330,7 @@ ldlink_filter = function(
         snps_bio_[,2] = paste0('chr',snps_bio_[,2])
         #snps_hg19_bio_[,3] = as.numeric(as.character(snps_hg19_bio_[,3]))-1
         dim(snps_bio_) %>% print
-    } else if(hg_chk=='hg38') { # Search biomart hg38 to get coordinates
+    } else if(!is.na(hg_chk)&hg_chk=='hg38') { # Search biomart hg38 to get coordinates
         paste0('  Hg38 result table\t= ') %>% cat
         hg38_snp = useMart(biomart="ENSEMBL_MART_SNP",host=mirror_url,
                         dataset="hsapiens_snp") # debug 20.08.11
@@ -351,35 +354,41 @@ ldlink_filter = function(
             colnames(snps_bio2)[1] = "refsnp_id"
             snps_bio = rbind(snps_bio1,snps_bio2) %>% unique
         } else snps_bio = snps_bio1
-        colnames(snps_bio) = c('Rsid','Chr','Start','End')
+        colnames(snps_bio) = c('Chr','Start','End','Rsid')
         snps_bio_       = subset(snps_bio,Chr %in% c(1:22,'X','Y'))
         snps_bio_[,2]   = paste0('chr',snps_bio_[,2])
         #snps_bio_[,3]   = as.numeric(as.character(snps_bio_[,3]))-1
         dim(snps_bio_) %>% print
     } else snps_bio_ = NULL
 
-    # Merge the biomart result with the GWAS SNP list
-    paste0('  Merge data\t\t= ') %>% cat
-    #snps_merge = merge(snps_,snps_bio_,by='rsid',all.x=TRUE)
-    colnames(ldlink_)[2] = 'Rsid'
-    snps_li_tmp = list(snps_,ldlink_[,2:3],ldblock,snp_src,snps_bio_)
-    snps_li = lapply(snps_li_tmp, na.omit)
-    snps_merge1 = Reduce(function(x,y) merge(x=x,y=y,by='Rsid',all.x=T), snps_li) %>% unique
-    dim(snps_merge1) %>% print
+    # Search dbsnp151 hg19 to get coordinates
+    if(!is.null(srch_db)) {
+        paste0('\nSearch dbSNP151 hg19 for SNP coordinates:\n') %>% cat
+        paste0('  Query SNPs\t\t= ') %>% cat; length(snp_cand) %>% print
+        hg_chk = hg
+    } else hg_chk = NA
+    if(!is.na(hg_chk)&hg_chk=='hg19') {
+        conn = dbConnect(RSQLite::SQLite(),srch_db)
+        q_snps = paste0(snp_cand,collapse='","')
+        sqlquery = paste0('select * from dbsnp151 where NAME in ("',q_snps,'")')
+        snp_dbsnp = dbGetQuery(conn,sqlquery)[,1:4]
+        colnames(snp_dbsnp) = c('Chr','Start','End','Rsid')
+        paste0('  Result coord\t\t= ') %>% cat
+        dim(snp_dbsnp) %>% print
+    } else {
+        paste0('\nThis function only support hg19 coordinate.\n') %>% cat
+        snp_dbsnp = NULL
+    }
 
     # Add Cytoband annotation (hg19)
     if(hg=='hg19') {
-        coord    = snps_merge1$ld_coord
-        hg19_chr = snps_merge1$hg19_chr
-        hg19_end = snps_merge1$hg19_end
-
         ## Download cytoband data from UCSC
-        paste0('Cytoband annotation... ') %>% cat
+        paste0('\nCytoband annotation: ') %>% cat
         cyto = circlize::read.cytoband(species = 'hg19')$df
         colnames(cyto) = c('chr','start','end','cytoband','tag')
 
         ## Split SNP coord to CHR and POS
-        coord_li = lapply(coord,function(c) {
+        coord_li = lapply(ldlink_$ld_coord,function(c) {
             split = strsplit(c %>% as.character,'\\:') %>% unlist
             data.frame(
                 chr = split[1],
@@ -404,11 +413,18 @@ ldlink_filter = function(
             cytoband = paste0(chr[2],cyto_sub)
             return(cytoband)
         }) %>% unlist
-        paste0(length(cytoband),'.. ') %>% cat
-        m = ncol(snps_merge1)
-        snps_merge = data.frame(snps_merge1[,1:2],cytoband,snps_merge1[,c(3:m)])
-        paste0('done\n') %>% cat
-    }
+        cytoband_df = data.frame(Rsid=ldlink_$ldSNPs, Cytoband=cytoband)
+        dim(cytoband_df) %>% print
+    } else cytoband = NULL
+
+    # Merge the biomart result with the GWAS SNP list
+    paste0('Merge SNP annotations:\n') %>% cat
+    paste0('  Merge data\t\t= ') %>% cat
+    colnames(ldlink_)[2] = 'Rsid'
+    snps_li_tmp = list(snps_,ldlink_[,2:3],cytoband_df,ldblock,snp_src,snps_bio_,snp_dbsnp)
+    snps_li = snps_li_tmp[!sapply(snps_li_tmp, is.null)]
+    snps_merge = Reduce(function(x,y) merge(x=x,y=y,by='Rsid',all.x=T), snps_li) %>% unique
+    dim(snps_merge) %>% print
 
     # Write a TSV file
     snp_n = snps_merge$Rsid %>% unique %>% length
@@ -526,15 +542,17 @@ gwas_ldlink = function(
     if(length(args$blk_idx)>0) { blk_idx  = args$blk_idx
     } else                       blk_idx  = FALSE
     if(length(args$srch_bio)>0) {srch_bio = args$srch_bio
-    } else                       srch_bio = TRUE
+    } else                       srch_bio = FALSE
+    if(length(args$srch_db)>0) { srch_db  = args$srch_db
+    } else                       srch_db  = NULL
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
         ldlink_down(b_path,out,popul,token,debug)
     } else if(args$ldlink == 'filter') {
         if(blk_idx=='TRUE') blk_idx = TRUE
-        if(srch_bio=='FALSE') srch_bio = FALSE
-        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,srch_bio,debug)
+        if(srch_bio=='TRUE') srch_bio = TRUE
+        ldlink_filter(b_path,ld_path,out,r2,dprime,hg,mirror_url,blk_idx,srch_bio,srch_db,debug)
     } else if(args$ldlink == 'bed') {
         ldlink_bed(b_path,out,debug)
     } else if(args$ldlink == 'chkbiomart') {
