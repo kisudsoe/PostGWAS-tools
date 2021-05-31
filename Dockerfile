@@ -10,7 +10,7 @@ RUN apt -y -qq update && \
 RUN DEBIAN_FRONTEND=noninteractive apt -y install tzdata
 
 # Install dependencies
-RUN apt -y install \
+RUN apt -y -qq install \
 	openjdk-11-jre-headless \
 	wget \
 	bedtools \
@@ -20,7 +20,8 @@ RUN apt -y install \
 	vim \
 	software-properties-common \
 	sqlite3
-#RUN apt -y install parallel
+
+RUN apt -y -qq install parallel
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
@@ -44,16 +45,6 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "BiocManager::install('clusterProfiler')"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
-
-# Install zsh: https://github.com/deluan/zsh-in-docker
-#RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.1/zsh-in-docker.sh)"
-## terminal colors with xterm
-## set the zsh theme 
-ENV TERM xterm
-ENV ZSH_THEME agnoster
-
-# run the installation script  
-RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
 # Add Version number
 ADD VERSION .
