@@ -20,7 +20,6 @@ RUN apt -y -qq install \
 	vim \
 	software-properties-common \
 	sqlite3
-
 RUN apt -y -qq install parallel
 
 # Install R
@@ -36,13 +35,7 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
 	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
 	R -e "BiocManager::install(version = '3.12')" && \
-	R -e "BiocManager::install('biomaRt')" && \
-	R -e "BiocManager::install('limma')" && \
-	R -e "BiocManager::install('regioneR')" && \
-	R -e "BiocManager::install('ComplexHeatmap')" && \
-	R -e "BiocManager::install('fgsea')" && \
-	R -e "BiocManager::install('hypeR')" && \
-	R -e "BiocManager::install('clusterProfiler')"
+	R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
 
