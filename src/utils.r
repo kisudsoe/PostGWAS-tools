@@ -112,10 +112,10 @@ bash_script = function(
     )
 
     # Combine and save the bash scripts
-    tag1 = 'printf "\n  1) Genome_dist.. "'
-    tag2 = 'printf "done\n  2) Roadmap_dist.. "'
-    tag3 = 'printf "done\n  3) Roadmap_dist_25status.. "'
-    tag4 = 'printf "done\n"'
+    tag1 = 'printf "1) Genome_dist\n"'
+    tag2 = 'printf "2) Roadmap_dist\n"'
+    tag3 = 'printf "3) Roadmap_dist_25status\n"'
+    tag4 = 'printf "done"'
     bash = c(tag1, bash1, tag2, bash2, tag3, bash3, tag4)
     out_base = tools::file_path_sans_ext(basename(out))
     f_name = paste0(out,'/dist_', out_base, '.sh')

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# 9/11/2020 VERSION
+# 5/31/2021 VERSION
 # This file is generated and maintained by Seungsoo Kim.
 
-WORK_DIR="data"
+WORK_DIR="/data"
 BASE_BED=$WORK_DIR"/input_bed/gwas_biomart_5892.bed"
-SH_FILE="dist_data.sh"
-ANN_PATH="db"
+SH_FILE=$WORK_DIR/"dist_data.sh"
+ANN_PATH="/data/db_gwas"
 
 ROAD_FILE=$ANN_PATH"/roadmap_meta.tsv"
 REG_DIR=$ANN_PATH"/regulome"
@@ -26,9 +26,9 @@ Rscript postgwas-exe.r \
   --base $BASE_BED \
   --out  $WORK_DIR \
   --ann  $ANN_PATH
-mv $SH_FILE data/$SH_FILE
+#mv $SH_FILE $WORK_DIR/$SH_FILE
 printf "  Run bedtools commands. This step is taking a while. "
-bash data/$SH_FILE
+cat $SH_FILE | parallel
 printf "done\n"
 
 printf "1-2. UCSC gene tags separation "
