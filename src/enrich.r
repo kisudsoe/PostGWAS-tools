@@ -582,13 +582,14 @@ draw_heatmap = function(
         paste0('-> extract ha2 ') %>% cat
         if(meta_db=='roadmap_meta') { anatomy = meta$ANATOMY
         } else if(meta_db=='encode_meta') { anatomy = meta$Tissue }
+        print(annot)
         if(!is.na(annot)) {
             annots = strsplit(annot,',')[[1]]
             `%notin%` = Negate(`%in%`) # define %notin% operator
             anatomy[meta$ANATOMY %notin% annots] = 'Other' # A bug to change as NA
             anatomy_uq = anatomy %>% unique %>% sort
-            ana_num = length(anatomy_uq)
-        }
+        } else anatomy_uq = anatomy %>% unique %>% sort
+        ana_num = length(anatomy_uq)
         if(ana_num<5) { ann_cols = terrain.colors(length(anatomy_uq))
         } else ann_cols = rainbow(length(anatomy_uq))
 
@@ -612,7 +613,7 @@ draw_heatmap = function(
     my_col = colorRamp2(c(z_range[1],0,z_range[2]),c("#2E86C1","#FEF9E7","#C0392B"))
     if(meta_db=='roadmap_meta') {
         cluster_row_col = c(FALSE,TRUE)
-        wh = c(20,8*n+3)
+        wh = c(20,7*n+5)
     } else if(meta_db=='encode_meta') {
         cluster_row_col = c(FALSE,FALSE)
         wh = c(22,25)
