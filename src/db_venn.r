@@ -66,7 +66,7 @@ ensgid_biomaRt = function(
 		ensembl   = useMart(
 			biomart='ENSEMBL_MART_ENSEMBL',
 			dataset='hsapiens_gene_ensembl',
-			host   ="useast.ensembl.org")
+			host   ='useast.ensembl.org')
 		gene_attr = c('ensembl_gene_id','hgnc_symbol','description')
 		getBM(
 			attributes = gene_attr,
@@ -88,6 +88,28 @@ ensgid_biomaRt = function(
 	gene_ens$name = gene_name
 	paste0(length(gene_ens$ensembl_gene_id %>% unique),'.. done\n') %>% cat
 	return(gene_ens)
+}
+
+ensgid_symbol = function(
+	genes = NULL, # Ensgids
+	ensgid_bed = NULL # db_gwas/ensembl_gene_hg19.bed
+) {
+	paste0('  Search ensembl_gene_hg19.bed ') %>% cat
+	genes = genes %>% unique
+	paste0('-> ',length(genes),' ') %>% cat
+
+	# Parsing Ensgid//Symbol
+	paste0('-> parsing ') %>% cat
+	li = lapply(ensgid_bed[,4],function(x) {
+		x1 = strsplit(x,'//')[[1]]
+		data.frame(Ensgid=x1[1],Symbol=x[2])
+	})
+	df = data.table::rbindlist(li)
+	paste0('-> merge ') %>% cat
+	genes_df = data.frame(Ensgid=genes)
+	merge_df = merge(genes_df,df,by='Ensgid',all.x=T)
+	dim(merge_df) %>% print
+	return(merge_df)
 }
 
 
@@ -248,6 +270,7 @@ summ_ann = function(
 			gene_ann$hgnc_symbol = gene_names
 			dim(gene_ann) %>% print
 		} else {
+			#gene_ens = ensgid_symbol(genes=near_ann$Ensgid,ensgid_bed=)
 			gene_ann = near_ann
 		}
 		

@@ -62,9 +62,9 @@ bash_script = function(
 
     # gene_dist files
     genome_dist_f = c(
-        paste0(ann_path, '/ensembl_gene_hg19.bed'),
-        paste0(ann_path, '/wgEncodeRegTfbsClusteredWithCellsV3.bed'),
-        paste0(ann_path, '/ucsc_annot.bed')
+        paste0(ann_path, '/ensembl_gene_hg19.bed.gz'),
+        paste0(ann_path, '/wgEncodeRegTfbsClusteredWithCellsV3.bed.gz'),
+        paste0(ann_path, '/ucsc_annot.bed.gz')
     )
 
     # roadmap files
