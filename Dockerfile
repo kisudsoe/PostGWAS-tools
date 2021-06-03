@@ -7,7 +7,7 @@ RUN apt -y -qq update && \
 	apt -y -qq upgrade
 
 # Set locale & R v4.0 repository
-RUN DEBIAN_FRONTEND=noninteractive apt -y install tzdata
+RUN DEBIAN_FRONTEND=noninteractive apt -y -qq install tzdata
 
 # Install dependencies
 RUN apt -y -qq install \
@@ -20,7 +20,7 @@ RUN apt -y -qq install \
 	vim \
 	software-properties-common \
 	sqlite3
-RUN apt -y -qq install parallel
+#RUN apt -y -qq install parallel
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
