@@ -613,7 +613,7 @@ draw_heatmap = function(
     my_col = colorRamp2(c(z_range[1],0,z_range[2]),c("#2E86C1","#FEF9E7","#C0392B"))
     if(meta_db=='roadmap_meta') {
         cluster_row_col = c(FALSE,TRUE)
-        wh = c(20,7*n+5)
+        wh = c(20,6.5*n+5.5)
     } else if(meta_db=='encode_meta') {
         cluster_row_col = c(FALSE,FALSE)
         wh = c(22,25)
