@@ -30,11 +30,11 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD5
 	libxt-dev
 
 # Install R packages
-RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser','future.apply','corrplot'), dependencies=T, repos='http://cran.us.r-project.org/')" && \
-	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
-	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
-	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
-	R -e "BiocManager::install(version = '3.12')"
+RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circlize','LDlinkR','reshape','ggplot2','RSQLite','argparser','future.apply','corrplot'), dependencies=T, repos='http://cran.us.r-project.org/')"
+RUN R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')"
+RUN R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)"
+RUN R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')"
+RUN R -e "BiocManager::install(version = '3.12')"
 RUN R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
