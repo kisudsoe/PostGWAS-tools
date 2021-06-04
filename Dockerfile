@@ -3,7 +3,7 @@ WORKDIR /
 
 MAINTAINER Suhlab-Seungsoo_Kim
 
-RUN apt -y -qq update && \
+RUN apt -y -qq update --fix-missing && \
 	apt -y -qq upgrade
 
 # Set locale & R v4.0 repository
