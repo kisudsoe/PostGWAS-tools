@@ -33,7 +33,7 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 RUN R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')"
 RUN R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)"
 RUN R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')"
-RUN R -e "BiocManager::install(version = '3.12')"
+#RUN R -e "BiocManager::install(version = '3.12')"
 RUN R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
