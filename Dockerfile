@@ -20,7 +20,6 @@ RUN apt -y -qq install \
 	vim \
 	software-properties-common \
 	sqlite3
-#RUN apt -y -qq install parallel
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
@@ -38,6 +37,7 @@ RUN R -e "BiocManager::install(version = '3.12')"
 RUN R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
 
 RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
+RUN apt -y -qq install parallel
 
 # Add Version number
 ADD VERSION .
