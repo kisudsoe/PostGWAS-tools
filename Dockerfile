@@ -19,8 +19,8 @@ RUN apt -y -qq install \
 	libssl-dev \
 	vim \
 	software-properties-common \
-	sqlite3
-#RUN apt -y -qq install parallel
+	sqlite3 \
+	parallel
 
 # Install R
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
@@ -34,10 +34,10 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','data.table','eulerr','circl
 	R -e "if (!requireNamespace('BiocManager',quietly=T)) install.packages('BiocManager')" && \
 	R -e "Sys.setenv(R_INSTALL_STAGED = FALSE)" && \
 	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
-	R -e "BiocManager::install(version = '3.12')" && \
+#RUN R -e "BiocManager::install(version = '3.12')" && \
 	R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
-
-RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')"
+RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')" 
+#RUN apt -y -qq install parallel
 
 # Add Version number
 ADD VERSION .
