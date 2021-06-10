@@ -12,7 +12,7 @@ Usage:
 
 Functions:
     trait       Generating pivot table for traits.
-    gene        Generating pivot table for genes.
+    snp         Generating pivot table for snps.
     study       Generating summary table for studies.
     filter      Filtering SNPs by P-values.
 
@@ -132,7 +132,7 @@ study_pivot = function(
     return(pivot)
 }
 
-gene_pivot = function(
+snp_pivot = function(
     gdata   = NULL,   # GWAS Catalog data
     out     = 'data', # Output folder path
     file_nm = NULL,   # Output file name
@@ -140,9 +140,12 @@ gene_pivot = function(
 ) {
     # Shrink data
     gdata2 = data.frame(
-        SNPS        = gdata$SNPS,
-        MAPPED_GENE = gdata$MAPPED_GENE,
-        P.VALUE     = gdata$P.VALUE
+        SNPS         = gdata$SNPS,
+        MAPPED_GENE  = gdata$MAPPED_GENE,
+        P.VALUE      = gdata$P.VALUE,
+        PMID         = gdata$PUBMEDID,
+        FIRST.AUTHOR = gdata$FIRST.AUTHOR,
+        DATE         = gdata$DATE
     ) %>% unique
     if(debug) {
         paste0('  gdata2 dim = ') %>% cat
@@ -152,7 +155,7 @@ gene_pivot = function(
     # Reshape data 2: Min_P
     gdata2$MAPPED_GENE[gdata2$MAPPED_GENE==""] = NA # debug 2020-08-10
     pivot1 = gdata2 %>%
-        group_by(SNPS,MAPPED_GENE) %>%
+        group_by(SNPS,MAPPED_GENE,PMID,FIRST.AUTHOR,DATE) %>%
         summarize(Min_P = min(P.VALUE))
     if(debug) {
         paste0('  pivot1 dim = ') %>% cat
@@ -165,9 +168,12 @@ gene_pivot = function(
         genes   = strsplit(geness,", ") %>% unlist %>% unique
         genes_n = length(genes)
         out = data.frame(
-            SNPS  = rep(row[1],genes_n),
-            GENES = genes,
-            Min_P = rep(row[3],genes_n)
+            SNPS          = row[1],
+            GENES         = genes,
+            PMID          = row[3],
+            FIRST.AUTHOR  = row[4],
+            DATE          = row[5],
+            Min_P         = row[6]
         )
         return(out)
     })
@@ -255,10 +261,11 @@ generate_pivot = function(
     paste0('\n** Run function generate_pivot in gwas_catalog.r:\n') %>% cat
     f_gwas = list.files(gwas, full.names=T)
     f_n = length(f_gwas)
-    if(f_n==1) { f_gwas = gwas
+    if(f_n==0) { f_gwas = gwas
     } else {
         paste0(f_n,' files input -> [') %>% cat
     }
+    f_n = length(f_gwas) # debug 6/10/2021
     gwas_li=list()
     for(i in 1:f_n) {
         paste0('.') %>% cat
@@ -277,7 +284,7 @@ generate_pivot = function(
 
     # Generate TRAITS pivot table
     dir_nm = tools::file_path_sans_ext(gwas %>% basename)
-    f_name = paste0(out,'/',dir_nm,c('_studies','_genes','_snps'),'.tsv')
+    f_name = paste0(out,'/',dir_nm,c('_trait','_snp','_study'),'.tsv')
     if('trait' %in% pivot) {
         #paste0('\n** Run trait_pivot:\n') %>% cat
         trait_pivot = trait_pivot(gwas_merged, out, file_nm, debug)
@@ -285,11 +292,11 @@ generate_pivot = function(
         paste0('Write study pivot: ',f_name[1],'\n') %>% cat
     }
     # Generate SNP-Gene-Min_P table
-    if('gene' %in% pivot) {
-        #paste0('\n** Run gene_pivot:\n') %>% cat
-        gene_pivot = gene_pivot(gwas_merged, out, file_nm, debug)
-        write.table(gene_pivot,  f_name[2],sep='\t',quote=F,row.names=F)
-        paste0('Write gene pivot: ',f_name[2],'\n') %>% cat
+    if('snp' %in% pivot) {
+        #paste0('\n** Run snp_pivot:\n') %>% cat
+        snps_pivot = snp_pivot(gwas_merged, out, file_nm, debug)
+        write.table(snps_pivot,  f_name[2],sep='\t',quote=F,row.names=F)
+        paste0('Write snp pivot: ',f_name[2],'\n') %>% cat
     }
     # Generate Study summary table
     if('study' %in% pivot) {
@@ -322,7 +329,8 @@ gwas_catalog = function(
     # Generate out folder
     source('src/pdtime.r'); t0=Sys.time()
     ifelse(!dir.exists(out), dir.create(out),'')
-    if(args$gwas %in% c('trait','gene','study')) {
+    #if(args$gwas %in% c('trait','gene','study')) {
+    if(all(args$gwas %in% c('trait','snp','study'))) {
         # Generate pivot tables
         generate_pivot(gwas, out, pivot, debug)
     } else if(args$gwas == 'filter') {

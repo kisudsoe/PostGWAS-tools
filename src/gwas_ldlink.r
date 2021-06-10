@@ -1,39 +1,42 @@
 help_message = '
-gwas_ldlink, v2020-10-16
+gwas_ldlink, v2021-06-10
 This is a function for LDlink data.
 
 Usage:
-    Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder> --popul <CEU TSI FIN GBR IBS ...>
+    Rscript postgwas-exe.r --ldlink input --base <base file> --out <out folder> --p.criteria <P-value>
+    Rscript postgwas-exe.r --ldlink down --base <base file> --out <out folder>
     Rscript postgwas-exe.r --ldlink filter --base <base file> --ldlink <ldlink dir path> --out <out folder> --r2 0.6 --dprime 1
     Rscript postgwas-exe.r --ldlink bed --base <base file> --out <out folder>
     Rscript postgwas-exe.r --ldlink chkbiomart --out <out folder>
 
 
 Functions:
-    down        This is a function for LDlink data download.
-    filter      This is a function for LDlink data filter.
-    bed         This is a function for generating two BED files (hg19 and hg38).
-    chkbiomart  Check biomart lists.
+    input        This is a function to prepare input file for LDlink download. 
+    down         This is a function for LDlink data download.
+    filter       This is a function for LDlink data filter.
+    bed          This is a function for generating two BED files (hg19 and hg38).
+    chkbiomart   Check biomart lists.
 
 Global arguments:
-    --base      <EFO0001359.tsv>
-                One base TSV file is mendatory.
-                A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
-                A TSV file processed from "filter" function for "bed" function.
-    --out       <default: data>
-                Out folder path is mendatory. Default is "data" folder.
+    --base       <EFO0001359.tsv>
+                 One base TSV file is mendatory.
+                 A TSV file downloaded from GWAS catalog for "down" and "filter" functions.
+                 A TSV file processed from "filter" function for "bed" function.
+    --out        <default: data>
+                 Out folder path is mendatory. Default is "data" folder.
 
 Required arguments:
-    --popul     <CEU TSI FIN GBR IBS ...>
-                An argument for the "--ldlink ddown". One or more population option have to be included.
-    --r2        An argument for the "--ldlink filter". Set a criteria for r2 over.
-    --dprime    An argument for the "--ldlink filter". Set a criteria for dprime over.
+    --popul      Table with two columns: <FIRST.AUTHOR> <Population>
+                 An argument for the "--ldlink ddown". One or more population option have to be included.
+    --r2         An argument for the "--ldlink filter". Set a criteria for r2 over.
+    --dprime     An argument for the "--ldlink filter". Set a criteria for dprime over.
 
 Optional argument:
-    --mirror    An argument for the "--ldlink filter". Set a biomaRt host server.
-    --blk_idx   An argument for the "--ldlink filter". Add LD block calculation by TRUE. Default value is FALSE.
-    --srch_bio  An argument for the "--ldlink filter". Add Ensembl biomaRt annotation by TRUE.
-    --srch_db   An argument for the "--ldlink filter". Add dbSNP151 hg19 coordinates with db PATH.
+    --mirror     An argument for the "--ldlink filter". Set a biomaRt host server.
+    --blk_idx    An argument for the "--ldlink filter". Add LD block calculation by TRUE. Default value is FALSE.
+    --srch_bio   An argument for the "--ldlink filter". Add Ensembl biomaRt annotation by TRUE.
+    --srch_db    An argument for the "--ldlink filter". Add dbSNP151 hg19 coordinates with db PATH.
+    --p.criteria An argument for the "--ldlink input". Cut GWAS rsid by p-value.
 '
 
 
@@ -42,6 +45,63 @@ suppressMessages(library(dplyr))
 
 
 ## Functions Start ##
+ldlink_input = function(
+    b_path = NULL,
+    popul  = NULL,
+    out    = NULL,
+    p.criteria = NULL
+) {
+    paste0('\n** Run function ldlink_input... ') %>% cat
+    ifelse(!dir.exists(out), dir.create(out),''); '\n' %>% cat # mkdir
+
+    # Read file
+    paste0('Read, ',b_path,' = ') %>% cat
+    snp_df = read.delim(b_path,stringsAsFactors=F)
+    dim(snp_df) %>% print
+
+    paste0('Read, ',popul,' = ') %>% cat
+    pop_df = read.delim(popul,stringsAsFactors=F)
+    dim(pop_df) %>% print
+
+    # Filter snp_df by p.criteria
+    if(!is.null(p.criteria)) {
+        paste0('\nFilter by <',p.criteria,' = ') %>% cat
+        p.criteria = as.numeric(p.criteria)
+        snp_df_sub = subset(snp_df, Min_P < p.criteria)
+        dim(snp_df_sub) %>% print
+    } else snp_df_sub = snp_df
+
+    # Prepare input file
+    paste0('Prepare input file = ') %>% cat
+    snps_uq = snp_df_sub$SNPS %>% unique
+    n = length(snps_uq)
+    snp_li = lapply(c(1:n), function(i) {
+        snp_df_sub2 = subset(snp_df_sub, SNPS==snps_uq[i])
+        snp_df_sub3 = subset(snp_df_sub2, select=-GENES) %>% unique
+        pop_sub = subset(pop_df, PMID %in% snp_df_sub3$PMID)
+        pop_uq = strsplit(pop_sub$Population, ' ') %>% unlist %>% unique
+        pops = paste0(pop_uq, collapse=' ')
+        authors = paste0(snp_df_sub3$FIRST.AUTHOR,', ',snp_df_sub3$DATE)
+        return(data.frame(
+            Rsid=snps_uq[i],
+            Pops=pops,
+            File=paste0(snps_uq[i],' ',pops,'.txt'),
+            PMIDS=paste0(snp_df_sub3$PMID, collapse=', '),
+            AUTHORS=paste0(authors, collapse='; ')
+        ))
+    })
+    snp_input = data.table::rbindlist(snp_li)
+    dim(snp_input) %>% print
+    
+    # Wrtie input file
+    rsid_n = snp_input$Rsid %>% unique %>% length
+    if(is.null(p.criteria)) p.criteria = 'no_criteria'
+    f_name = paste0(out,'/rsid_pops-',p.criteria,'-',rsid_n,'.tsv')
+    write.table(snp_input,f_name,sep='\t',row.names=F,quote=F)
+    paste0('Write file: ',f_name,'\n') %>% cat
+}
+
+
 ldlink_bed = function(
     ldfl_path = NULL,   # LDlink filter result. Need to check removing NA value.
     out       = 'data', # Out folder path
@@ -442,7 +502,6 @@ ldlink_filter = function(
 ldlink_down = function(
     snp_path = NULL,   # gwassnp_summ: 'filter' result file path
     out      = 'data', # out folder path
-    popul    = NULL,   # population filter option for LDlink
     token    = '669e9dc0b428', # Seungsoo Kim's personal token; 4151ef4ec96b
     debug    = F
 ) {
@@ -545,10 +604,12 @@ gwas_ldlink = function(
     } else                       srch_bio = FALSE
     if(length(args$srch_db)>0) { srch_db  = args$srch_db
     } else                       srch_db  = NULL
+    if(length(args$p.criteria)>0) { p.criteria = args$p.criteria
+    } else                          p.criteria = NULL
     
     source('src/pdtime.r'); t0=Sys.time()
     if(args$ldlink == 'down') {
-        ldlink_down(b_path,out,popul,token,debug)
+        ldlink_down(b_path,out,token,debug)
     } else if(args$ldlink == 'filter') {
         if(blk_idx=='TRUE') blk_idx = TRUE
         if(srch_bio=='TRUE') srch_bio = TRUE
@@ -557,6 +618,8 @@ gwas_ldlink = function(
         ldlink_bed(b_path,out,debug)
     } else if(args$ldlink == 'chkbiomart') {
         check_biomart(out, debug)
+    } else if(args$ldlink == 'input') {
+        ldlink_input(b_path,popul,out,p.criteria)
     } else {
         paste0('[Error] There is no such function in gwas_ldlink: ',
             paste0(args$ldlink,collapse=', '),'\n') %>% cat
