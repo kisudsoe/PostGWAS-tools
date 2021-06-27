@@ -261,7 +261,9 @@ generate_pivot = function(
     paste0('\n** Run function generate_pivot in gwas_catalog.r:\n') %>% cat
     f_gwas = list.files(gwas, full.names=T)
     f_n = length(f_gwas)
-    if(f_n==0) { f_gwas = gwas
+    if(f_n==0) { 
+        f_gwas = gwas
+        paste0('Read ', f_gwas,' = ') %>% cat
     } else {
         paste0(f_n,' files input -> [') %>% cat
     }
@@ -278,7 +280,7 @@ generate_pivot = function(
             dim(gdata) %>% print
         }
     }
-    paste0('] = ') %>% cat
+    if(f_n>1) paste0('] = ') %>% cat
     gwas_merged  = data.table::rbindlist(gwas_li)
     dim(gwas_merged) %>% print
 
@@ -333,7 +335,7 @@ gwas_catalog = function(
     if(all(args$gwas %in% c('trait','snp','study'))) {
         # Generate pivot tables
         generate_pivot(gwas, out, pivot, debug)
-    } else if(args$gwas == 'filter') {
+    } else if(args$gwas[1] == 'filter') {
         # Generate filtered SNP table
         paste0('\n** Run function gwas_filt:\n') %>% cat
         gdata = read.delim(gwas,stringsAsFactors=F)
