@@ -36,8 +36,7 @@ RUN R -e "install.packages(c('dplyr','plyr','tidyr','tidyverse','data.table','eu
 	R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')" && \
 	#RUN R -e "BiocManager::install(version = '3.12')" && \
 	R -e "BiocManager::install(c('biomaRt','limma','regioneR','ComplexHeatmap','fgsea','hypeR','clusterProfiler'))"
-RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')" 
-#RUN apt -y -qq install parallel
+#RUN R -e "library(devtools); install_bitbucket('ibi_group/disgenet2r')" 
 
 # Add Version number
 ADD VERSION .
